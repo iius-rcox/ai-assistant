@@ -1,0 +1,75 @@
+# Node & package managers
+node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.eslintcache
+
+# Build artifacts
+dist/
+build/
+out/
+.cache/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+.turbo/
+
+# Editors & OS
+.DS_Store
+.AppleDouble
+.LSOverride
+.idea/
+.vscode/
+*.swp
+*.swo
+.history/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+.env.local
+.env.production.local
+.env.development.local
+.env.test.local
+credentials.json
+token.json
+*.pem
+*.key
+*.p12
+*.crt
+*.cer
+*.der
+
+# Databases & state
+*.sqlite
+*.sqlite-journal
+*.db
+*.db-journal
+
+# n8n local data (when running locally)
+.n8n/
+n8n_data/
+docker/volumes/n8n/
+
+# Supabase local artifacts
+supabase/.temp/
+supabase/.branches/
+supabase/.shadow/
+supabase/.env
+supabase/migrations/*-shadow.sql
+
+# Docker
+docker-data/
+docker-compose.override.yml
+*.pid
+
+# Misc
+.node_repl_history
+Thumbs.db
+
+

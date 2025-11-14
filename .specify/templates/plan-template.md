@@ -31,7 +31,13 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] **User-First Design**: Feature delivers measurable user value with clear acceptance criteria
+- [ ] **Test-Driven Development**: Test strategy defined with test-first approach planned
+- [ ] **Modular Architecture**: Components properly separated with clear interfaces
+- [ ] **Progressive Enhancement**: MVP defined with incremental delivery path
+- [ ] **Observable Systems**: Logging and monitoring strategy defined
+- [ ] **Security by Design**: Security considerations identified and addressed
+- [ ] **Documentation as Code**: Documentation plan included in implementation
 
 ## Project Structure
 

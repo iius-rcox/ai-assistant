@@ -1,0 +1,55 @@
+{
+  "name": "Notification-Workflow",
+  "id": "VADceJJa6WJuwCKG",
+  "nodes": [
+    {
+      "name": "When called by another workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1
+    },
+    {
+      "name": "Is High Priority?",
+      "type": "n8n-nodes-base.if",
+      "description": "Check if urgency=HIGH or action in (PAYMENT, CALENDAR, RESPOND)"
+    },
+    {
+      "name": "Check Quiet Hours",
+      "type": "n8n-nodes-base.code",
+      "description": "Detect 10pm-7am quiet hours window"
+    },
+    {
+      "name": "Is Quiet Hours?",
+      "type": "n8n-nodes-base.if"
+    },
+    {
+      "name": "Queue Notification",
+      "type": "n8n-nodes-base.supabase",
+      "parameters": {
+        "operation": "create",
+        "tableId": "notifications",
+        "delivery_status": "QUEUED"
+      }
+    },
+    {
+      "name": "Format Telegram Message",
+      "type": "n8n-nodes-base.code"
+    },
+    {
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "parameters": {
+        "operation": "sendMessage"
+      }
+    },
+    {
+      "name": "Log Notification Sent",
+      "type": "n8n-nodes-base.supabase",
+      "parameters": {
+        "operation": "create",
+        "tableId": "notifications",
+        "delivery_status": "SENT"
+      }
+    }
+  ],
+  "description": "Sends Telegram notifications for high-priority emails with quiet hours support"
+}

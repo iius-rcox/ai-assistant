@@ -1,0 +1,51 @@
+{
+  "name": "Organization-Workflow",
+  "id": "00U9iowWuwQofzlQ",
+  "nodes": [
+    {
+      "name": "When called by another workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1
+    },
+    {
+      "name": "Add Gmail Label",
+      "type": "n8n-nodes-base.gmail",
+      "parameters": {
+        "resource": "message",
+        "operation": "addLabels"
+      }
+    },
+    {
+      "name": "Log Label Applied",
+      "type": "n8n-nodes-base.supabase",
+      "parameters": {
+        "operation": "create",
+        "tableId": "email_actions"
+      }
+    },
+    {
+      "name": "Is Action FYI?",
+      "type": "n8n-nodes-base.if"
+    },
+    {
+      "name": "Mark as Read",
+      "type": "n8n-nodes-base.gmail",
+      "parameters": {
+        "operation": "markAsRead"
+      }
+    },
+    {
+      "name": "Should Archive?",
+      "type": "n8n-nodes-base.if"
+    },
+    {
+      "name": "Archive Email",
+      "type": "n8n-nodes-base.gmail",
+      "parameters": {
+        "operation": "removeLabels",
+        "labelIds": ["INBOX"]
+      }
+    }
+  ],
+  "description": "Applies Gmail labels, marks emails read, and archives based on classification"
+}

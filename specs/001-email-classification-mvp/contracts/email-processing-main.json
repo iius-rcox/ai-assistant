@@ -1,0 +1,64 @@
+{
+  "name": "Email-Processing-Main",
+  "id": "W42UBwlIGyfZx1M2",
+  "nodes": [
+    {
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "parameters": {
+        "pollTimes": {
+          "item": [{"mode": "everyMinute", "minute": 5}]
+        },
+        "filters": {
+          "labelIds": ["INBOX"]
+        }
+      }
+    },
+    {
+      "name": "Get Full Email",
+      "type": "n8n-nodes-base.gmail",
+      "parameters": {
+        "operation": "get"
+      }
+    },
+    {
+      "name": "Check for Duplicate",
+      "type": "n8n-nodes-base.code",
+      "description": "Extract email metadata and check for duplicates"
+    },
+    {
+      "name": "Store Email in Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "parameters": {
+        "operation": "create",
+        "tableId": "emails"
+      }
+    },
+    {
+      "name": "Call Classification Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "parameters": {
+        "workflowId": "MVkAVroogGQA6ePC"
+      }
+    },
+    {
+      "name": "Call Organization Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "parameters": {
+        "workflowId": "00U9iowWuwQofzlQ"
+      }
+    },
+    {
+      "name": "Call Notification Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "parameters": {
+        "workflowId": "VADceJJa6WJuwCKG"
+      }
+    },
+    {
+      "name": "Log Processing Complete",
+      "type": "n8n-nodes-base.code"
+    }
+  ],
+  "description": "Main orchestration workflow - triggers on new emails and coordinates classification, organization, and notifications"
+}

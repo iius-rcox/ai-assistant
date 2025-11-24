@@ -1,0 +1,353 @@
+{
+  "workflowName": "Calendar-Event-Extraction-Workflow",
+  "description": "AI-powered workflow that extracts structured calendar event details from email content using OpenAI GPT-4-mini, with support for multiple appointments, partial information, and relative date handling.",
+  "trigger": "Called by Email-Processing-Main workflow when email classification returns action=CALENDAR",
+  "nodes": [
+    {
+      "nodeType": "nodes-base.executeWorkflowTrigger",
+      "operation": "trigger",
+      "parameters": {},
+      "inputs": [
+        "email_id: UUID of the email being processed",
+        "message_id: Gmail message ID",
+        "subject: Email subject line",
+        "body: Full email body text",
+        "sender: Email sender address",
+        "received_at: Email received timestamp (ISO 8601)"
+      ],
+      "outputs": [
+        "Passes all input data to next node"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.code",
+      "operation": "javascript",
+      "name": "Prepare Event Extraction Prompt",
+      "parameters": {
+        "jsCode": "// Prepare email data for AI extraction\nconst item = $input.first().json;\nconst receivedDate = new Date(item.received_at);\nconst processingDate = new Date();\nconst delayHours = (processingDate - receivedDate) / (1000 * 60 * 60);\n\n// Calculate if relative dates should be flagged for review (FR-017)\nconst isStaleProcessing = delayHours > 24;\n\nconst promptContext = {\n  email_id: item.email_id,\n  subject: item.subject,\n  body: item.body,\n  sender: item.sender,\n  received_at: item.received_at,\n  user_timezone: 'America/Los_Angeles',\n  processing_delay_hours: Math.round(delayHours * 10) / 10,\n  flag_relative_dates: isStaleProcessing\n};\n\nreturn [{ json: promptContext }];"
+      },
+      "inputs": [
+        "Email data from trigger node"
+      ],
+      "outputs": [
+        "promptContext object with email details and processing metadata"
+      ]
+    },
+    {
+      "nodeType": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "operation": "embedding",
+      "parameters": {
+        "model": "text-embedding-ada-002"
+      },
+      "credentials": "openAiApi",
+      "inputs": [
+        "Connected to AI Agent for vector similarity search (if needed)"
+      ],
+      "outputs": [
+        "Embedding vectors for event matching context"
+      ]
+    },
+    {
+      "nodeType": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "operation": "chat",
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "temperature": 0.2,
+          "maxTokens": 1500
+        }
+      },
+      "credentials": "openAiApi",
+      "inputs": [
+        "Connected to AI Agent as language model"
+      ],
+      "outputs": [
+        "AI responses for event extraction"
+      ]
+    },
+    {
+      "nodeType": "@n8n/n8n-nodes-langchain.agent",
+      "operation": "agent",
+      "name": "Event Extraction Agent",
+      "parameters": {
+        "text": "={{ $json.body }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI assistant that extracts calendar event information from emails.\n\nYour task:\n1. Identify ALL event details in the email (title, date/time, location, attendees)\n2. Normalize dates to ISO 8601 format (YYYY-MM-DDTHH:MM:SS)\n3. Detect timezone from context (email signature, location) or use user's default timezone\n4. Extract video conference URLs (Zoom, Google Meet, Microsoft Teams)\n5. Handle multiple appointments in a single email (FR-019)\n6. Handle partial information (FR-014): If time is missing but date present, mark as all-day event\n7. Handle relative dates (FR-017): Calculate based on email received timestamp\n\nRELATIVE DATE HANDLING:\n- Email received: {{ $json.received_at }}\n- Processing delay: {{ $json.processing_delay_hours }} hours\n- If processing_delay > 24 hours AND relative dates detected ('tomorrow', 'next week'), set requires_review=true\n\nRULES:\n- For relative dates ('tomorrow', 'next Tuesday'), calculate absolute dates based on received_at timestamp\n- For time ranges ('2-3pm'), create start and end times\n- If no end time specified, default to 1 hour duration\n- If date provided but NO time, create all-day event (is_all_day=true)\n- Extract all email addresses mentioned as potential attendees\n- Confidence score reflects extraction certainty (0.0-1.0)\n- If confidence < 0.7, set requires_review=true (FR-012)\n- Detect multiple appointments: Return array of events if >1 appointment found\n\nUser's Default Timezone: {{ $json.user_timezone }}\n\nOutput Format: Strict JSON array matching the provided schema (even if single event, return array)"
+        }
+      },
+      "inputs": [
+        "Email body text from prompt preparation",
+        "Email context (subject, sender, received_at, timezone)",
+        "Language model (OpenAI Chat Model)",
+        "Output parser (Structured Output Parser)"
+      ],
+      "outputs": [
+        "Structured JSON array of extracted event(s)"
+      ]
+    },
+    {
+      "nodeType": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "operation": "parse",
+      "name": "Structured Output Parser",
+      "parameters": {
+        "jsonSchema": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Event title/summary (max 1024 chars)"
+              },
+              "start_datetime": {
+                "type": "string",
+                "description": "Start date/time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS)"
+              },
+              "end_datetime": {
+                "type": "string",
+                "description": "End date/time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS)"
+              },
+              "is_all_day": {
+                "type": "boolean",
+                "description": "True if event is all-day (no specific time extracted)"
+              },
+              "location": {
+                "type": "string",
+                "description": "Event location (physical address, room, or 'Virtual')"
+              },
+              "attendees": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Array of attendee email addresses"
+              },
+              "meeting_url": {
+                "type": "string",
+                "description": "Video conference URL (Zoom, Google Meet, Teams)"
+              },
+              "timezone": {
+                "type": "string",
+                "description": "IANA timezone identifier (e.g., America/New_York)"
+              },
+              "description": {
+                "type": "string",
+                "description": "Event description/notes/agenda from email"
+              },
+              "confidence_score": {
+                "type": "number",
+                "description": "Extraction confidence (0.0-1.0)",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "requires_review": {
+                "type": "boolean",
+                "description": "True if confidence < 0.7 or stale relative date detected"
+              },
+              "missing_fields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of expected fields that could not be extracted"
+              }
+            },
+            "required": [
+              "title",
+              "start_datetime",
+              "end_datetime",
+              "is_all_day",
+              "confidence_score",
+              "requires_review"
+            ]
+          }
+        }
+      },
+      "inputs": [
+        "Raw AI Agent output"
+      ],
+      "outputs": [
+        "Validated JSON array of event extraction(s)"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.code",
+      "operation": "javascript",
+      "name": "Validate and Enrich Events",
+      "parameters": {
+        "jsCode": "// Validate extracted events and add metadata\nconst input = $input.first().json;\nconst emailId = $('When called by another workflow').first().json.email_id;\nconst events = Array.isArray(input) ? input : [input];\n\nconst results = [];\n\nfor (const event of events) {\n  // Validate datetime range\n  const startDate = new Date(event.start_datetime);\n  const endDate = new Date(event.end_datetime);\n  \n  if (endDate <= startDate) {\n    // Invalid range, flag for review\n    event.requires_review = true;\n    event.missing_fields = event.missing_fields || [];\n    event.missing_fields.push('valid_datetime_range');\n  }\n  \n  // Convert confidence to percentage (0-100)\n  const confidenceScore = Math.round(event.confidence_score * 100);\n  \n  // Check confidence threshold (FR-012: 70%)\n  if (confidenceScore < 70) {\n    event.requires_review = true;\n  }\n  \n  // Add tracking metadata\n  results.push({\n    json: {\n      email_id: emailId,\n      title: event.title.slice(0, 1024), // Enforce Google Calendar limit\n      start_datetime: event.start_datetime,\n      end_datetime: event.end_datetime,\n      is_all_day: event.is_all_day || false,\n      location: event.location || null,\n      attendees: event.attendees || [],\n      meeting_url: event.meeting_url || null,\n      timezone: event.timezone || 'America/Los_Angeles',\n      description: event.description || null,\n      confidence_score: confidenceScore,\n      requires_review: event.requires_review || false,\n      missing_fields: event.missing_fields || [],\n      extracted_at: new Date().toISOString()\n    }\n  });\n}\n\nreturn results;"
+      },
+      "inputs": [
+        "Parsed event array from Structured Output Parser"
+      ],
+      "outputs": [
+        "Array of validated and enriched event objects (one output item per event)"
+      ]
+    }
+  ],
+  "connections": {
+    "When called by another workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Event Extraction Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Event Extraction Prompt": {
+      "main": [
+        [
+          {
+            "node": "Event Extraction Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Event Extraction Agent": {
+      "main": [
+        [
+          {
+            "node": "Validate and Enrich Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Event Extraction Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Event Extraction Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Event Extraction Agent",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "outputFormat": {
+    "email_id": "UUID - Source email reference",
+    "title": "string - Event title (max 1024 chars, Google Calendar limit)",
+    "start_datetime": "string (ISO 8601) - Event start date and time",
+    "end_datetime": "string (ISO 8601) - Event end date and time",
+    "is_all_day": "boolean - True if no specific time extracted (FR-014)",
+    "location": "string | null - Event location",
+    "attendees": "string[] - Array of email addresses",
+    "meeting_url": "string | null - Video conference URL",
+    "timezone": "string - IANA timezone (default: America/Los_Angeles)",
+    "description": "string | null - Event description/notes",
+    "confidence_score": "number (0-100) - AI extraction confidence percentage",
+    "requires_review": "boolean - True if confidence <70% or processing delay >24h with relative dates (FR-012, FR-017)",
+    "missing_fields": "string[] - List of fields that could not be extracted",
+    "extracted_at": "string (ISO 8601) - Extraction timestamp"
+  },
+  "errorHandling": "On AI extraction failure, return requires_review=true with minimal event data. On schema validation failure, route to error notification workflow. All errors logged to execution history.",
+  "performance": {
+    "estimatedTime": "3-6 seconds per email",
+    "nodeCount": 7,
+    "aiCost": "$0.0001-0.0003 per email (GPT-4o-mini pricing)"
+  },
+  "constitutionCompliance": {
+    "nativeNodes": "100% - Uses only native n8n nodes (AI Agent, OpenAI Chat Model, Structured Output Parser, Code node)",
+    "codeNodeJustification": "Code nodes used for: (1) Prompt preparation with processing delay calculation, (2) Event validation and metadata enrichment. Both are data transformation tasks allowed by Constitution.",
+    "referencePattern": "Follows Swim Dad Assistant pattern: AI Agent + Structured Output Parser + Code for validation"
+  },
+  "testScenarios": [
+    {
+      "name": "Single event with complete information",
+      "input": {
+        "subject": "Team Sync Tomorrow",
+        "body": "Let's meet tomorrow at 2pm in Conference Room A. Zoom link: https://zoom.us/j/123456",
+        "received_at": "2025-11-16T10:00:00Z"
+      },
+      "expectedOutput": {
+        "title": "Team Sync Tomorrow",
+        "start_datetime": "2025-11-17T14:00:00",
+        "end_datetime": "2025-11-17T15:00:00",
+        "is_all_day": false,
+        "location": "Conference Room A",
+        "meeting_url": "https://zoom.us/j/123456",
+        "confidence_score": ">80",
+        "requires_review": false
+      }
+    },
+    {
+      "name": "Multiple appointments in single email (FR-019)",
+      "input": {
+        "subject": "This week's appointments",
+        "body": "Dentist appointment Monday at 2pm. Also haircut Wednesday at 10am.",
+        "received_at": "2025-11-16T10:00:00Z"
+      },
+      "expectedOutput": [
+        {
+          "title": "Dentist appointment",
+          "start_datetime": "2025-11-18T14:00:00",
+          "confidence_score": ">70"
+        },
+        {
+          "title": "Haircut",
+          "start_datetime": "2025-11-20T10:00:00",
+          "confidence_score": ">70"
+        }
+      ]
+    },
+    {
+      "name": "Partial information - date only, no time (FR-014)",
+      "input": {
+        "subject": "Conference next Friday",
+        "body": "Annual company conference is scheduled for next Friday.",
+        "received_at": "2025-11-16T10:00:00Z"
+      },
+      "expectedOutput": {
+        "title": "Annual company conference",
+        "start_datetime": "2025-11-22T00:00:00",
+        "is_all_day": true,
+        "missing_fields": ["time"],
+        "confidence_score": ">60"
+      }
+    },
+    {
+      "name": "Stale relative date handling (FR-017)",
+      "input": {
+        "subject": "Meeting tomorrow",
+        "body": "Let's meet tomorrow at 3pm",
+        "received_at": "2025-11-14T10:00:00Z",
+        "processing_delay_hours": 48
+      },
+      "expectedOutput": {
+        "requires_review": true,
+        "confidence_score": "ANY",
+        "note": "Flagged due to processing delay >24h with relative date"
+      }
+    }
+  ]
+}

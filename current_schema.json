@@ -1,0 +1,702 @@
+[
+    {
+      "table_name": "calendar_events",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 1
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "email_id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 2
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "event_id",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 3
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "calendar_id",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 4
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "summary",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 5
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 6
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "location",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 7
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "start_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "ordinal_position": 8
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "end_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "ordinal_position": 9
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "timezone",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 10
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "attendees",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "ordinal_position": 11
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "organizer",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 12
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 13
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "sync_status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 14
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "sync_error",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 15
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "last_synced_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 16
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 17
+    },
+    {
+      "table_name": "calendar_events",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 18
+    },
+    {
+      "table_name": "calendar_operations",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 1
+    },
+    {
+      "table_name": "calendar_operations",
+      "column_name": "operation_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 2
+    },
+    {
+      "table_name": "calendar_operations",
+      "column_name": "event_id",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "ordinal_position": 3
+    },
+    {
+      "table_name": "calendar_operations",
+      "column_name": "email_id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 4
+    },
+    {
+      "table_name": "calendar_operations",
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 5
+    },
+    {
+      "table_name": "calendar_operations",
+      "column_name": "error_message",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 6
+    },
+    {
+      "table_name": "calendar_operations",
+      "column_name": "confidence_score",
+      "data_type": "numeric",
+      "is_nullable": "YES",
+      "ordinal_position": 7
+    },
+    {
+      "table_name": "calendar_operations",
+      "column_name": "performed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "ordinal_position": 8
+    },
+    {
+      "table_name": "calendar_operations",
+      "column_name": "notified_user",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "ordinal_position": 9
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 1
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "email_id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 2
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "category",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 3
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "urgency",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 4
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "action",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 5
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "confidence_score",
+      "data_type": "numeric",
+      "is_nullable": "YES",
+      "ordinal_position": 6
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "extracted_names",
+      "data_type": "ARRAY",
+      "is_nullable": "YES",
+      "ordinal_position": 7
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "extracted_dates",
+      "data_type": "ARRAY",
+      "is_nullable": "YES",
+      "ordinal_position": 8
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "extracted_amounts",
+      "data_type": "ARRAY",
+      "is_nullable": "YES",
+      "ordinal_position": 9
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "classified_timestamp",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "ordinal_position": 10
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "original_category",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 11
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "original_urgency",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 12
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "original_action",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 13
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "corrected_timestamp",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 14
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "corrected_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 15
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 16
+    },
+    {
+      "table_name": "classifications",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 17
+    },
+    {
+      "table_name": "correction_logs",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 1
+    },
+    {
+      "table_name": "correction_logs",
+      "column_name": "email_id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 2
+    },
+    {
+      "table_name": "correction_logs",
+      "column_name": "field_name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 3
+    },
+    {
+      "table_name": "correction_logs",
+      "column_name": "original_value",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 4
+    },
+    {
+      "table_name": "correction_logs",
+      "column_name": "corrected_value",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 5
+    },
+    {
+      "table_name": "correction_logs",
+      "column_name": "correction_timestamp",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "ordinal_position": 6
+    },
+    {
+      "table_name": "correction_logs",
+      "column_name": "corrected_by",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 7
+    },
+    {
+      "table_name": "correction_logs",
+      "column_name": "correction_reason",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 8
+    },
+    {
+      "table_name": "correction_logs",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 9
+    },
+    {
+      "table_name": "corrections",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "ordinal_position": 1
+    },
+    {
+      "table_name": "corrections",
+      "column_name": "category",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 2
+    },
+    {
+      "table_name": "corrections",
+      "column_name": "urgency",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 3
+    },
+    {
+      "table_name": "corrections",
+      "column_name": "action",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 4
+    },
+    {
+      "table_name": "corrections",
+      "column_name": "received",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 5
+    },
+    {
+      "table_name": "email_actions",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 1
+    },
+    {
+      "table_name": "email_actions",
+      "column_name": "email_id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 2
+    },
+    {
+      "table_name": "email_actions",
+      "column_name": "action_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 3
+    },
+    {
+      "table_name": "email_actions",
+      "column_name": "action_details",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "ordinal_position": 4
+    },
+    {
+      "table_name": "email_actions",
+      "column_name": "action_timestamp",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "ordinal_position": 5
+    },
+    {
+      "table_name": "email_actions",
+      "column_name": "success_status",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "ordinal_position": 6
+    },
+    {
+      "table_name": "email_actions",
+      "column_name": "error_message",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 7
+    },
+    {
+      "table_name": "email_actions",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 8
+    },
+    {
+      "table_name": "email_embeddings",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 1
+    },
+    {
+      "table_name": "email_embeddings",
+      "column_name": "email_id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 2
+    },
+    {
+      "table_name": "email_embeddings",
+      "column_name": "embedding",
+      "data_type": "USER-DEFINED",
+      "is_nullable": "NO",
+      "ordinal_position": 3
+    },
+    {
+      "table_name": "email_embeddings",
+      "column_name": "metadata",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "ordinal_position": 4
+    },
+    {
+      "table_name": "email_embeddings",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 5
+    },
+    {
+      "table_name": "emails",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 1
+    },
+    {
+      "table_name": "emails",
+      "column_name": "message_id",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 2
+    },
+    {
+      "table_name": "emails",
+      "column_name": "thread_id",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 3
+    },
+    {
+      "table_name": "emails",
+      "column_name": "sender",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 4
+    },
+    {
+      "table_name": "emails",
+      "column_name": "recipient",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 5
+    },
+    {
+      "table_name": "emails",
+      "column_name": "subject",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 6
+    },
+    {
+      "table_name": "emails",
+      "column_name": "body",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 7
+    },
+    {
+      "table_name": "emails",
+      "column_name": "received_timestamp",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "ordinal_position": 8
+    },
+    {
+      "table_name": "emails",
+      "column_name": "labels",
+      "data_type": "ARRAY",
+      "is_nullable": "YES",
+      "ordinal_position": 9
+    },
+    {
+      "table_name": "emails",
+      "column_name": "is_read",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "ordinal_position": 10
+    },
+    {
+      "table_name": "emails",
+      "column_name": "is_archived",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "ordinal_position": 11
+    },
+    {
+      "table_name": "emails",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 12
+    },
+    {
+      "table_name": "emails",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 13
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 1
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "email_id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "ordinal_position": 2
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "channel",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 3
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "recipient",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 4
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "message_content",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 5
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "sent_timestamp",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 6
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "delivery_status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 7
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "retry_count",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "ordinal_position": 8
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "error_message",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 9
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "scheduled_for",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 10
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 11
+    },
+    {
+      "table_name": "notifications",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 12
+    },
+    {
+      "table_name": "system_config",
+      "column_name": "key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "ordinal_position": 1
+    },
+    {
+      "table_name": "system_config",
+      "column_name": "value",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "ordinal_position": 2
+    },
+    {
+      "table_name": "system_config",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "ordinal_position": 3
+    },
+    {
+      "table_name": "system_config",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "ordinal_position": 4
+    }
+  ]

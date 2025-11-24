@@ -29,6 +29,7 @@ coverage/
 .history/
 
 # Env & secrets
+.mcp.json
 .env
 .env.*
 !.env.example

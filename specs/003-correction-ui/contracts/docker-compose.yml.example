@@ -1,0 +1,123 @@
+# Docker Compose Configuration for Email Classification Correction UI
+# Feature: 003-correction-ui
+# Target: Unraid server deployment via Docker Compose
+#
+# Usage:
+#   1. Copy this file to correction-ui/docker-compose.yml
+#   2. Create .env file with your Supabase credentials
+#   3. Run: docker-compose up -d
+#   4. Access: http://unraid-server-ip:3000
+
+version: '3.8'
+
+services:
+  correction-ui:
+    image: correction-ui:latest
+    container_name: email-correction-ui
+
+    # Build from local Dockerfile (if not using pre-built image)
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Port mapping: host:container
+    # Access UI at http://unraid-server-ip:3000
+    ports:
+      - "3000:80"
+
+    # Environment variables
+    # Option 1: Load from .env file
+    env_file:
+      - .env
+
+    # Option 2: Specify inline (less secure, visible in docker inspect)
+    # environment:
+    #   - VITE_SUPABASE_URL=${SUPABASE_URL}
+    #   - VITE_SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+
+    # Restart policy for Unraid server reboots
+    restart: unless-stopped
+
+    # Resource limits (optional, adjust based on Unraid capacity)
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'      # 50% of one CPU core
+          memory: 256M     # 256MB RAM
+        reservations:
+          cpus: '0.25'     # Minimum 25% CPU
+          memory: 128M     # Minimum 128MB RAM
+
+    # Health check (ensures container is serving traffic)
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Max log file size
+        max-file: "3"     # Keep last 3 log files
+
+# ============================================================================
+# Unraid Deployment Instructions
+# ============================================================================
+#
+# Method 1: Docker Compose (recommended)
+# -----------------------------------------
+# 1. SSH into Unraid server
+# 2. Navigate to /mnt/user/appdata/correction-ui/
+# 3. Copy docker-compose.yml and .env to this directory
+# 4. Run: docker-compose up -d
+# 5. Access: http://UNRAID_IP:3000
+#
+# Method 2: Unraid Community Applications
+# -----------------------------------------
+# 1. Open Unraid web UI → Apps tab
+# 2. Search for "Custom Docker Container" or "My Containers"
+# 3. Configure:
+#    - Repository: correction-ui:latest
+#    - Port: 3000 → 80
+#    - Environment Variables:
+#      * VITE_SUPABASE_URL=https://xmziovusqlmgygcrgyqt.supabase.co
+#      * VITE_SUPABASE_SERVICE_KEY=[your key]
+#    - Restart Policy: Unless stopped
+# 4. Click "Apply"
+# 5. Access: http://UNRAID_IP:3000
+#
+# Method 3: Docker CLI
+# -----------------------------------------
+# docker run -d \
+#   --name email-correction-ui \
+#   -p 3000:80 \
+#   -e VITE_SUPABASE_URL=https://xmziovusqlmgygcrgyqt.supabase.co \
+#   -e VITE_SUPABASE_SERVICE_KEY=your_key \
+#   --restart unless-stopped \
+#   correction-ui:latest
+#
+# ============================================================================
+# Environment Variables Required
+# ============================================================================
+#
+# Create .env file:
+#
+# SUPABASE_URL=https://xmziovusqlmgygcrgyqt.supabase.co
+# SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+#
+# Note: VITE_ prefix is required for Vite to expose variables to the frontend
+#       during build time. For runtime configuration, see advanced options.
+#
+# ============================================================================
+# Accessing the UI
+# ============================================================================
+#
+# From devices on your local network:
+#   http://192.168.1.100:3000  (replace with your Unraid IP)
+#   http://unraid-server:3000  (if hostname is configured)
+#
+# From Unraid server itself:
+#   http://localhost:3000

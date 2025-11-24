@@ -1,0 +1,464 @@
+{
+  "updatedAt": "2025-11-16T06:09:15.000Z",
+  "createdAt": "2025-11-15T22:02:24.016Z",
+  "id": "W42UBwlIGyfZx1M2",
+  "name": "Email-Processing-Main",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "includeSpamTrash": false,
+          "labelIds": []
+        },
+        "options": {}
+      },
+      "id": "trigger",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2ytjDO6KlB7VOUpD",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {}
+      },
+      "id": "get-message",
+      "name": "Get Full Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        304,
+        0
+      ],
+      "webhookId": "c5e4e544-f90b-4851-850d-566c3f85c7f9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2ytjDO6KlB7VOUpD",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const email = $input.first().json;\nconst sender = email.from?.text || email.headers?.from || 'unknown';\nconst recipient = email.to?.text || email.headers?.to || 'unknown';\nconst subject = email.subject || email.headers?.subject || '';\nconst body = email.text || email.textAsHtml || email.html || '';\nconst receivedDate = email.date || email.headers?.date || new Date().toISOString();\nconst receivedTimestamp = new Date(receivedDate).toISOString();\n\nreturn [{\n  json: {\n    message_id: email.id,\n    thread_id: email.threadId,\n    sender: sender,\n    recipient: recipient,\n    subject: subject,\n    body: body.slice(0, 10000),\n    received_timestamp: receivedTimestamp,\n    labels: email.labelIds || [],\n    is_read: !email.labelIds?.includes('UNREAD'),\n    is_archived: !email.labelIds?.includes('INBOX')\n  }\n}];"
+      },
+      "id": "check-duplicate",
+      "name": "Check for Duplicate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "emails",
+        "dataToSend": "autoMapInputData"
+      },
+      "id": "store-email",
+      "name": "Store Email in Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        752,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "srygfjYmc19qywnM",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "MVkAVroogGQA6ePC"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "call-classification",
+      "name": "Call Classification Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1648,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "00U9iowWuwQofzlQ"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "call-organization",
+      "name": "Call Organization Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1872,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "VADceJJa6WJuwCKG"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "call-notification",
+      "name": "Call Notification Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1872,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const startTime = new Date($('Gmail Trigger').item.json.receivedTime || Date.now());\nconst endTime = new Date();\nconst duration = (endTime - startTime) / 1000;\n\nreturn [{\n  json: {\n    message_id: $('Check for Duplicate').item.json.message_id,\n    processing_complete: true,\n    duration_seconds: duration,\n    timestamp: endTime.toISOString()\n  }\n}];"
+      },
+      "id": "log-complete",
+      "name": "Log Processing Complete",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2096,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const emailData = $('Check for Duplicate').first().json;\nconst lookupResult = $input.first().json;\n\n// Get email_id from lookup result\nconst email_id = lookupResult.id || null;\n\nreturn [{\n  json: {\n    message_id: emailData.message_id,\n    thread_id: emailData.thread_id,\n    sender: emailData.sender,\n    recipient: emailData.recipient,\n    subject: emailData.subject,\n    body: emailData.body,\n    received_timestamp: emailData.received_timestamp,\n    labels: emailData.labels,\n    is_read: emailData.is_read,\n    is_archived: emailData.is_archived,\n    email_id: email_id\n  }\n}];"
+      },
+      "id": "merge-data",
+      "name": "Get Email Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "emails",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "message_id",
+              "keyValue": "={{ $('Check for Duplicate').first().json.message_id }}"
+            }
+          ]
+        }
+      },
+      "id": "lookup-email-id",
+      "name": "Get Email ID from Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        976,
+        96
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "srygfjYmc19qywnM",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const emailData = $('Check for Duplicate').first().json;\nconst lookupResult = $input.first().json;\n\nreturn [{\n  json: {\n    ...emailData,\n    email_id: lookupResult.id\n  }\n}];"
+      },
+      "id": "merge-lookup",
+      "name": "Merge Email ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "merge-paths",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1424,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "emails",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "message_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Check for Duplicate').first().json.message_id }}"
+            }
+          ]
+        }
+      },
+      "id": "lookup-id",
+      "name": "Lookup Email ID",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        -96
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "srygfjYmc19qywnM",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Full Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Full Email": {
+      "main": [
+        [
+          {
+            "node": "Check for Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Store Email in Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Email in Supabase": {
+      "main": [
+        [
+          {
+            "node": "Lookup Email ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Email ID from Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Classification Workflow": {
+      "main": [
+        [
+          {
+            "node": "Call Organization Workflow",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call Notification Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Organization Workflow": {
+      "main": [
+        [
+          {
+            "node": "Log Processing Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Notification Workflow": {
+      "main": [
+        [
+          {
+            "node": "Log Processing Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Email ID from Supabase": {
+      "main": [
+        [
+          {
+            "node": "Merge Email ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Email ID": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Call Classification Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Email Data": {
+      "main": [
+        [
+          {
+            "node": "Call Classification Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Email ID": {
+      "main": [
+        [
+          {
+            "node": "Get Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Gmail Trigger": {
+      "Gmail Trigger": {
+        "lastTimeChecked": 1763403761,
+        "possibleDuplicates": [
+          "19a930e15cb29823",
+          "19a930a613958834"
+        ]
+      }
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "75fa48ac-df6d-4293-9f60-4a6ed0f68a4b",
+  "versionCounter": 125,
+  "triggerCount": 1
+}

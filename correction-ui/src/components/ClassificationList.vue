@@ -16,9 +16,19 @@ import { useGridNavigation } from '@/composables/useGridNavigation'
 import { useAutoSave } from '@/composables/useAutoSave'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import { usePendingQueue } from '@/composables/usePendingQueue'
+import { useSearch } from '@/composables/useSearch'
+import { useSort } from '@/composables/useSort'
+import { useBulkActions } from '@/composables/useBulkActions'
+import { useExpandableRows } from '@/composables/useExpandableRows'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import CorrectionBadge from './shared/CorrectionBadge.vue'
+import KeyboardShortcutsModal from './KeyboardShortcutsModal.vue'
+import ConfidenceBar from './ConfidenceBar.vue'
 import ConflictResolutionDialog from './ConflictResolutionDialog.vue'
 import MobileEditModal from './MobileEditModal.vue'
+import SearchInput from './SearchInput.vue'
+import BulkActionToolbar from './BulkActionToolbar.vue'
+import ExpandableRowDetails from './ExpandableRowDetails.vue'
 import type { InlineEditData, ConflictData } from '@/types/inline-edit'
 import { useMediaQuery } from '@vueuse/core'
 import { formatTimestamp, formatConfidence } from '@/utils/formatters'
@@ -27,6 +37,115 @@ import { logAction, logInfo } from '@/utils/logger'
 
 const router = useRouter()
 const store = useClassificationStore()
+
+// Search composable (Feature: 005-table-enhancements, Task: T016)
+const {
+  query: searchQuery,
+  isLoading: isSearching,
+  resultCount: searchResultCount,
+  hasQuery: hasSearchQuery,
+  filteredClassifications,
+  setQuery: setSearchQuery,
+  clearSearch,
+  highlight: highlightText
+} = useSearch({
+  onSearchComplete: (resultIds) => {
+    logAction('Search completed', { resultCount: resultIds.length })
+  },
+  onSearchError: (error) => {
+    showError(`Search failed: ${error.message}`)
+  }
+})
+
+// Sort composable with localStorage persistence (Feature: 005-table-enhancements, Tasks: T017, T022, T023)
+const {
+  sortColumn,
+  sortDirection,
+  toggleSort,
+  getSortIndicator
+} = useSort({
+  persist: true, // T023 - persist across page refresh
+  onSortChange: (state) => {
+    logAction('Sort changed (persisted)', { column: state.column, direction: state.direction })
+  }
+})
+
+// Bulk actions composable (Feature: 005-table-enhancements, Tasks: T031-T033)
+const {
+  selectedIds: bulkSelectedIds,
+  selectedCount: bulkSelectedCount,
+  isAllSelected: bulkIsAllSelected,
+  isIndeterminate: bulkIsIndeterminate,
+  hasSelection: bulkHasSelection,
+  isProcessing: bulkIsProcessing,
+  toggleSelection: bulkToggleSelection,
+  toggleSelectAll: bulkToggleSelectAll,
+  clearSelection: bulkClearSelection,
+  isSelected: bulkIsSelected,
+  executeBulkAction
+} = useBulkActions({
+  onSelectionChange: (ids) => {
+    logAction('Bulk selection changed', { count: ids.length })
+  },
+  onActionComplete: (result) => {
+    if (result.failed.length === 0) {
+      showSuccess(`Updated ${result.success.length} items successfully`)
+    } else {
+      showError(`Updated ${result.success.length} items, ${result.failed.length} failed`)
+    }
+  }
+})
+
+// Expandable rows composable (Feature: 005-table-enhancements, Tasks: T034-T040)
+const {
+  isExpanded: rowIsExpanded,
+  isLoading: rowIsLoading,
+  getDetails: getRowDetails,
+  getError: getRowError,
+  toggleExpand: toggleRowExpand
+} = useExpandableRows({
+  singleExpand: true,
+  onExpand: (id, details) => {
+    logAction('Row expanded', { id, hasHistory: (details.correctionHistory?.length ?? 0) > 0 })
+  },
+  onCollapse: (id) => {
+    logAction('Row collapsed', { id })
+  },
+  onError: (id, error) => {
+    showError(`Failed to load details: ${error.message}`)
+  }
+})
+
+// Keyboard shortcuts composable (Feature: 005-table-enhancements, Tasks: T041-T047)
+// Reference to search input for focus
+const searchInputRef = ref<InstanceType<typeof SearchInput> | null>(null)
+
+const {
+  isHelpModalOpen: isKeyboardHelpOpen,
+  closeHelpModal: closeKeyboardHelp
+} = useKeyboardShortcuts({
+  onFocusSearch: () => {
+    // Focus the search input when "/" is pressed
+    const searchInput = document.querySelector('.search-input input') as HTMLInputElement
+    searchInput?.focus()
+  },
+  onToggleExpand: () => {
+    // Expand/collapse the focused row
+    const classifications = hasSearchQuery.value ? filteredClassifications.value : store.classifications
+    if (classifications.length > 0 && focusedRow.value >= 0 && focusedRow.value < classifications.length) {
+      const classification = classifications[focusedRow.value]
+      if (classification) {
+        toggleRowExpand(classification.id)
+      }
+    }
+  },
+  onSave: () => {
+    // Save current edit if there's one in progress
+    if (editingRowId.value !== null && canSave.value) {
+      handleSaveRow(editingRowId.value)
+    }
+  }
+})
 
 // Inline edit composable (T016)
 const {
@@ -128,7 +247,7 @@ const {
   getGridAttributes
 } = useGridNavigation({
   rowCount: () => store.classifications.length,
-  columnCount: 8, // Subject, Sender, Category, Urgency, Action, Confidence, Timestamp, Status
+  columnCount: 9, // Checkbox, Subject, Sender, Category, Urgency, Action, Confidence, Timestamp, Status
   onEnter: (rowIndex) => {
     // Enter edit mode for the focused row
     const classification = store.classifications[rowIndex]
@@ -385,11 +504,19 @@ function handleCancelRow(rowId: number) {
   logAction('Inline edit cancelled', { rowId })
 }
 
-// Sort handler
+// Sort handler using useSort composable (T022)
 function handleSort(column: string) {
-  const newDir = store.sortBy === column && store.sortDir === 'asc' ? 'desc' : 'asc'
-  logAction('Sort changed', { column, direction: newDir })
-  store.setSorting(column, newDir)
+  toggleSort(column as any)
+}
+
+// Bulk action handler (T033)
+async function handleBulkAction(type: string, value?: string) {
+  logAction('Bulk action triggered', { type, value, count: bulkSelectedCount.value })
+  try {
+    await executeBulkAction(type as any, value)
+  } catch (e) {
+    showError(`Bulk action failed: ${(e as Error).message}`)
+  }
 }
 
 // Page size change
@@ -418,6 +545,15 @@ const errorMessage = computed(() => {
     <div class="list-header">
       <h2>Email Classifications</h2>
       <div class="list-controls">
+        <!-- Search Input (Feature: 005-table-enhancements, Task: T016) -->
+        <SearchInput
+          :model-value="searchQuery"
+          @update:model-value="setSearchQuery"
+          @clear="clearSearch"
+          :is-loading="isSearching"
+          :result-count="searchResultCount"
+          placeholder="Search emails..."
+        />
         <label class="page-size-control">
           Show:
           <select
@@ -458,6 +594,14 @@ const errorMessage = computed(() => {
       </button>
     </div>
 
+    <!-- Bulk Action Toolbar (Feature: 005-table-enhancements, Task: T033) -->
+    <BulkActionToolbar
+      :selected-count="bulkSelectedCount"
+      :is-processing="bulkIsProcessing"
+      @action="handleBulkAction"
+      @clear="bulkClearSelection"
+    />
+
     <!-- Conflict Resolution Dialog (T056) -->
     <ConflictResolutionDialog
       :isOpen="isConflictDialogOpen"
@@ -478,6 +622,12 @@ const errorMessage = computed(() => {
       @save="handleMobileSave"
       @cancel="handleMobileCancel"
       @close="handleMobileClose"
+    />
+
+    <!-- Keyboard Shortcuts Modal (T045, T046) -->
+    <KeyboardShortcutsModal
+      :isOpen="isKeyboardHelpOpen"
+      @close="closeKeyboardHelp"
     />
 
     <!-- Success message toast (T030) -->
@@ -506,8 +656,33 @@ const errorMessage = computed(() => {
         tabindex="0"
         aria-label="Email Classifications"
       >
+        <colgroup>
+          <col /> <!-- Checkbox -->
+          <col /> <!-- Subject -->
+          <col /> <!-- Sender -->
+          <col /> <!-- Category -->
+          <col /> <!-- Urgency -->
+          <col /> <!-- Action -->
+          <col /> <!-- Confidence -->
+          <col /> <!-- Classified -->
+          <col /> <!-- Status -->
+        </colgroup>
         <thead>
           <tr>
+            <!-- Select All checkbox (T032) -->
+            <th class="checkbox-cell">
+              <label class="checkbox-wrapper" title="Select all">
+                <input
+                  type="checkbox"
+                  :checked="bulkIsAllSelected"
+                  :indeterminate="bulkIsIndeterminate"
+                  @change="bulkToggleSelectAll(hasSearchQuery ? filteredClassifications : store.classifications)"
+                  class="bulk-checkbox"
+                  aria-label="Select all rows"
+                />
+                <span class="checkbox-custom"></span>
+              </label>
+            </th>
             <!-- Sortable headers (T028) -->
             <th @click="handleSort('subject')" class="sortable">
               Subject
@@ -558,6 +733,7 @@ const errorMessage = computed(() => {
           <!-- Loading skeletons (T086) -->
           <template v-if="store.isLoading && store.classifications.length === 0">
             <tr v-for="n in 5" :key="`skeleton-${n}`" class="skeleton-row">
+              <td class="checkbox-cell"><div class="skeleton skeleton-checkbox"></div></td>
               <td><div class="skeleton skeleton-text skeleton-long"></div></td>
               <td><div class="skeleton skeleton-text skeleton-medium"></div></td>
               <td><div class="skeleton skeleton-badge"></div></td>
@@ -571,7 +747,7 @@ const errorMessage = computed(() => {
 
           <!-- Loading overlay for smooth updates (when data already exists) -->
           <tr v-else-if="store.isLoading" class="loading-overlay-row">
-            <td colspan="8" class="loading-overlay-cell">
+            <td colspan="9" class="loading-overlay-cell">
               <div class="loading-overlay">
                 <div class="mini-spinner"></div>
                 <span>Updating...</span>
@@ -579,9 +755,28 @@ const errorMessage = computed(() => {
             </td>
           </tr>
 
-          <!-- Empty state (T087) -->
+          <!-- Empty state - No search results (T015, T087) -->
+          <tr v-else-if="hasSearchQuery && filteredClassifications.length === 0" class="empty-row">
+            <td colspan="9" class="empty-cell">
+              <div class="empty-state">
+                <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <p class="empty-title">No results found</p>
+                <p class="empty-description">
+                  No emails match "{{ searchQuery }}". Try different keywords.
+                </p>
+                <button @click="clearSearch" class="btn-clear-filters">
+                  Clear Search
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty state - No data (T087) -->
           <tr v-else-if="store.classifications.length === 0" class="empty-row">
-            <td colspan="8" class="empty-cell">
+            <td colspan="9" class="empty-cell">
               <div class="empty-state">
                 <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 8V21H3V8"></path>
@@ -600,24 +795,58 @@ const errorMessage = computed(() => {
           </tr>
 
           <!-- Data rows with always-on inline dropdowns (T018-T020, T035-T043, T077) -->
-          <tr
+          <!-- Uses filteredClassifications when search is active (T016) -->
+          <template
             v-else
-            v-for="(classification, rowIndex) in store.classifications"
+            v-for="(classification, rowIndex) in (hasSearchQuery ? filteredClassifications : store.classifications)"
             :key="classification.id"
+          >
+          <tr
             v-bind="getRowAttributes(rowIndex)"
             :class="{
               'table-row': true,
               'has-changes': hasRowChanges(classification.id),
               'row-focused': focusedRow === rowIndex,
+              'row-expanded': rowIsExpanded(classification.id),
               'mobile-clickable': isMobile
             }"
             @click="handleRowClick(classification)"
           >
-            <!-- Subject (read-only) -->
-            <td class="subject-cell">{{ classification.email.subject || 'N/A' }}</td>
+            <!-- Row checkbox (T031) -->
+            <td class="checkbox-cell" @click.stop>
+              <label class="checkbox-wrapper">
+                <input
+                  type="checkbox"
+                  :checked="bulkIsSelected(classification.id)"
+                  @change="bulkToggleSelection(classification.id)"
+                  class="bulk-checkbox"
+                  :aria-label="`Select row ${classification.id}`"
+                />
+                <span class="checkbox-custom"></span>
+              </label>
+            </td>
 
-            <!-- Sender (read-only) -->
-            <td>{{ classification.email.sender || 'N/A' }}</td>
+            <!-- Subject (read-only) - with search highlight (T016) -->
+            <td class="subject-cell">
+              <button
+                class="expand-btn"
+                :class="{ expanded: rowIsExpanded(classification.id) }"
+                @click.stop="toggleRowExpand(classification.id)"
+                :aria-expanded="rowIsExpanded(classification.id)"
+                :aria-label="rowIsExpanded(classification.id) ? 'Collapse row details' : 'Expand row details'"
+                title="Toggle details"
+              >
+                <span class="expand-icon">▶</span>
+              </button>
+              <span v-if="hasSearchQuery" v-html="highlightText(classification.email.subject || 'N/A')"></span>
+              <span v-else>{{ classification.email.subject || 'N/A' }}</span>
+            </td>
+
+            <!-- Sender (read-only) - with search highlight (T016) -->
+            <td>
+              <span v-if="hasSearchQuery" v-html="highlightText(classification.email.sender || 'N/A')"></span>
+              <span v-else>{{ classification.email.sender || 'N/A' }}</span>
+            </td>
 
             <!-- Category (always editable) - T019 -->
             <td @click.stop>
@@ -670,7 +899,12 @@ const errorMessage = computed(() => {
             </td>
 
             <!-- Confidence (read-only) -->
-            <td>{{ formatConfidence(classification.confidence_score) }}</td>
+            <td>
+              <ConfidenceBar
+                :score="classification.confidence_score"
+                :compact="true"
+              />
+            </td>
 
             <!-- Classified timestamp (read-only) -->
             <td>{{ formatTimestamp(classification.classified_timestamp) }}</td>
@@ -706,6 +940,16 @@ const errorMessage = computed(() => {
               />
             </td>
           </tr>
+
+          <!-- Expandable Row Details (T037-T040) -->
+          <ExpandableRowDetails
+            v-if="rowIsExpanded(classification.id)"
+            :details="getRowDetails(classification.id)"
+            :is-loading="rowIsLoading(classification.id)"
+            :error="getRowError(classification.id)"
+            :colspan="10"
+          />
+          </template>
         </tbody>
       </table>
     </div>
@@ -766,7 +1010,16 @@ const errorMessage = computed(() => {
 
 .list-controls {
   display: flex;
+  align-items: center;
   gap: 1rem;
+}
+
+/* Search highlight styling (T016) */
+:deep(mark) {
+  background-color: #fff3cd;
+  padding: 0.1em 0.2em;
+  border-radius: 2px;
+  font-weight: 500;
 }
 
 .page-size-control {
@@ -1047,50 +1300,184 @@ const errorMessage = computed(() => {
 .subject-cell {
   font-weight: 500;
   color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* Allow subject to display more text */
+  max-width: none;
+}
+
+.subject-cell > span {
+  /* Only truncate when absolutely necessary */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Maximize space usage - proportional widths */
+/* Expand button styles (T037-T040) */
+.expand-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: #6c757d;
+}
+
+.expand-btn:hover {
+  background-color: #e9ecef;
+  color: #3498db;
+}
+
+.expand-btn:focus {
+  outline: 2px solid #3498db;
+  outline-offset: 1px;
+}
+
+.expand-icon {
+  font-size: 0.6rem;
+  transition: transform 0.15s ease;
+}
+
+.expand-btn.expanded .expand-icon {
+  transform: rotate(90deg);
+}
+
+.table-row.row-expanded {
+  background-color: #f0f7ff;
+  border-left: 3px solid #3498db;
+}
+
+/* Checkbox column styles (T031, T032) */
+.checkbox-cell {
+  width: 40px !important;
+  min-width: 40px;
+  max-width: 40px;
+  text-align: center;
+  padding: 0.5rem !important;
+}
+
+.checkbox-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.bulk-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.checkbox-custom {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d0d0d0;
+  border-radius: 4px;
+  background-color: white;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.bulk-checkbox:checked + .checkbox-custom {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.bulk-checkbox:checked + .checkbox-custom::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.bulk-checkbox:indeterminate + .checkbox-custom {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.bulk-checkbox:indeterminate + .checkbox-custom::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 7px;
+  width: 10px;
+  height: 2px;
+  background-color: white;
+}
+
+.bulk-checkbox:focus + .checkbox-custom {
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+.checkbox-wrapper:hover .checkbox-custom {
+  border-color: #3498db;
+}
+
+.skeleton-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  margin: 0 auto;
+}
+
+/* Column widths - percentage based for responsiveness */
+.classification-table col:nth-child(1) { width: 3%; }    /* Checkbox */
+.classification-table col:nth-child(2) { width: 25%; }   /* Subject */
+.classification-table col:nth-child(3) { width: 12%; }   /* Sender */
+.classification-table col:nth-child(4) { width: 10%; }   /* Category */
+.classification-table col:nth-child(5) { width: 8%; }    /* Urgency */
+.classification-table col:nth-child(6) { width: 9%; }    /* Action */
+.classification-table col:nth-child(7) { width: 8%; }    /* Confidence */
+.classification-table col:nth-child(8) { width: 18%; }   /* Classified */
+.classification-table col:nth-child(9) { width: 7%; }    /* Status */
+
+/* Checkbox column */
 .classification-table th:nth-child(1),
 .classification-table td:nth-child(1) {
-  width: 35%;
+  padding: 0.5rem !important;
+  text-align: center;
 }
 
+/* Subject column */
 .classification-table th:nth-child(2),
 .classification-table td:nth-child(2) {
-  width: 25%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* Sender column */
 .classification-table th:nth-child(3),
 .classification-table td:nth-child(3) {
-  width: 10%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.classification-table th:nth-child(4),
-.classification-table td:nth-child(4) {
-  width: 8%;
-}
-
-.classification-table th:nth-child(5),
-.classification-table td:nth-child(5) {
-  width: 8%;
-}
-
-.classification-table th:nth-child(6),
-.classification-table td:nth-child(6) {
-  width: 7%;
-}
-
-.classification-table th:nth-child(7),
-.classification-table td:nth-child(7) {
-  width: 12%;
-}
-
-.classification-table th:nth-child(8),
-.classification-table td:nth-child(8) {
-  width: 5%;
+/* Status column */
+.classification-table th:nth-child(9),
+.classification-table td:nth-child(9) {
   text-align: center;
 }
 
@@ -1586,8 +1973,23 @@ const errorMessage = computed(() => {
     padding: 0;
   }
 
-  /* Subject spans full width */
+  /* Checkbox - show in corner of card on mobile */
   .classification-table td:nth-child(1) {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: auto !important;
+    min-width: auto;
+    max-width: none;
+  }
+
+  .classification-table tr.table-row {
+    position: relative;
+    padding-right: 2.5rem; /* Make room for checkbox */
+  }
+
+  /* Subject spans full width */
+  .classification-table td:nth-child(2) {
     width: 100%;
     font-size: 1rem;
     font-weight: 600;
@@ -1595,7 +1997,7 @@ const errorMessage = computed(() => {
   }
 
   /* Sender spans full width */
-  .classification-table td:nth-child(2) {
+  .classification-table td:nth-child(3) {
     width: 100%;
     font-size: 0.85rem;
     color: #6c757d;
@@ -1603,20 +2005,20 @@ const errorMessage = computed(() => {
   }
 
   /* Category, Urgency, Action in a row */
-  .classification-table td:nth-child(3),
   .classification-table td:nth-child(4),
-  .classification-table td:nth-child(5) {
+  .classification-table td:nth-child(5),
+  .classification-table td:nth-child(6) {
     width: auto;
   }
 
   /* Hide confidence, timestamp on mobile - show in modal */
-  .classification-table td:nth-child(6),
-  .classification-table td:nth-child(7) {
+  .classification-table td:nth-child(7),
+  .classification-table td:nth-child(8) {
     display: none;
   }
 
   /* Status/Actions at end */
-  .classification-table td:nth-child(8) {
+  .classification-table td:nth-child(9) {
     width: auto;
     margin-left: auto;
   }

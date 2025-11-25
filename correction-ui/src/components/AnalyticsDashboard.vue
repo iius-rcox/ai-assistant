@@ -1,32 +1,53 @@
 <!--
   Analytics Dashboard Component
-  Feature: 003-correction-ui
-  Tasks: T066, T070
+  Feature: 003-correction-ui, 005-table-enhancements
+  Tasks: T066, T070, T080-T087
 
-  Combines summary stats, patterns table, and timeline chart
+  Combines summary stats, patterns table, timeline chart, and enhanced analytics
 -->
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import SummaryStats from './analytics/SummaryStats.vue'
 import PatternsTable from './analytics/PatternsTable.vue'
 import TimelineChart from './analytics/TimelineChart.vue'
+import CorrectionsChart from './analytics/CorrectionsChart.vue'
+import CategoryPieChart from './analytics/CategoryPieChart.vue'
 import type { CorrectionStatistics } from '@/types/models'
 
 interface Props {
   statistics: CorrectionStatistics | null
+  correctionTrends?: {
+    dates: string[]
+    corrections: number[]
+    classifications: number[]
+    rates: number[]
+  } | null
+  categoryDistribution?: {
+    categories: string[]
+    counts: number[]
+    percentages: number[]
+  } | null
   isLoading?: boolean
   error?: Error | null
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   isLoading: false,
-  error: null
+  error: null,
+  correctionTrends: null,
+  categoryDistribution: null
 })
 
 const emit = defineEmits<{
   'refresh': []
   'pattern-click': [pattern: any]
+  'export': [type: 'trends' | 'categories' | 'patterns']
+  'drill-down': [type: string, value: string | number]
 }>()
+
+// Active tab for enhanced view
+const activeTab = ref<'overview' | 'trends' | 'distribution'>('overview')
 
 function handleRefresh() {
   emit('refresh')
@@ -35,15 +56,62 @@ function handleRefresh() {
 function handlePatternClick(pattern: any) {
   emit('pattern-click', pattern)
 }
+
+function handleExport(type: 'trends' | 'categories' | 'patterns') {
+  emit('export', type)
+}
+
+function handleTrendPointClick(date: string, type: string) {
+  emit('drill-down', 'trend', `${date}:${type}`)
+}
+
+function handleCategorySliceClick(category: string, _count: number) {
+  emit('drill-down', 'category', category)
+}
 </script>
 
 <template>
   <div class="analytics-dashboard">
     <div class="dashboard-header">
       <h2>Correction History & Analytics</h2>
-      <button @click="handleRefresh" class="btn-refresh" :disabled="isLoading">
-        <span class="refresh-icon">↻</span>
-        {{ isLoading ? 'Refreshing...' : 'Refresh' }}
+      <div class="header-actions">
+        <div class="export-buttons" v-if="statistics">
+          <button @click="handleExport('trends')" class="btn-export" title="Export trends to CSV">
+            Export Trends
+          </button>
+          <button @click="handleExport('categories')" class="btn-export" title="Export categories to CSV">
+            Export Categories
+          </button>
+          <button @click="handleExport('patterns')" class="btn-export" title="Export patterns to CSV">
+            Export Patterns
+          </button>
+        </div>
+        <button @click="handleRefresh" class="btn-refresh" :disabled="isLoading">
+          <span class="refresh-icon">↻</span>
+          {{ isLoading ? 'Refreshing...' : 'Refresh' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab navigation -->
+    <div class="tab-nav" v-if="statistics">
+      <button
+        :class="['tab-btn', { active: activeTab === 'overview' }]"
+        @click="activeTab = 'overview'"
+      >
+        Overview
+      </button>
+      <button
+        :class="['tab-btn', { active: activeTab === 'trends' }]"
+        @click="activeTab = 'trends'"
+      >
+        Trends
+      </button>
+      <button
+        :class="['tab-btn', { active: activeTab === 'distribution' }]"
+        @click="activeTab = 'distribution'"
+      >
+        Distribution
       </button>
     </div>
 
@@ -63,23 +131,58 @@ function handlePatternClick(pattern: any) {
 
     <!-- Analytics content -->
     <div v-else-if="statistics">
-      <!-- Summary statistics -->
-      <SummaryStats
-        :totalCorrections="statistics.summary.totalCorrections"
-        :correctionRate="statistics.summary.correctionRate"
-        :mostCorrectedCategory="statistics.summary.mostCorrectedCategory"
-      />
+      <!-- Overview Tab -->
+      <div v-show="activeTab === 'overview'" class="tab-content">
+        <!-- Summary statistics -->
+        <SummaryStats
+          :totalCorrections="statistics.summary.totalCorrections"
+          :correctionRate="statistics.summary.correctionRate"
+          :mostCorrectedCategory="statistics.summary.mostCorrectedCategory"
+        />
 
-      <!-- Correction patterns table -->
-      <PatternsTable
-        :patterns="statistics.patterns"
-        @pattern-click="handlePatternClick"
-      />
+        <!-- Correction patterns table -->
+        <PatternsTable
+          :patterns="statistics.patterns"
+          @pattern-click="handlePatternClick"
+        />
 
-      <!-- Timeline chart -->
-      <TimelineChart
-        :timeline="statistics.timeline"
-      />
+        <!-- Timeline chart (original) -->
+        <TimelineChart
+          :timeline="statistics.timeline"
+        />
+      </div>
+
+      <!-- Trends Tab -->
+      <div v-show="activeTab === 'trends'" class="tab-content">
+        <CorrectionsChart
+          v-if="correctionTrends"
+          :dates="correctionTrends.dates"
+          :corrections="correctionTrends.corrections"
+          :classifications="correctionTrends.classifications"
+          :rates="correctionTrends.rates"
+          @point-click="handleTrendPointClick"
+        />
+        <div v-else class="no-data-message">
+          <p>Trend data is loading or not available.</p>
+        </div>
+      </div>
+
+      <!-- Distribution Tab -->
+      <div v-show="activeTab === 'distribution'" class="tab-content">
+        <div class="charts-grid">
+          <CategoryPieChart
+            v-if="categoryDistribution"
+            :categories="categoryDistribution.categories"
+            :counts="categoryDistribution.counts"
+            :percentages="categoryDistribution.percentages"
+            chartType="donut"
+            @slice-click="handleCategorySliceClick"
+          />
+          <div v-else class="no-data-message">
+            <p>Category distribution data is loading or not available.</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- No data state -->
@@ -98,18 +201,48 @@ function handlePatternClick(pattern: any) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .dashboard-header h2 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--text-primary, #2c3e50);
   font-size: 1.5rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-export {
+  padding: 0.4rem 0.8rem;
+  background-color: var(--bg-secondary, #f8f9fa);
+  color: var(--text-primary, #2c3e50);
+  border: 1px solid var(--border-primary, #dee2e6);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.btn-export:hover {
+  background-color: var(--bg-hover, #e9ecef);
+  border-color: var(--color-primary, #3498db);
 }
 
 .btn-refresh {
   padding: 0.6rem 1.2rem;
-  background-color: #3498db;
+  background-color: var(--color-primary, #3498db);
   color: white;
   border: none;
   border-radius: 4px;
@@ -122,7 +255,7 @@ function handlePatternClick(pattern: any) {
 }
 
 .btn-refresh:hover:not(:disabled) {
-  background-color: #2980b9;
+  background-color: var(--color-primary-hover, #2980b9);
   transform: translateY(-1px);
 }
 
@@ -141,19 +274,86 @@ function handlePatternClick(pattern: any) {
   transform: rotate(180deg);
 }
 
+/* Tab navigation */
+.tab-nav {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-primary, #dee2e6);
+  padding-bottom: 0;
+}
+
+.tab-btn {
+  padding: 0.75rem 1.5rem;
+  background-color: transparent;
+  color: var(--text-secondary, #6c757d);
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  margin-bottom: -2px;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary, #2c3e50);
+  background-color: var(--bg-hover, #f8f9fa);
+}
+
+.tab-btn.active {
+  color: var(--color-primary, #3498db);
+  border-bottom-color: var(--color-primary, #3498db);
+}
+
+.tab-content {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1200px) {
+  .charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 3rem;
+  background-color: var(--bg-primary, white);
+  border-radius: 8px;
+  border: 1px solid var(--border-primary, #e0e0e0);
+  color: var(--text-muted, #95a5a6);
+}
+
+.no-data-message p {
+  margin: 0;
+  font-size: 1rem;
+}
+
 .loading-state,
 .error-state,
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  background-color: white;
+  background-color: var(--bg-primary, white);
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.05));
 }
 
 .spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
+  border: 4px solid var(--bg-tertiary, #f3f3f3);
+  border-top: 4px solid var(--color-primary, #3498db);
   border-radius: 50%;
   width: 50px;
   height: 50px;
@@ -167,12 +367,12 @@ function handlePatternClick(pattern: any) {
 }
 
 .loading-state p {
-  color: #7f8c8d;
+  color: var(--text-muted, #7f8c8d);
   font-size: 1rem;
 }
 
 .error-state {
-  color: #e74c3c;
+  color: var(--color-danger, #e74c3c);
 }
 
 .error-text {
@@ -182,7 +382,7 @@ function handlePatternClick(pattern: any) {
 
 .btn-retry {
   padding: 0.6rem 1.5rem;
-  background-color: #e74c3c;
+  background-color: var(--color-danger, #e74c3c);
   color: white;
   border: none;
   border-radius: 4px;
@@ -195,11 +395,39 @@ function handlePatternClick(pattern: any) {
 }
 
 .empty-state {
-  color: #95a5a6;
+  color: var(--text-muted, #95a5a6);
 }
 
 .empty-state p {
   font-size: 1.1rem;
   margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .export-buttons {
+    display: none;
+  }
+
+  .tab-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
 }
 </style>

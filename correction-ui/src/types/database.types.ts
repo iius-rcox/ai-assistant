@@ -78,6 +78,8 @@ export interface Database {
           extracted_dates: string[] | null
           extracted_amounts: string[] | null
           classified_timestamp: string
+          // Note: Database stores original values (before correction) in original_* columns
+          // The current category/urgency/action columns contain the corrected values
           original_category: string | null
           original_urgency: string | null
           original_action: string | null

@@ -173,3 +173,206 @@ export async function getCorrectionStatistics(): Promise<CorrectionStatistics> {
     timeline
   }
 }
+
+/**
+ * Get correction trends over time
+ * Feature: 005-table-enhancements
+ * Task: T080
+ * Requirements: FR-040, FR-041
+ */
+export async function getCorrectionTrends(days: number = 30): Promise<{
+  dates: string[]
+  corrections: number[]
+  classifications: number[]
+  rates: number[]
+}> {
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - days)
+
+  // Get corrections timeline
+  const { data: corrections, error: corrError } = await supabase
+    .from('correction_logs')
+    .select('correction_timestamp')
+    .gte('correction_timestamp', startDate.toISOString())
+
+  if (corrError) throw corrError
+
+  // Get classifications timeline
+  const { data: classifications, error: classError } = await supabase
+    .from('classifications')
+    .select('classified_timestamp')
+    .gte('classified_timestamp', startDate.toISOString())
+
+  if (classError) throw classError
+
+  // Group by date
+  const dateMap = new Map<string, { corrections: number; classifications: number }>()
+
+  // Initialize all dates in range
+  for (let i = 0; i <= days; i++) {
+    const date = new Date(startDate)
+    date.setDate(date.getDate() + i)
+    const dateStr = date.toISOString().split('T')[0] ?? ''
+    if (dateStr) {
+      dateMap.set(dateStr, { corrections: 0, classifications: 0 })
+    }
+  }
+
+  // Count corrections
+  corrections?.forEach((log: any) => {
+    const date = log.correction_timestamp?.split('T')[0]
+    if (date && dateMap.has(date)) {
+      const entry = dateMap.get(date)!
+      entry.corrections++
+    }
+  })
+
+  // Count classifications
+  classifications?.forEach((cls: any) => {
+    const date = cls.classified_timestamp?.split('T')[0]
+    if (date && dateMap.has(date)) {
+      const entry = dateMap.get(date)!
+      entry.classifications++
+    }
+  })
+
+  // Convert to arrays
+  const sortedDates = Array.from(dateMap.keys()).sort()
+
+  return {
+    dates: sortedDates,
+    corrections: sortedDates.map(d => dateMap.get(d)!.corrections),
+    classifications: sortedDates.map(d => dateMap.get(d)!.classifications),
+    rates: sortedDates.map(d => {
+      const entry = dateMap.get(d)!
+      return entry.classifications > 0
+        ? (entry.corrections / entry.classifications) * 100
+        : 0
+    })
+  }
+}
+
+/**
+ * Get category distribution
+ * Feature: 005-table-enhancements
+ * Task: T081
+ * Requirements: FR-040, FR-042
+ */
+export async function getCategoryDistribution(): Promise<{
+  categories: string[]
+  counts: number[]
+  percentages: number[]
+}> {
+  const { data, error } = await supabase
+    .from('classifications')
+    .select('category')
+
+  if (error) throw error
+
+  // Count by category
+  const categoryCount = new Map<string, number>()
+  const total = data?.length || 0
+
+  data?.forEach((cls: any) => {
+    const category = cls.category || 'OTHER'
+    categoryCount.set(category, (categoryCount.get(category) || 0) + 1)
+  })
+
+  // Sort by count descending
+  const sorted = Array.from(categoryCount.entries())
+    .sort((a, b) => b[1] - a[1])
+
+  return {
+    categories: sorted.map(([cat]) => cat),
+    counts: sorted.map(([, count]) => count),
+    percentages: sorted.map(([, count]) => total > 0 ? (count / total) * 100 : 0)
+  }
+}
+
+/**
+ * Get accuracy trends over time
+ * Feature: 005-table-enhancements
+ * Task: T082
+ * Requirements: FR-040, FR-043
+ */
+export async function getAccuracyTrends(days: number = 30): Promise<{
+  dates: string[]
+  accuracy: number[]
+  totalPerDay: number[]
+}> {
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - days)
+
+  const { data, error } = await supabase
+    .from('classifications')
+    .select('classified_timestamp, corrected_timestamp')
+    .gte('classified_timestamp', startDate.toISOString())
+
+  if (error) throw error
+
+  // Group by date
+  const dateMap = new Map<string, { total: number; accurate: number }>()
+
+  // Initialize all dates in range
+  for (let i = 0; i <= days; i++) {
+    const date = new Date(startDate)
+    date.setDate(date.getDate() + i)
+    const dateStr = date.toISOString().split('T')[0] ?? ''
+    if (dateStr) {
+      dateMap.set(dateStr, { total: 0, accurate: 0 })
+    }
+  }
+
+  data?.forEach((cls: any) => {
+    const date = cls.classified_timestamp?.split('T')[0]
+    if (date && dateMap.has(date)) {
+      const entry = dateMap.get(date)!
+      entry.total++
+      // If not corrected, it's considered accurate
+      if (!cls.corrected_timestamp) {
+        entry.accurate++
+      }
+    }
+  })
+
+  // Convert to arrays
+  const sortedDates = Array.from(dateMap.keys()).sort()
+
+  return {
+    dates: sortedDates,
+    accuracy: sortedDates.map(d => {
+      const entry = dateMap.get(d)!
+      return entry.total > 0 ? (entry.accurate / entry.total) * 100 : 100
+    }),
+    totalPerDay: sortedDates.map(d => dateMap.get(d)!.total)
+  }
+}
+
+/**
+ * Export analytics data as CSV
+ * Feature: 005-table-enhancements
+ * Task: T086
+ * Requirements: FR-044
+ */
+export function exportAnalyticsCSV(data: {
+  headers: string[]
+  rows: (string | number)[][]
+}, filename: string = 'analytics-export.csv'): void {
+  // Create CSV content
+  const csvContent = [
+    data.headers.join(','),
+    ...data.rows.map(row => row.join(','))
+  ].join('\n')
+
+  // Create blob and download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.setAttribute('href', url)
+  link.setAttribute('download', filename)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}

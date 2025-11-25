@@ -1,0 +1,88 @@
+/**
+ * Dark Theme CSS Variables
+ * Feature: 005-table-enhancements
+ * Task: T071
+ * Requirements: FR-032, FR-034
+ */
+
+:root.theme-dark {
+  /* Background colors */
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-tertiary: #0f3460;
+  --bg-hover: #1f4068;
+  --bg-active: #0f3460;
+
+  /* Text colors */
+  --text-primary: #e4e4e4;
+  --text-secondary: #b4b4b4;
+  --text-muted: #8a8a8a;
+  --text-disabled: #5a5a5a;
+  --text-inverse: #1a1a2e;
+
+  /* Border colors */
+  --border-primary: #2d3748;
+  --border-secondary: #1f2937;
+  --border-focus: #4a90d9;
+
+  /* Brand colors */
+  --color-primary: #4a90d9;
+  --color-primary-hover: #5ba3ec;
+  --color-primary-light: #1a3a5c;
+
+  --color-success: #2ecc71;
+  --color-success-light: #1a3f2a;
+  --color-success-dark: #a8e6cf;
+
+  --color-warning: #f1c40f;
+  --color-warning-light: #3d3519;
+  --color-warning-dark: #f7dc6f;
+
+  --color-danger: #e74c3c;
+  --color-danger-light: #3d1f1f;
+  --color-danger-dark: #f5b7b1;
+
+  --color-info: #3498db;
+  --color-info-light: #1a3a5c;
+  --color-info-dark: #85c1e9;
+
+  /* Category badge colors (slightly adjusted for dark mode) */
+  --badge-kids: #a569bd;
+  --badge-robyn: #ec407a;
+  --badge-work: #5dade2;
+  --badge-financial: #58d68d;
+  --badge-shopping: #f5b041;
+  --badge-other: #aab7b8;
+
+  /* Urgency badge colors */
+  --badge-urgency-high: #ec7063;
+  --badge-urgency-medium: #f5b041;
+  --badge-urgency-low: #aab7b8;
+
+  /* Table styles */
+  --table-header-bg: #16213e;
+  --table-row-hover: #1f4068;
+  --table-row-expanded: #0f3460;
+  --table-row-selected: #1a3a5c;
+  --table-border: #2d3748;
+
+  /* Input styles */
+  --input-bg: #16213e;
+  --input-border: #2d3748;
+  --input-focus-border: #4a90d9;
+  --input-placeholder: #6c757d;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+
+  /* Modal/overlay */
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+  --modal-bg: #16213e;
+
+  /* Scrollbar */
+  --scrollbar-track: #16213e;
+  --scrollbar-thumb: #4a5568;
+  --scrollbar-thumb-hover: #5a6778;
+}

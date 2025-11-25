@@ -8,7 +8,8 @@
  */
 
 /**
- * Format ISO timestamp to local user timezone
+ * Format ISO timestamp to EST timezone
+ * Format: Mon 11/24/25 1:15PM
  * Requirement: FR-018
  */
 export function formatTimestamp(isoString: string | null): string {
@@ -16,14 +17,28 @@ export function formatTimestamp(isoString: string | null): string {
 
   try {
     const date = new Date(isoString)
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }).format(date)
+
+    // Convert to EST (America/New_York)
+    const estOptions: Intl.DateTimeFormatOptions = { timeZone: 'America/New_York' }
+
+    // Get day of week in EST
+    const dayName = date.toLocaleDateString('en-US', { ...estOptions, weekday: 'short' })
+
+    // Get date parts in EST
+    const month = date.toLocaleDateString('en-US', { ...estOptions, month: 'numeric' })
+    const day = date.toLocaleDateString('en-US', { ...estOptions, day: 'numeric' })
+    const year = date.toLocaleDateString('en-US', { ...estOptions, year: '2-digit' })
+
+    // Get time parts in EST
+    const hour = date.toLocaleString('en-US', { ...estOptions, hour: 'numeric', hour12: true })
+    const minute = date.toLocaleString('en-US', { ...estOptions, minute: '2-digit' })
+
+    // Extract just the number and AM/PM from hour
+    const hourMatch = hour.match(/(\d+)\s*(AM|PM)/i)
+    const hourNum = hourMatch?.[1] ?? '12'
+    const ampm = hourMatch?.[2]?.toUpperCase() ?? 'AM'
+
+    return `${dayName} ${month}/${day}/${year} ${hourNum}:${minute}${ampm}`
   } catch (error) {
     console.warn('Failed to format timestamp:', isoString, error)
     return isoString

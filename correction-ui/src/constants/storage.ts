@@ -76,6 +76,25 @@ export const STORAGE_KEYS = {
 } as const
 
 /**
+ * Table enhancement storage keys
+ * Feature: 005-table-enhancements
+ */
+export const TABLE_STORAGE_KEYS = {
+  /** Sort state (column + direction) */
+  SORT: `${STORAGE_PREFIX}:${STORAGE_VERSION}:table:sort`,
+  /** Column widths */
+  COLUMN_WIDTHS: `${STORAGE_PREFIX}:${STORAGE_VERSION}:table:columns`,
+  /** Pagination style preference (infinite/pages) */
+  PAGINATION_STYLE: `${STORAGE_PREFIX}:${STORAGE_VERSION}:table:pagination`,
+  /** Page size preference */
+  PAGE_SIZE: `${STORAGE_PREFIX}:${STORAGE_VERSION}:table:pageSize`,
+  /** Theme preference (light/dark/system) */
+  THEME: `${STORAGE_PREFIX}:${STORAGE_VERSION}:theme`,
+  /** Search query cache */
+  SEARCH_CACHE: `${STORAGE_PREFIX}:${STORAGE_VERSION}:search:cache`
+} as const
+
+/**
  * Expiry time for auto-saved drafts (24 hours)
  */
 export const STORAGE_EXPIRY_MS = STORAGE_TTL.DRAFT_EDIT

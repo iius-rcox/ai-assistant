@@ -1,7 +1,7 @@
 /**
  * Classification Store
- * Feature: 003-correction-ui, 004-inline-edit
- * Tasks: T020, T024, T025, T013
+ * Feature: 003-correction-ui, 004-inline-edit, 005-table-enhancements
+ * Tasks: T020, T024, T025, T013, T007
  *
  * Global state management for classifications using Pinia
  */
@@ -10,6 +10,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { ClassificationWithEmail, ClassificationFilters, PaginationParams } from '@/types/models'
 import type { InlineEditState, InlineEditData, SaveStatus, DisplayMode, ConflictData } from '@/types/inline-edit'
+import type { SortState, SearchState, SelectionState, ExpandedRowData } from '@/types/table-enhancements'
 import * as classificationService from '@/services/classificationService'
 import { logAction, logError } from '@/utils/logger'
 
@@ -24,6 +25,15 @@ export const useClassificationStore = defineStore('classification', () => {
   const sortDir = ref<'asc' | 'desc'>('desc')
   const isLoading = ref(false)
   const error = ref<Error | null>(null)
+
+  // State - Table Enhancements (Feature: 005-table-enhancements, Task: T007)
+  const searchQuery = ref('')
+  const searchResults = ref<number[] | null>(null)
+  const isSearching = ref(false)
+  const selectedIds = ref<Set<number>>(new Set())
+  const expandedIds = ref<Set<number>>(new Set())
+  const expandedData = ref<Map<number, ExpandedRowData>>(new Map())
+  const focusedRowId = ref<number | null>(null)
 
   // State - Inline Edit (Feature: 004-inline-edit, Task: T013)
   const editingRowId = ref<number | null>(null)
@@ -50,6 +60,17 @@ export const useClassificationStore = defineStore('classification', () => {
       f.corrected !== undefined
     )
   })
+
+  // Table enhancement getters (Feature: 005-table-enhancements, Task: T007)
+  const selectedCount = computed(() => selectedIds.value.size)
+  const isAllSelected = computed(() =>
+    classifications.value.length > 0 &&
+    classifications.value.every(c => selectedIds.value.has(c.id))
+  )
+  const isIndeterminate = computed(() =>
+    selectedIds.value.size > 0 && !isAllSelected.value
+  )
+  const hasSearch = computed(() => searchQuery.value.length > 0)
 
   // Inline edit getters (Feature: 004-inline-edit, Task: T013)
   const isEditing = computed(() => editingRowId.value !== null)
@@ -302,6 +323,14 @@ export const useClassificationStore = defineStore('classification', () => {
     sortDir,
     isLoading,
     error,
+    // State - Table Enhancements
+    searchQuery,
+    searchResults,
+    isSearching,
+    selectedIds,
+    expandedIds,
+    expandedData,
+    focusedRowId,
     // State - Inline Edit
     editingRowId,
     originalData,
@@ -314,6 +343,10 @@ export const useClassificationStore = defineStore('classification', () => {
     // Getters
     pageCount,
     hasActiveFilters,
+    selectedCount,
+    isAllSelected,
+    isIndeterminate,
+    hasSearch,
     isEditing,
     hasUnsavedChanges,
     hasConflict,

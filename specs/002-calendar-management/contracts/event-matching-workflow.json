@@ -1,0 +1,384 @@
+{
+  "workflowName": "Event-Matching-Workflow",
+  "description": "Matches update/cancel emails to existing Google Calendar events using email thread ID, title normalization, and datetime proximity. Routes to Calendar-Operation-Workflow with appropriate operation type.",
+  "trigger": "Called by Email-Processing-Main when extracted event has confidence >70% and requires matching for update/delete operations",
+  "nodes": [
+    {
+      "nodeType": "nodes-base.executeWorkflowTrigger",
+      "operation": "trigger",
+      "parameters": {},
+      "inputs": [
+        "email_id: UUID of source email",
+        "thread_id: Gmail thread ID for thread-based matching",
+        "title: string - Extracted event title",
+        "start_datetime: string (ISO 8601) - Extracted event start time",
+        "end_datetime: string (ISO 8601) - Extracted event end time",
+        "event_action: string (CREATE/UPDATE/DELETE) - Detected action from AI",
+        "...other extracted event fields"
+      ],
+      "outputs": [
+        "Passes all input data to next node"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.code",
+      "operation": "javascript",
+      "name": "Normalize Title and Calculate Search Window",
+      "parameters": {
+        "jsCode": "// Normalize event title and calculate datetime search window\nconst item = $input.first().json;\n\n// Title normalization (research.md pattern)\nfunction normalizeTitle(title) {\n  return title\n    .toLowerCase()\n    .replace(/^(re|fw|fwd):\\s*/i, '') // Remove email prefixes\n    .replace(/[^a-zA-Z0-9 ]/g, '')     // Remove special chars\n    .trim();\n}\n\nconst normalizedTitle = normalizeTitle(item.title);\n\n// Calculate datetime search window (±1 hour for proximity matching)\nconst targetDatetime = new Date(item.start_datetime);\nconst searchWindowStart = new Date(targetDatetime.getTime() - 60 * 60 * 1000); // -1 hour\nconst searchWindowEnd = new Date(targetDatetime.getTime() + 60 * 60 * 1000);   // +1 hour\n\nreturn [{\n  json: {\n    ...item,\n    normalized_title: normalizedTitle,\n    search_window_start: searchWindowStart.toISOString(),\n    search_window_end: searchWindowEnd.toISOString()\n  }\n}];"
+      },
+      "inputs": [
+        "Event data from trigger"
+      ],
+      "outputs": [
+        "Event data with normalized_title and search window timestamps"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.supabase",
+      "operation": "getAll",
+      "name": "Search calendar_events by Thread",
+      "parameters": {
+        "resource": "row",
+        "operation": "getAll",
+        "tableId": "calendar_events",
+        "returnAll": false,
+        "limit": 10,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email_id",
+              "condition": "in",
+              "keyValue": "=(SELECT id FROM emails WHERE thread_id = '{{ $json.thread_id }}')"
+            },
+            {
+              "keyName": "status",
+              "condition": "equals",
+              "keyValue": "active"
+            },
+            {
+              "keyName": "start_datetime",
+              "condition": "gte",
+              "keyValue": "={{ $json.search_window_start }}"
+            },
+            {
+              "keyName": "start_datetime",
+              "condition": "lte",
+              "keyValue": "={{ $json.search_window_end }}"
+            }
+          ]
+        }
+      },
+      "credentials": "supabaseApi",
+      "inputs": [
+        "Normalized event data with search window"
+      ],
+      "outputs": [
+        "Array of candidate calendar_events records from same email thread"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.code",
+      "operation": "javascript",
+      "name": "Find Best Match with Fuzzy Comparison",
+      "parameters": {
+        "jsCode": "// Find best matching event using title similarity and datetime proximity\nconst inputData = $('Normalize Title and Calculate Search Window').first().json;\nconst candidates = $input.all();\n\nif (candidates.length === 0) {\n  // No match found\n  return [{\n    json: {\n      ...inputData,\n      matched_event_id: null,\n      match_confidence: 0,\n      operation_type: 'create' // No match = create new event\n    }\n  }];\n}\n\n// Levenshtein distance for fuzzy title matching\nfunction levenshteinDistance(str1, str2) {\n  const matrix = [];\n  for (let i = 0; i <= str2.length; i++) {\n    matrix[i] = [i];\n  }\n  for (let j = 0; j <= str1.length; j++) {\n    matrix[0][j] = j;\n  }\n  for (let i = 1; i <= str2.length; i++) {\n    for (let j = 1; j <= str1.length; j++) {\n      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {\n        matrix[i][j] = matrix[i - 1][j - 1];\n      } else {\n        matrix[i][j] = Math.min(\n          matrix[i - 1][j - 1] + 1,\n          matrix[i][j - 1] + 1,\n          matrix[i - 1][j] + 1\n        );\n      }\n    }\n  }\n  return matrix[str2.length][str1.length];\n}\n\nfunction titleSimilarity(title1, title2) {\n  const distance = levenshteinDistance(title1, title2);\n  const maxLength = Math.max(title1.length, title2.length);\n  return maxLength === 0 ? 1.0 : 1.0 - (distance / maxLength);\n}\n\n// Normalize candidate titles and calculate match scores\nfunction normalizeTitle(title) {\n  return title\n    .toLowerCase()\n    .replace(/^(re|fw|fwd):\\s*/i, '')\n    .replace(/[^a-zA-Z0-9 ]/g, '')\n    .trim();\n}\n\nconst scoredCandidates = candidates.map(candidate => {\n  const candidateTitle = normalizeTitle(candidate.json.title);\n  const titleScore = titleSimilarity(inputData.normalized_title, candidateTitle);\n  \n  // Datetime proximity score (closer = higher score)\n  const targetTime = new Date(inputData.start_datetime).getTime();\n  const candidateTime = new Date(candidate.json.start_datetime).getTime();\n  const timeDiffMinutes = Math.abs(targetTime - candidateTime) / (1000 * 60);\n  const datetimeScore = Math.max(0, 1.0 - (timeDiffMinutes / 60)); // Score decreases over 1 hour\n  \n  // Attendee overlap (if available)\n  const inputAttendees = new Set(inputData.attendees || []);\n  const candidateAttendees = new Set(candidate.json.attendees || []);\n  const intersection = new Set([...inputAttendees].filter(x => candidateAttendees.has(x)));\n  const union = new Set([...inputAttendees, ...candidateAttendees]);\n  const attendeeScore = union.size === 0 ? 0.5 : intersection.size / union.size;\n  \n  // Weighted composite score (research.md: title + datetime + attendees)\n  const compositeScore = (titleScore * 0.5) + (datetimeScore * 0.35) + (attendeeScore * 0.15);\n  \n  return {\n    ...candidate.json,\n    match_score: compositeScore,\n    title_score: titleScore,\n    datetime_score: datetimeScore,\n    attendee_score: attendeeScore\n  };\n});\n\n// Sort by match score and select best match\nscorredCandidates.sort((a, b) => b.match_score - a.match_score);\nconst bestMatch = scoredCandidates[0];\n\n// Match threshold: 0.8 (80% similarity required)\nconst MATCH_THRESHOLD = 0.8;\n\nif (bestMatch.match_score >= MATCH_THRESHOLD) {\n  // Match found\n  const operationType = inputData.event_action === 'DELETE' ? 'delete' : 'update';\n  return [{\n    json: {\n      ...inputData,\n      matched_event_id: bestMatch.event_id,\n      match_confidence: Math.round(bestMatch.match_score * 100),\n      operation_type: operationType,\n      match_details: {\n        title_score: bestMatch.title_score,\n        datetime_score: bestMatch.datetime_score,\n        attendee_score: bestMatch.attendee_score\n      }\n    }\n  }];\n} else {\n  // No confident match found, create new event\n  return [{\n    json: {\n      ...inputData,\n      matched_event_id: null,\n      match_confidence: 0,\n      operation_type: 'create'\n    }\n  }];\n}"
+      },
+      "inputs": [
+        "Array of candidate events from Supabase search"
+      ],
+      "outputs": [
+        "Single best match with operation_type (create/update/delete) and confidence score"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.switch",
+      "operation": "routeOnValue",
+      "name": "Route by Match Confidence",
+      "parameters": {
+        "dataPropertyName": "match_confidence",
+        "rules": {
+          "rules": [
+            {
+              "operation": "larger",
+              "value": 80,
+              "output": 0
+            },
+            {
+              "operation": "between",
+              "value1": 70,
+              "value2": 80,
+              "output": 1
+            },
+            {
+              "operation": "smaller",
+              "value": 70,
+              "output": 2
+            }
+          ]
+        }
+      },
+      "inputs": [
+        "Best match result from Find Best Match"
+      ],
+      "outputs": [
+        "Output 0: High confidence match (>80%) - proceed to operation",
+        "Output 1: Medium confidence match (70-80%) - flag for review but proceed",
+        "Output 2: Low confidence match (<70%) - flag for manual review"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.code",
+      "operation": "javascript",
+      "name": "Flag for Review",
+      "parameters": {
+        "jsCode": "// Flag low/medium confidence matches for user review\nconst item = $input.first().json;\n\nreturn [{\n  json: {\n    ...item,\n    requires_review: true,\n    review_reason: `Match confidence ${item.match_confidence}% below automatic threshold`\n  }\n}];"
+      },
+      "inputs": [
+        "Medium or low confidence matches"
+      ],
+      "outputs": [
+        "Event data with requires_review=true flag"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.executeWorkflow",
+      "operation": "call",
+      "name": "Call Calendar-Operation-Workflow",
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Calendar-Operation-Workflow"
+        },
+        "source": "database"
+      },
+      "inputs": [
+        "Matched event data with operation_type (create/update/delete)"
+      ],
+      "outputs": [
+        "Operation result from Calendar-Operation-Workflow"
+      ]
+    }
+  ],
+  "connections": {
+    "When called by another workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalize Title and Calculate Search Window",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Title and Calculate Search Window": {
+      "main": [
+        [
+          {
+            "node": "Search calendar_events by Thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search calendar_events by Thread": {
+      "main": [
+        [
+          {
+            "node": "Find Best Match with Fuzzy Comparison",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Best Match with Fuzzy Comparison": {
+      "main": [
+        [
+          {
+            "node": "Route by Match Confidence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Match Confidence": {
+      "main": [
+        [
+          {
+            "node": "Call Calendar-Operation-Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Flag for Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Flag for Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flag for Review": {
+      "main": [
+        [
+          {
+            "node": "Call Calendar-Operation-Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "outputFormat": {
+    "operation_type": "string (create/update/delete) - Determined operation based on matching",
+    "matched_event_id": "string | null - Google Calendar event ID if match found, null for create",
+    "match_confidence": "number (0-100) - Match quality score",
+    "requires_review": "boolean - True if match confidence <80%",
+    "match_details": "object - Breakdown of title_score, datetime_score, attendee_score",
+    "...event_data": "All original event fields passed through to Calendar-Operation-Workflow"
+  },
+  "errorHandling": "On Supabase query failure, defaults to operation_type='create' (safer to create duplicate than lose event). Errors logged to execution history.",
+  "performance": {
+    "estimatedTime": "1-2 seconds per email",
+    "nodeCount": 7,
+    "databaseQueries": "1 Supabase query (indexed, <10ms)",
+    "complexity": "O(n) where n = candidate events in same thread (typically <5)"
+  },
+  "constitutionCompliance": {
+    "nativeNodes": "100% - Uses only native n8n nodes (Supabase, Code, Switch, Execute Workflow)",
+    "codeNodeJustification": "Code nodes used for: (1) Title normalization and search window calculation, (2) Fuzzy matching algorithm (Levenshtein distance), (3) Review flagging. Complex matching logic requires Code node as no native fuzzy-matching node exists. Justified per Constitution: 'requires complex computation'.",
+    "referencePattern": "Follows data transformation and routing pattern from MVP workflows"
+  },
+  "matchingStrategy": {
+    "threadBased": "Primary strategy - searches calendar_events linked to emails in same Gmail thread",
+    "titleSimilarity": "Levenshtein distance with 80% threshold for fuzzy matching (handles minor variations)",
+    "datetimeProximity": "±1 hour window from extracted datetime (handles timezone ambiguity and minor time shifts)",
+    "attendeeOverlap": "Jaccard similarity on attendee email sets (handles attendee list changes)",
+    "compositeScore": "Weighted: 50% title + 35% datetime + 15% attendee overlap",
+    "matchThreshold": "0.8 (80%) - balances precision and recall based on research.md recommendations"
+  },
+  "testScenarios": [
+    {
+      "name": "Exact match found in same thread",
+      "input": {
+        "thread_id": "thread123",
+        "title": "Team Sync",
+        "start_datetime": "2025-11-17T14:00:00",
+        "event_action": "UPDATE"
+      },
+      "existingEvents": [
+        {
+          "thread_id": "thread123",
+          "title": "Team Sync",
+          "start_datetime": "2025-11-17T14:00:00",
+          "event_id": "evt_abc123"
+        }
+      ],
+      "expectedOutput": {
+        "operation_type": "update",
+        "matched_event_id": "evt_abc123",
+        "match_confidence": ">95"
+      }
+    },
+    {
+      "name": "Fuzzy title match with minor variation",
+      "input": {
+        "thread_id": "thread456",
+        "title": "RE: Team Sync Meeting",
+        "start_datetime": "2025-11-17T14:30:00",
+        "event_action": "UPDATE"
+      },
+      "existingEvents": [
+        {
+          "thread_id": "thread456",
+          "title": "Team Sync",
+          "start_datetime": "2025-11-17T14:00:00",
+          "event_id": "evt_def456"
+        }
+      ],
+      "expectedOutput": {
+        "operation_type": "update",
+        "matched_event_id": "evt_def456",
+        "match_confidence": ">80",
+        "note": "Title normalized, datetime within 1-hour window"
+      }
+    },
+    {
+      "name": "No match found - create new event",
+      "input": {
+        "thread_id": "thread789",
+        "title": "New Client Meeting",
+        "start_datetime": "2025-11-18T10:00:00",
+        "event_action": "CREATE"
+      },
+      "existingEvents": [],
+      "expectedOutput": {
+        "operation_type": "create",
+        "matched_event_id": null,
+        "match_confidence": 0
+      }
+    },
+    {
+      "name": "Delete operation with confident match",
+      "input": {
+        "thread_id": "thread101",
+        "title": "Cancelled: Team Sync",
+        "start_datetime": "2025-11-17T14:00:00",
+        "event_action": "DELETE"
+      },
+      "existingEvents": [
+        {
+          "thread_id": "thread101",
+          "title": "Team Sync",
+          "start_datetime": "2025-11-17T14:00:00",
+          "event_id": "evt_xyz789"
+        }
+      ],
+      "expectedOutput": {
+        "operation_type": "delete",
+        "matched_event_id": "evt_xyz789",
+        "match_confidence": ">85"
+      }
+    },
+    {
+      "name": "Low confidence match - flag for review",
+      "input": {
+        "thread_id": "thread202",
+        "title": "Project Discussion",
+        "start_datetime": "2025-11-17T14:00:00",
+        "event_action": "UPDATE"
+      },
+      "existingEvents": [
+        {
+          "thread_id": "thread202",
+          "title": "Different Project Meeting",
+          "start_datetime": "2025-11-17T16:00:00",
+          "event_id": "evt_low123"
+        }
+      ],
+      "expectedOutput": {
+        "operation_type": "create",
+        "matched_event_id": null,
+        "match_confidence": "<70",
+        "requires_review": true,
+        "note": "Title dissimilarity + datetime >1 hour difference = low score, create new instead of incorrect update"
+      }
+    }
+  ]
+}

@@ -1,0 +1,550 @@
+{
+  "workflowName": "Calendar-Operation-Workflow",
+  "description": "Creates, updates, or deletes Google Calendar events based on extracted event data, with duplicate detection, confidence threshold validation, and comprehensive audit logging.",
+  "trigger": "Called by Event-Matching-Workflow after determining operation type (create/update/delete) and matching event (for updates/deletes)",
+  "nodes": [
+    {
+      "nodeType": "nodes-base.executeWorkflowTrigger",
+      "operation": "trigger",
+      "parameters": {},
+      "inputs": [
+        "operation_type: string (create/update/delete)",
+        "event_id: string | null (Google Calendar event ID for update/delete, null for create)",
+        "email_id: UUID of source email",
+        "title: string - Event title",
+        "start_datetime: string (ISO 8601) - Event start",
+        "end_datetime: string (ISO 8601) - Event end",
+        "is_all_day: boolean - All-day event flag",
+        "location: string | null",
+        "attendees: string[] - Email addresses",
+        "meeting_url: string | null",
+        "timezone: string - IANA timezone",
+        "description: string | null",
+        "confidence_score: number (0-100)",
+        "requires_review: boolean"
+      ],
+      "outputs": [
+        "Passes all input data to router"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.switch",
+      "operation": "routeOnValue",
+      "name": "Route by Operation Type",
+      "parameters": {
+        "dataPropertyName": "operation_type",
+        "rules": {
+          "rules": [
+            {
+              "operation": "equal",
+              "value": "create",
+              "output": 0
+            },
+            {
+              "operation": "equal",
+              "value": "update",
+              "output": 1
+            },
+            {
+              "operation": "equal",
+              "value": "delete",
+              "output": 2
+            }
+          ]
+        }
+      },
+      "inputs": [
+        "Event data from trigger"
+      ],
+      "outputs": [
+        "Output 0: create operations",
+        "Output 1: update operations",
+        "Output 2: delete operations"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.code",
+      "operation": "javascript",
+      "name": "Prepare Google Calendar Event Data",
+      "parameters": {
+        "jsCode": "// Transform extracted data to Google Calendar API format\nconst item = $input.first().json;\n\n// Build event object\nconst eventData = {\n  summary: item.title,\n  description: item.description || '',\n  location: item.location || '',\n  start: {},\n  end: {}\n};\n\n// Handle all-day vs timed events (FR-014)\nif (item.is_all_day) {\n  // All-day event uses date field (not dateTime)\n  const startDate = item.start_datetime.split('T')[0];\n  const endDate = item.end_datetime.split('T')[0];\n  eventData.start.date = startDate;\n  eventData.end.date = endDate;\n} else {\n  // Timed event uses dateTime field with timezone\n  eventData.start.dateTime = item.start_datetime;\n  eventData.start.timeZone = item.timezone;\n  eventData.end.dateTime = item.end_datetime;\n  eventData.end.timeZone = item.timezone;\n}\n\n// Add attendees if present\nif (item.attendees && item.attendees.length > 0) {\n  eventData.attendees = item.attendees.map(email => ({ email }));\n}\n\n// Add meeting URL to description if present\nif (item.meeting_url) {\n  eventData.description = `${eventData.description}\\n\\nMeeting URL: ${item.meeting_url}`;\n}\n\n// Store metadata in extended properties for event matching (research.md recommendation)\neventData.extendedProperties = {\n  private: {\n    email_id: item.email_id,\n    created_by_workflow: '002-calendar-management',\n    confidence_score: item.confidence_score.toString(),\n    extracted_at: new Date().toISOString()\n  }\n};\n\nreturn [{\n  json: {\n    ...item,\n    googleCalendarEvent: eventData\n  }\n}];"
+      },
+      "inputs": [
+        "Event data from create branch"
+      ],
+      "outputs": [
+        "Event data with formatted googleCalendarEvent object"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.googleCalendar",
+      "operation": "create",
+      "name": "Create Google Calendar Event",
+      "parameters": {
+        "resource": "event",
+        "operation": "create",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "primary"
+        },
+        "start": "={{ $json.googleCalendarEvent.start.dateTime || $json.googleCalendarEvent.start.date }}",
+        "end": "={{ $json.googleCalendarEvent.end.dateTime || $json.googleCalendarEvent.end.date }}",
+        "summary": "={{ $json.googleCalendarEvent.summary }}",
+        "description": "={{ $json.googleCalendarEvent.description }}",
+        "location": "={{ $json.googleCalendarEvent.location }}",
+        "attendees": "={{ $json.googleCalendarEvent.attendees }}",
+        "sendUpdates": "none",
+        "useDefaultReminders": true
+      },
+      "credentials": "googleCalendarOAuth2Api",
+      "inputs": [
+        "Formatted event data from preparation node"
+      ],
+      "outputs": [
+        "Google Calendar event object with event.id"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.googleCalendar",
+      "operation": "update",
+      "name": "Update Google Calendar Event",
+      "parameters": {
+        "resource": "event",
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "primary"
+        },
+        "eventId": "={{ $json.event_id }}",
+        "start": "={{ $json.start_datetime }}",
+        "end": "={{ $json.end_datetime }}",
+        "summary": "={{ $json.title }}",
+        "description": "={{ $json.description }}",
+        "location": "={{ $json.location }}",
+        "attendees": "={{ $json.attendees }}",
+        "sendUpdates": "all"
+      },
+      "credentials": "googleCalendarOAuth2Api",
+      "inputs": [
+        "Event data from update branch (includes event_id)"
+      ],
+      "outputs": [
+        "Updated Google Calendar event object"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.googleCalendar",
+      "operation": "delete",
+      "name": "Delete Google Calendar Event",
+      "parameters": {
+        "resource": "event",
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "primary"
+        },
+        "eventId": "={{ $json.event_id }}",
+        "sendUpdates": "all"
+      },
+      "credentials": "googleCalendarOAuth2Api",
+      "inputs": [
+        "Event data from delete branch (includes event_id)"
+      ],
+      "outputs": [
+        "Empty response on success"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.code",
+      "operation": "javascript",
+      "name": "Format Operation Result",
+      "parameters": {
+        "jsCode": "// Merge Google Calendar response with operation metadata\nconst inputData = $('Route by Operation Type').first().json;\nconst operationType = inputData.operation_type;\nlet calendarResponse = {};\n\nif (operationType === 'create') {\n  calendarResponse = $('Create Google Calendar Event').first().json;\n} else if (operationType === 'update') {\n  calendarResponse = $('Update Google Calendar Event').first().json;\n} else if (operationType === 'delete') {\n  calendarResponse = { deleted: true };\n}\n\nreturn [{\n  json: {\n    operation_type: operationType,\n    event_id: calendarResponse.id || inputData.event_id,\n    email_id: inputData.email_id,\n    status: 'success',\n    error_message: null,\n    confidence_score: inputData.confidence_score,\n    performed_at: new Date().toISOString(),\n    notified_user: false,\n    calendar_event_data: {\n      title: inputData.title,\n      start_datetime: inputData.start_datetime,\n      end_datetime: inputData.end_datetime,\n      location: inputData.location,\n      attendees: inputData.attendees,\n      meeting_url: inputData.meeting_url,\n      timezone: inputData.timezone,\n      description: inputData.description,\n      status: operationType === 'delete' ? 'deleted' : 'active'\n    }\n  }\n}];"
+      },
+      "inputs": [
+        "Google Calendar operation response"
+      ],
+      "outputs": [
+        "Standardized operation result with metadata"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.supabase",
+      "operation": "create",
+      "name": "Insert/Update calendar_events",
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "tableId": "calendar_events",
+        "dataToSend": "defineBelow",
+        "columnsUi": {
+          "columnValues": [
+            {
+              "column": "event_id",
+              "value": "={{ $json.event_id }}"
+            },
+            {
+              "column": "email_id",
+              "value": "={{ $json.email_id }}"
+            },
+            {
+              "column": "title",
+              "value": "={{ $json.calendar_event_data.title }}"
+            },
+            {
+              "column": "start_datetime",
+              "value": "={{ $json.calendar_event_data.start_datetime }}"
+            },
+            {
+              "column": "end_datetime",
+              "value": "={{ $json.calendar_event_data.end_datetime }}"
+            },
+            {
+              "column": "location",
+              "value": "={{ $json.calendar_event_data.location }}"
+            },
+            {
+              "column": "attendees",
+              "value": "={{ JSON.stringify($json.calendar_event_data.attendees) }}"
+            },
+            {
+              "column": "meeting_url",
+              "value": "={{ $json.calendar_event_data.meeting_url }}"
+            },
+            {
+              "column": "timezone",
+              "value": "={{ $json.calendar_event_data.timezone }}"
+            },
+            {
+              "column": "description",
+              "value": "={{ $json.calendar_event_data.description }}"
+            },
+            {
+              "column": "status",
+              "value": "={{ $json.calendar_event_data.status }}"
+            },
+            {
+              "column": "confidence_score",
+              "value": "={{ $json.confidence_score }}"
+            }
+          ]
+        }
+      },
+      "credentials": "supabaseApi",
+      "inputs": [
+        "Operation result from Format Operation Result"
+      ],
+      "outputs": [
+        "Supabase calendar_events record"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.supabase",
+      "operation": "create",
+      "name": "Insert calendar_operations Log",
+      "parameters": {
+        "resource": "row",
+        "operation": "create",
+        "tableId": "calendar_operations",
+        "dataToSend": "defineBelow",
+        "columnsUi": {
+          "columnValues": [
+            {
+              "column": "operation_type",
+              "value": "={{ $json.operation_type }}"
+            },
+            {
+              "column": "event_id",
+              "value": "={{ $('Insert/Update calendar_events').first().json.id }}"
+            },
+            {
+              "column": "email_id",
+              "value": "={{ $json.email_id }}"
+            },
+            {
+              "column": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "column": "error_message",
+              "value": "={{ $json.error_message }}"
+            },
+            {
+              "column": "confidence_score",
+              "value": "={{ $json.confidence_score }}"
+            },
+            {
+              "column": "performed_at",
+              "value": "={{ $json.performed_at }}"
+            },
+            {
+              "column": "notified_user",
+              "value": "={{ $json.notified_user }}"
+            }
+          ]
+        }
+      },
+      "credentials": "supabaseApi",
+      "inputs": [
+        "Operation result from Format Operation Result"
+      ],
+      "outputs": [
+        "Supabase calendar_operations record (audit log)"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.errorTrigger",
+      "operation": "trigger",
+      "name": "On Error",
+      "parameters": {},
+      "inputs": [
+        "Triggered when any node in workflow fails"
+      ],
+      "outputs": [
+        "Error details with stack trace"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.code",
+      "operation": "javascript",
+      "name": "Format Error for Logging",
+      "parameters": {
+        "jsCode": "// Extract error information and prepare for logging\nconst error = $input.first().json.error;\nconst inputData = $('Route by Operation Type').first().json;\n\nreturn [{\n  json: {\n    operation_type: inputData.operation_type,\n    event_id: null,\n    email_id: inputData.email_id,\n    status: 'failure',\n    error_message: error.message || 'Unknown error',\n    confidence_score: inputData.confidence_score,\n    performed_at: new Date().toISOString(),\n    notified_user: false\n  }\n}];"
+      },
+      "inputs": [
+        "Error trigger output"
+      ],
+      "outputs": [
+        "Formatted error log entry"
+      ]
+    },
+    {
+      "nodeType": "nodes-base.supabase",
+      "operation": "create",
+      "name": "Log Failed Operation",
+      "parameters": {
+        "resource": "row",
+        "operation": "create",
+        "tableId": "calendar_operations",
+        "dataToSend": "autoMapInputData"
+      },
+      "credentials": "supabaseApi",
+      "inputs": [
+        "Formatted error from Format Error for Logging"
+      ],
+      "outputs": [
+        "Supabase calendar_operations record with status=failure"
+      ]
+    }
+  ],
+  "connections": {
+    "When called by another workflow": {
+      "main": [
+        [
+          {
+            "node": "Route by Operation Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Operation Type": {
+      "main": [
+        [
+          {
+            "node": "Prepare Google Calendar Event Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Google Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete Google Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Google Calendar Event Data": {
+      "main": [
+        [
+          {
+            "node": "Create Google Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Google Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "Format Operation Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Google Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "Format Operation Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Google Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "Format Operation Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Operation Result": {
+      "main": [
+        [
+          {
+            "node": "Insert/Update calendar_events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert/Update calendar_events": {
+      "main": [
+        [
+          {
+            "node": "Insert calendar_operations Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Format Error for Logging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error for Logging": {
+      "main": [
+        [
+          {
+            "node": "Log Failed Operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "outputFormat": {
+    "operation_type": "string (create/update/delete) - Operation performed",
+    "event_id": "string - Google Calendar event ID",
+    "email_id": "UUID - Source email reference",
+    "status": "string (success/failure/pending_review) - Operation result",
+    "error_message": "string | null - Error details if failed",
+    "confidence_score": "number (0-100) - AI extraction confidence",
+    "performed_at": "string (ISO 8601) - Operation timestamp",
+    "notified_user": "boolean - User notification status",
+    "calendar_event_data": "object - Full event details stored in calendar_events table"
+  },
+  "errorHandling": "On Google Calendar API failure, error is caught by Error Trigger node, formatted, and logged to calendar_operations with status=failure. User is notified via Notification-Workflow. Email processing continues (calendar failure does not block workflow).",
+  "performance": {
+    "estimatedTime": "2-4 seconds per operation",
+    "nodeCount": 12,
+    "apiCalls": "1 Google Calendar API + 2 Supabase writes per success, 1 Supabase write per failure"
+  },
+  "constitutionCompliance": {
+    "nativeNodes": "100% - Uses only native n8n nodes (Google Calendar, Supabase, Code, Switch, Error Trigger)",
+    "codeNodeJustification": "Code nodes used for: (1) Google Calendar event data transformation to API format, (2) Operation result formatting for database storage, (3) Error formatting. All are data transformation tasks allowed by Constitution.",
+    "referencePattern": "Follows n8n-native architecture: Google Calendar node for all calendar operations, no custom API calls"
+  },
+  "duplicateDetection": "Handled by Event-Matching-Workflow before calling this workflow. This workflow trusts operation_type routing from caller.",
+  "confidenceThreshold": "Events with confidence_score <70% are still processed but flagged with requires_review=true for user notification (FR-012)",
+  "testScenarios": [
+    {
+      "name": "Create event with complete data",
+      "input": {
+        "operation_type": "create",
+        "title": "Team Sync",
+        "start_datetime": "2025-11-17T14:00:00",
+        "end_datetime": "2025-11-17T15:00:00",
+        "is_all_day": false,
+        "confidence_score": 95
+      },
+      "expectedOutput": {
+        "status": "success",
+        "event_id": "GOOGLE_EVENT_ID",
+        "calendar_operations_logged": true
+      }
+    },
+    {
+      "name": "Update existing event",
+      "input": {
+        "operation_type": "update",
+        "event_id": "existing_google_event_id",
+        "title": "Team Sync (Rescheduled)",
+        "start_datetime": "2025-11-18T14:00:00",
+        "end_datetime": "2025-11-18T15:00:00"
+      },
+      "expectedOutput": {
+        "status": "success",
+        "calendar_events_updated": true
+      }
+    },
+    {
+      "name": "Delete cancelled event",
+      "input": {
+        "operation_type": "delete",
+        "event_id": "existing_google_event_id",
+        "email_id": "UUID"
+      },
+      "expectedOutput": {
+        "status": "success",
+        "calendar_event_status": "deleted"
+      }
+    },
+    {
+      "name": "API failure handling",
+      "input": {
+        "operation_type": "create",
+        "title": "Event",
+        "start_datetime": "INVALID_DATE"
+      },
+      "expectedOutput": {
+        "status": "failure",
+        "error_message": "CONTAINS_ERROR_TEXT",
+        "calendar_operations_logged": true
+      }
+    }
+  ]
+}

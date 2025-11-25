@@ -247,6 +247,14 @@ The system's effectiveness is measured by:
 - n8n workflows (4 production workflows) at https://n8n.coxserver.com
 - OpenAI GPT-4-mini for AI classification
 - Telegram notifications via cox_concierge_bot
+- JavaScript (n8n Code nodes only for data transformation) (002-calendar-management)
+- Supabase PostgreSQL (project: xmziovusqlmgygcrgyqt) with pgvector extension (002-calendar-management)
+- TypeScript 5.6+ with Vue 3.4+ (ES2022 target) + Vue 3, Vite 5.4, Supabase JS 2.45, ApexCharts 3.54, Pinia 2.2 (003-correction-ui)
+- Supabase PostgreSQL (existing database project: xmziovusqlmgygcrgyqt) (003-correction-ui)
+- TypeScript 5.6+ with Vue 3.4+ (ES2022 target) + Vue 3.5+, Pinia 2.2+, Supabase JS 2.45+, VueUse 11+, Vite 5.4+ (004-inline-edit)
+- Supabase PostgreSQL (project: xmziovusqlmgygcrgyqt) with localStorage for offline drafts (004-inline-edit)
+- TypeScript 5.6+ with Vue 3.5+ (ES2022 target) + Vue 3.5+, Pinia 2.2+, Supabase JS 2.45+, VueUse 11+, ApexCharts 3.54+, Vite 5.4+ (005-table-enhancements)
+- Supabase PostgreSQL (project: xmziovusqlmgygcrgyqt) with localStorage for user preferences (005-table-enhancements)
 
 ## Production Systems
 
@@ -268,4 +276,7 @@ The system's effectiveness is measured by:
 **Database**: Supabase project xmziovusqlmgygcrgyqt with 47 emails, 33 classifications
 
 ## Recent Changes
-- 001-email-classification-mvp: MVP COMPLETE - AI classification, organization, and notifications all operational in production
+- 005-table-enhancements: Added TypeScript 5.6+ with Vue 3.5+ (ES2022 target) + Vue 3.5+, Pinia 2.2+, Supabase JS 2.45+, VueUse 11+, ApexCharts 3.54+, Vite 5.4+
+- 004-inline-edit: Added TypeScript 5.6+ with Vue 3.4+ (ES2022 target) + Vue 3.5+, Pinia 2.2+, Supabase JS 2.45+, VueUse 11+, Vite 5.4+
+- 003-correction-ui: Added TypeScript 5.6+ with Vue 3.4+ (ES2022 target) + Vue 3, Vite 5.4, Supabase JS 2.45, ApexCharts 3.54, Pinia 2.2
+...

@@ -53,10 +53,89 @@ export function logAction(action: string, details?: LogContext): void {
   })
 }
 
+/**
+ * Performance monitoring (T092)
+ * Tracks operation timing for performance analysis
+ */
+
+const performanceMarks = new Map<string, number>()
+
+/**
+ * Start a performance measurement
+ */
+export function perfStart(label: string): void {
+  performanceMarks.set(label, performance.now())
+  if (import.meta.env.DEV) {
+    console.debug(`[PERF] Started: ${label}`)
+  }
+}
+
+/**
+ * End a performance measurement and log the duration
+ */
+export function perfEnd(label: string, context?: LogContext): number {
+  const startTime = performanceMarks.get(label)
+  if (startTime === undefined) {
+    console.warn(`[PERF] No start mark found for: ${label}`)
+    return -1
+  }
+
+  const duration = performance.now() - startTime
+  performanceMarks.delete(label)
+
+  console.log(`[PERF] ${label}: ${duration.toFixed(2)}ms`, {
+    duration,
+    context,
+    timestamp: new Date().toISOString()
+  })
+
+  // Warn if operation is slow (>1s)
+  if (duration > 1000) {
+    console.warn(`[PERF] Slow operation detected: ${label} took ${duration.toFixed(2)}ms`)
+  }
+
+  return duration
+}
+
+/**
+ * Measure an async operation's performance
+ */
+export async function perfMeasure<T>(
+  label: string,
+  operation: () => Promise<T>,
+  context?: LogContext
+): Promise<T> {
+  perfStart(label)
+  try {
+    const result = await operation()
+    perfEnd(label, context)
+    return result
+  } catch (error) {
+    perfEnd(label, { ...context, error: true })
+    throw error
+  }
+}
+
+/**
+ * Log page/component render performance
+ */
+export function logRender(componentName: string, renderTime?: number): void {
+  if (import.meta.env.DEV) {
+    console.log(`[RENDER] ${componentName}`, {
+      renderTime: renderTime !== undefined ? `${renderTime.toFixed(2)}ms` : 'mounted',
+      timestamp: new Date().toISOString()
+    })
+  }
+}
+
 // Export as default object for convenience
 export default {
   error: logError,
   warn: logWarn,
   info: logInfo,
-  action: logAction
+  action: logAction,
+  perfStart,
+  perfEnd,
+  perfMeasure,
+  logRender
 }

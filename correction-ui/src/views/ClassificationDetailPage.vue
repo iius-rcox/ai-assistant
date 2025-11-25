@@ -48,16 +48,12 @@ onMounted(async () => {
 async function handleSave(updates: any) {
   if (!classification.value) return
 
-  try {
-    const updated = await store.updateClassification(classification.value.id, updates)
+  const updated = await store.updateClassification(classification.value.id, updates)
 
-    // Update local classification with new values
-    classification.value = {
-      ...classification.value,
-      ...updated
-    }
-  } catch (e) {
-    throw e // Re-throw to let ClassificationDetail handle display
+  // Update local classification with new values
+  classification.value = {
+    ...classification.value,
+    ...updated
   }
 }
 

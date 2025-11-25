@@ -39,7 +39,7 @@ onMounted(async () => {
     if (error) throw error
 
     // Get unique categories
-    const uniqueCategories = [...new Set(data.map(item => item.category))]
+    const uniqueCategories = [...new Set((data as any[]).map(item => item.category).filter((c): c is string => c !== null))]
     categories.value = uniqueCategories.sort()
   } catch (error) {
     console.error('Failed to fetch categories:', error)

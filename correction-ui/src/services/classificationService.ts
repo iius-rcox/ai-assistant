@@ -7,6 +7,7 @@
  */
 
 import { supabase } from './supabase'
+import { perfStart, perfEnd, logInfo } from '@/utils/logger'
 import type {
   ClassificationWithEmail,
   ClassificationFilters,
@@ -28,6 +29,7 @@ export async function listClassifications(params: {
   sortBy?: string
   sortDir?: 'asc' | 'desc'
 }): Promise<PaginatedResponse<ClassificationWithEmail>> {
+  perfStart('listClassifications')
   const { page, pageSize, filters, sortBy = 'classified_timestamp', sortDir = 'desc' } = params
 
   let query = supabase
@@ -79,8 +81,12 @@ export async function listClassifications(params: {
   const { data, error, count } = await query
 
   if (error) {
+    perfEnd('listClassifications', { error: true })
     throw error
   }
+
+  perfEnd('listClassifications', { page, pageSize, resultCount: data?.length || 0 })
+  logInfo('Classifications loaded', { page, pageSize, totalCount: count })
 
   return {
     data: (data || []) as ClassificationWithEmail[],
@@ -96,6 +102,7 @@ export async function listClassifications(params: {
  * Requirement: FR-002 (detail view)
  */
 export async function getClassification(id: number): Promise<ClassificationWithEmail> {
+  perfStart('getClassification')
   const { data, error } = await supabase
     .from('classifications')
     .select(`
@@ -106,13 +113,16 @@ export async function getClassification(id: number): Promise<ClassificationWithE
     .single()
 
   if (error) {
+    perfEnd('getClassification', { error: true, id })
     throw error
   }
 
   if (!data) {
+    perfEnd('getClassification', { notFound: true, id })
     throw new Error(`Classification with ID ${id} not found`)
   }
 
+  perfEnd('getClassification', { id })
   return data as ClassificationWithEmail
 }
 
@@ -135,27 +145,36 @@ export async function updateClassification(request: {
     correction_reason?: string | null
   }
 }): Promise<{ classification: Classification }> {
+  perfStart('updateClassification')
   const { id, updates } = request
+  logInfo('Updating classification', { id, updates })
 
-  const { data, error } = await supabase
-    .from('classifications')
-    .update({
-      category: updates.category,
-      urgency: updates.urgency,
-      action: updates.action,
-      updated_at: new Date().toISOString()
-    })
+  const updatePayload = {
+    category: updates.category,
+    urgency: updates.urgency,
+    action: updates.action,
+    updated_at: new Date().toISOString()
+  }
+
+  const { data, error } = await (supabase
+    .from('classifications') as any)
+    .update(updatePayload)
     .eq('id', id)
     .select()
     .single()
 
   if (error) {
+    perfEnd('updateClassification', { error: true, id })
     throw error
   }
 
   if (!data) {
+    perfEnd('updateClassification', { noData: true, id })
     throw new Error(`Failed to update classification ${id}`)
   }
+
+  perfEnd('updateClassification', { id, success: true })
+  logInfo('Classification updated successfully', { id })
 
   return {
     classification: data as Classification

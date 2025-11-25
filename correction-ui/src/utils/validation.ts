@@ -1,14 +1,15 @@
 /**
  * Validation Service
- * Feature: 003-correction-ui
- * Task: T013
- * Requirement: FR-014 (Prevent invalid enum values)
+ * Feature: 003-correction-ui, 004-inline-edit
+ * Task: T013, T012
+ * Requirement: FR-014 (Prevent invalid enum values), FR-005 (Validate before save)
  *
  * Client-side validation before database updates
  */
 
 import { CATEGORIES, URGENCY_LEVELS, ACTION_TYPES } from '@/types/enums'
 import type { Category, UrgencyLevel, ActionType } from '@/types/enums'
+import type { InlineEditData } from '@/types/inline-edit'
 
 export interface ValidationError {
   field: string
@@ -51,6 +52,69 @@ export function validateClassificationEdit(form: {
   }
 
   return errors
+}
+
+/**
+ * Validate inline edit data
+ * Feature: 004-inline-edit
+ * Task: T012
+ * Requirements: FR-005 (Validate before save)
+ *
+ * @param data - Inline edit data to validate
+ * @returns Array of validation errors (empty if valid)
+ */
+export function validateInlineEdit(data: InlineEditData): ValidationError[] {
+  return validateClassificationEdit(data)
+}
+
+/**
+ * Check if inline edit data is valid
+ * Convenience function that returns boolean
+ *
+ * @param data - Inline edit data to validate
+ * @returns true if valid, false if validation errors exist
+ */
+export function isValidInlineEdit(data: InlineEditData): boolean {
+  return validateInlineEdit(data).length === 0
+}
+
+/**
+ * Check if inline edit data has any changes compared to original
+ * Used to determine if Save button should be enabled
+ *
+ * @param original - Original classification data
+ * @param current - Current inline edit data
+ * @returns true if any field has changed
+ */
+export function hasInlineEditChanges(
+  original: Pick<any, 'category' | 'urgency' | 'action'>,
+  current: InlineEditData
+): boolean {
+  return (
+    original.category !== current.category ||
+    original.urgency !== current.urgency ||
+    original.action !== current.action
+  )
+}
+
+/**
+ * Get list of changed fields between original and current
+ *
+ * @param original - Original classification data
+ * @param current - Current inline edit data
+ * @returns Array of field names that have changed
+ */
+export function getChangedFields(
+  original: Pick<any, 'category' | 'urgency' | 'action'>,
+  current: InlineEditData
+): Array<keyof InlineEditData> {
+  const changed: Array<keyof InlineEditData> = []
+
+  if (original.category !== current.category) changed.push('category')
+  if (original.urgency !== current.urgency) changed.push('urgency')
+  if (original.action !== current.action) changed.push('action')
+
+  return changed
 }
 
 /**

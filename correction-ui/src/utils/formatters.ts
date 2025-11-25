@@ -85,7 +85,8 @@ export function formatDateForInput(isoString: string | null): string {
 
   try {
     const date = new Date(isoString)
-    return date.toISOString().split('T')[0]
+    const formatted = date.toISOString().split('T')[0]
+    return formatted || ''
   } catch (error) {
     console.warn('Failed to format date:', isoString, error)
     return ''

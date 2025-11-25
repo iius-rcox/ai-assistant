@@ -59,7 +59,7 @@ export async function getCorrectionPatterns(): Promise<CorrectionPattern[]> {
   // Aggregate patterns
   const patternMap = new Map<string, CorrectionPattern>()
 
-  data.forEach(log => {
+  data.forEach((log: any) => {
     const key = `${log.field_name}:${log.original_value}→${log.corrected_value}`
 
     if (!patternMap.has(key)) {
@@ -105,7 +105,7 @@ export async function getCorrectionTimeline(days: number = 56): Promise<Correcti
   // Group by date
   const dateMap = new Map<string, number>()
 
-  data.forEach(log => {
+  data.forEach((log: any) => {
     const date = log.correction_timestamp.split('T')[0] // YYYY-MM-DD
     dateMap.set(date, (dateMap.get(date) || 0) + 1)
   })
@@ -134,7 +134,7 @@ export async function getMostCorrectedCategory(): Promise<string> {
   // Count by category
   const categoryCount = new Map<string, number>()
 
-  data.forEach(log => {
+  data.forEach((log: any) => {
     categoryCount.set(log.original_value, (categoryCount.get(log.original_value) || 0) + 1)
   })
 

@@ -22,7 +22,7 @@ const props = defineProps<Props>()
 const chartOptions = computed(() => ({
   chart: {
     id: 'correction-timeline',
-    type: 'line',
+    type: 'line' as const,
     toolbar: {
       show: true,
       tools: {
@@ -41,12 +41,12 @@ const chartOptions = computed(() => ({
     }
   },
   stroke: {
-    curve: 'smooth',
+    curve: 'smooth' as const,
     width: 3
   },
   colors: ['#3498db'],
   xaxis: {
-    type: 'datetime',
+    type: 'datetime' as const,
     title: {
       text: 'Date'
     },
@@ -64,7 +64,7 @@ const chartOptions = computed(() => ({
   },
   title: {
     text: 'Corrections Over Time',
-    align: 'left',
+    align: 'left' as const,
     style: {
       fontSize: '16px',
       fontWeight: 600,

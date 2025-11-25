@@ -1,7 +1,7 @@
 /**
  * Classification Store
- * Feature: 003-correction-ui
- * Tasks: T020, T024, T025
+ * Feature: 003-correction-ui, 004-inline-edit
+ * Tasks: T020, T024, T025, T013
  *
  * Global state management for classifications using Pinia
  */
@@ -9,11 +9,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { ClassificationWithEmail, ClassificationFilters, PaginationParams } from '@/types/models'
+import type { InlineEditState, InlineEditData, SaveStatus, DisplayMode, ConflictData } from '@/types/inline-edit'
 import * as classificationService from '@/services/classificationService'
 import { logAction, logError } from '@/utils/logger'
 
 export const useClassificationStore = defineStore('classification', () => {
-  // State
+  // State - List View
   const classifications = ref<ClassificationWithEmail[]>([])
   const totalCount = ref(0)
   const currentPage = ref(1)
@@ -24,8 +25,39 @@ export const useClassificationStore = defineStore('classification', () => {
   const isLoading = ref(false)
   const error = ref<Error | null>(null)
 
+  // State - Inline Edit (Feature: 004-inline-edit, Task: T013)
+  const editingRowId = ref<number | null>(null)
+  const originalData = ref<InlineEditData | null>(null)
+  const originalVersion = ref<number | null>(null)
+  const currentData = ref<InlineEditData | null>(null)
+  const saveStatus = ref<SaveStatus>('idle')
+  const saveError = ref<string | null>(null)
+  const conflictData = ref<ConflictData | null>(null)
+  const displayMode = ref<DisplayMode>('inline')
+
   // Getters
   const pageCount = computed(() => Math.ceil(totalCount.value / pageSize.value))
+
+  // Check if any filters are active (T087 - for empty state message)
+  const hasActiveFilters = computed(() => {
+    const f = filters.value
+    return !!(
+      f.confidenceMin !== undefined ||
+      f.confidenceMax !== undefined ||
+      f.dateFrom !== undefined ||
+      f.dateTo !== undefined ||
+      (f.category && f.category.length > 0) ||
+      f.corrected !== undefined
+    )
+  })
+
+  // Inline edit getters (Feature: 004-inline-edit, Task: T013)
+  const isEditing = computed(() => editingRowId.value !== null)
+  const hasUnsavedChanges = computed(() => {
+    if (!originalData.value || !currentData.value) return false
+    return JSON.stringify(originalData.value) !== JSON.stringify(currentData.value)
+  })
+  const hasConflict = computed(() => conflictData.value !== null)
 
   // Actions
 
@@ -103,7 +135,10 @@ export const useClassificationStore = defineStore('classification', () => {
       // Update local state
       const index = classifications.value.findIndex(c => c.id === id)
       if (index !== -1) {
-        classifications.value[index] = { ...classifications.value[index], ...updated.classification }
+        const current = classifications.value[index]
+        if (current && current.email) {
+          classifications.value[index] = { ...current, ...updated.classification, email: current.email } as any
+        }
       }
 
       logAction('Classification updated successfully', { id })
@@ -160,8 +195,104 @@ export const useClassificationStore = defineStore('classification', () => {
     fetchClassifications()
   }
 
+  /**
+   * Start editing a row
+   * Feature: 004-inline-edit
+   * Task: T013
+   * Requirements: FR-001, FR-008
+   */
+  function startEditingRow(id: number) {
+    const classification = classifications.value.find(c => c.id === id)
+    if (!classification) {
+      logError('Cannot start editing: classification not found', null, { id })
+      return
+    }
+
+    editingRowId.value = id
+    originalData.value = {
+      category: classification.category,
+      urgency: classification.urgency,
+      action: classification.action
+    }
+    originalVersion.value = classification.version
+    currentData.value = { ...originalData.value }
+    saveStatus.value = 'idle'
+    saveError.value = null
+    conflictData.value = null
+
+    logAction('Started editing row', { id })
+  }
+
+  /**
+   * Update a field in the current edit
+   * Feature: 004-inline-edit
+   * Task: T013
+   * Requirement: FR-002
+   */
+  function updateEditField<K extends keyof InlineEditData>(
+    field: K,
+    value: InlineEditData[K]
+  ) {
+    if (!currentData.value) return
+
+    currentData.value[field] = value
+    logAction('Updated edit field', { field, value })
+  }
+
+  /**
+   * Cancel editing and revert changes
+   * Feature: 004-inline-edit
+   * Task: T013
+   * Requirements: FR-015
+   */
+  function cancelEditing() {
+    const rowId = editingRowId.value
+
+    editingRowId.value = null
+    originalData.value = null
+    originalVersion.value = null
+    currentData.value = null
+    saveStatus.value = 'idle'
+    saveError.value = null
+    conflictData.value = null
+
+    logAction('Cancelled editing', { rowId })
+  }
+
+  /**
+   * Set save status
+   * Feature: 004-inline-edit
+   * Task: T013
+   */
+  function setSaveStatus(status: SaveStatus) {
+    saveStatus.value = status
+  }
+
+  /**
+   * Set conflict data
+   * Feature: 004-inline-edit
+   * Task: T013
+   * Requirements: FR-021, FR-022
+   */
+  function setConflictData(conflict: ConflictData | null) {
+    conflictData.value = conflict
+    if (conflict) {
+      saveStatus.value = 'conflict'
+    }
+  }
+
+  /**
+   * Set display mode (inline vs modal)
+   * Feature: 004-inline-edit
+   * Task: T013
+   * Requirements: FR-031, FR-032, FR-033
+   */
+  function setDisplayMode(mode: DisplayMode) {
+    displayMode.value = mode
+  }
+
   return {
-    // State
+    // State - List View
     classifications,
     totalCount,
     currentPage,
@@ -171,9 +302,22 @@ export const useClassificationStore = defineStore('classification', () => {
     sortDir,
     isLoading,
     error,
+    // State - Inline Edit
+    editingRowId,
+    originalData,
+    originalVersion,
+    currentData,
+    saveStatus,
+    saveError,
+    conflictData,
+    displayMode,
     // Getters
     pageCount,
-    // Actions
+    hasActiveFilters,
+    isEditing,
+    hasUnsavedChanges,
+    hasConflict,
+    // Actions - List View
     fetchClassifications,
     refreshClassifications,
     updateClassification,
@@ -181,6 +325,13 @@ export const useClassificationStore = defineStore('classification', () => {
     setPageSize,
     setFilters,
     clearFilters,
-    setSorting
+    setSorting,
+    // Actions - Inline Edit
+    startEditingRow,
+    updateEditField,
+    cancelEditing,
+    setSaveStatus,
+    setConflictData,
+    setDisplayMode
   }
 })

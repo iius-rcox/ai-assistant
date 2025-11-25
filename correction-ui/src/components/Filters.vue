@@ -67,8 +67,8 @@ function applyFilters() {
 
   // Confidence range
   const range = confidenceRanges[confidenceRange.value]
-  if (range.min !== undefined) filters.confidenceMin = range.min
-  if (range.max !== undefined) filters.confidenceMax = range.max
+  if (range && range.min !== undefined) filters.confidenceMin = range.min
+  if (range && range.max !== undefined) filters.confidenceMax = range.max
 
   // Date range (preset-based)
   const dateRangeValues = getDateRange(dateRange.value)

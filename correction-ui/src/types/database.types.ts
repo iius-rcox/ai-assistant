@@ -83,6 +83,7 @@ export interface Database {
           original_action: string | null
           corrected_timestamp: string | null
           corrected_by: string | null
+          version: number
           created_at: string
           updated_at: string
         }
@@ -102,6 +103,7 @@ export interface Database {
           original_action?: string | null
           corrected_timestamp?: string | null
           corrected_by?: string | null
+          version?: number
           created_at?: string
           updated_at?: string
         }
@@ -121,6 +123,7 @@ export interface Database {
           original_action?: string | null
           corrected_timestamp?: string | null
           corrected_by?: string | null
+          version?: number
           created_at?: string
           updated_at?: string
         }

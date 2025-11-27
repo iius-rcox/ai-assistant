@@ -155,6 +155,7 @@ export const useClassificationStore = defineStore('classification', () => {
       category: string
       urgency: string
       action: string
+      action_v2?: string
       correction_reason?: string | null
     }
   ) {
@@ -167,6 +168,7 @@ export const useClassificationStore = defineStore('classification', () => {
           category: updates.category as any,
           urgency: updates.urgency as any,
           action: updates.action as any,
+          action_v2: updates.action_v2 as any,
           correction_reason: updates.correction_reason,
         },
       })

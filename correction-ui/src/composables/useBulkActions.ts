@@ -19,6 +19,17 @@ import type {
 } from '@/types/table-enhancements'
 import type { ClassificationWithEmail } from '@/types/models'
 import { BULK_ACTION_CONFIG } from '@/constants/table'
+import type { ActionTypeV2 } from '@/types/actions'
+
+// V2 to V1 action mapping for backward compatibility
+const V2_TO_V1_ACTION_MAP: Record<ActionTypeV2, string> = {
+  IGNORE: 'FYI',
+  SHIPMENT: 'NONE',
+  DRAFT_REPLY: 'RESPOND',
+  JUNK: 'NONE',
+  NOTIFY: 'FYI',
+  CALENDAR: 'CALENDAR',
+}
 
 export interface UseBulkActionsOptions {
   /** Maximum items that can be selected */
@@ -295,7 +306,9 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
         if (!value) throw new Error('Action value required')
         updates.category = classification.category
         updates.urgency = classification.urgency
-        updates.action = value
+        // Set both v1 and v2 action fields
+        updates.action = V2_TO_V1_ACTION_MAP[value as ActionTypeV2] || 'NONE'
+        updates.action_v2 = value
         break
 
       case 'mark_reviewed':

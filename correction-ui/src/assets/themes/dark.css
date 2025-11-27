@@ -152,6 +152,14 @@
   --md-ext-color-urgency-low: hsl(var(--muted-foreground));
   --md-ext-color-urgency-low-text: #1a1a1a;
 
+  /* Action Badge Colors (Feature: 011-email-actions-v2) */
+  --md-ext-color-action-ignore: #90a4ae;
+  --md-ext-color-action-shipment: #a1887f;
+  --md-ext-color-action-draft-reply: #7986cb;
+  --md-ext-color-action-junk: hsl(0 62.8% 55%);
+  --md-ext-color-action-notify: #fbbf24;
+  --md-ext-color-action-calendar: #34d399;
+
   /* ============================================
    * LEGACY TOKEN ALIASES (Migration Support)
    * ============================================ */

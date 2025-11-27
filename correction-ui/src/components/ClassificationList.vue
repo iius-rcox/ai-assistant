@@ -49,6 +49,8 @@ import ColumnSearchInput from './ColumnSearchInput.vue'
 import BulkActionToolbar from './BulkActionToolbar.vue'
 import ExpandableRowDetails from './ExpandableRowDetails.vue'
 import MobileColumnFilters from './MobileColumnFilters.vue'
+// Feature: 011-email-actions-v2 - Action dropdown
+import ActionDropdown from './ActionDropdown.vue'
 import {
   Pagination,
   PaginationContent,
@@ -60,10 +62,17 @@ import {
 } from '@/components/ui/pagination'
 import { usePagination } from '@/composables/usePagination'
 import type { InlineEditData, ConflictData } from '@/types/inline-edit'
+import type { ActionTypeV2 } from '@/types/enums'
+import { ACTION_TYPES_V2 } from '@/types/enums'
+import { migrateAction, type ActionAvailabilityContext } from '@/types/actions'
 import { useMediaQuery, useDebounceFn } from '@vueuse/core'
 import { formatTimestamp, formatConfidence } from '@/utils/formatters'
 import { handleSupabaseError } from '@/utils/errorHandler'
 import { logAction, logInfo } from '@/utils/logger'
+
+// Feature flag for Email Actions V2 (011-email-actions-v2)
+// Set to true once database migration is complete
+const USE_ACTION_V2 = true
 
 const router = useRouter()
 const store = useClassificationStore()
@@ -651,6 +660,40 @@ function wasRecentlySaved(recordId: number, field: string): boolean {
   return (
     recentlySavedField.value?.recordId === recordId && recentlySavedField.value?.field === field
   )
+}
+
+// =============================================================================
+// EMAIL ACTIONS V2 HELPERS (Feature: 011-email-actions-v2, Tasks: T016-T020)
+// =============================================================================
+
+/**
+ * Get action availability context for a classification
+ * Used by ActionDropdown to determine which actions are available
+ */
+function getActionContext(classification: any): ActionAvailabilityContext {
+  return {
+    hasTrackingInfo: classification.has_tracking_info || false,
+    hasDateInfo: classification.has_date_info || false,
+    category: classification.category,
+    isBlacklisted: false, // TODO: Check sender_lists when available
+    isSafelisted: false, // TODO: Check sender_lists when available
+  }
+}
+
+/**
+ * Handle action change for V2 actions
+ * Uses instant save pattern from T015-T019
+ */
+async function handleActionV2Change(
+  recordId: number,
+  newAction: ActionTypeV2,
+  previousAction: string
+) {
+  logAction('Action V2 change triggered', { recordId, newAction, previousAction })
+
+  // For now, save to action_v2 column via instant save
+  // This will be extended to also create action_logs entries
+  await handleInstantSave(recordId, 'action', newAction, previousAction)
 }
 
 // Handle mobile modal field update (T080)
@@ -1370,32 +1413,45 @@ const displayedClassifications = computed(() => {
                 ></span>
               </td>
 
-              <!-- Action (instant save) - T015, T019, T035 -->
-              <td @click.stop class="editable-cell">
-                <select
-                  :value="classification.action"
-                  @change="
-                    handleInstantSave(
-                      classification.id,
-                      'action',
-                      ($event.target as HTMLSelectElement).value,
-                      classification.action
-                    )
-                  "
-                  class="action-select"
-                  :class="[
-                    { 'is-saving': isFieldSaving(classification.id, 'action') },
-                    { 'save-success': wasRecentlySaved(classification.id, 'action') },
-                  ]"
-                  :disabled="isFieldSaving(classification.id, 'action')"
-                >
-                  <option value="FYI">FYI</option>
-                  <option value="RESPOND">RESPOND</option>
-                  <option value="TASK">TASK</option>
-                  <option value="PAYMENT">PAYMENT</option>
-                  <option value="CALENDAR">CALENDAR</option>
-                  <option value="NONE">NONE</option>
-                </select>
+              <!-- Action (instant save) - T015, T019, T035, T018 (011-email-actions-v2) -->
+              <td @click.stop class="editable-cell action-cell">
+                <!-- V2 Action Dropdown (Feature: 011-email-actions-v2) -->
+                <template v-if="USE_ACTION_V2">
+                  <ActionDropdown
+                    :model-value="(classification as any).action_v2 || migrateAction(classification.action)"
+                    :context="getActionContext(classification)"
+                    :disabled="isFieldSaving(classification.id, 'action')"
+                    compact
+                    @change="(newAction: ActionTypeV2) => handleActionV2Change(classification.id, newAction, (classification as any).action_v2 || classification.action)"
+                  />
+                </template>
+                <!-- V1 Action Select (legacy) -->
+                <template v-else>
+                  <select
+                    :value="classification.action"
+                    @change="
+                      handleInstantSave(
+                        classification.id,
+                        'action',
+                        ($event.target as HTMLSelectElement).value,
+                        classification.action
+                      )
+                    "
+                    class="action-select"
+                    :class="[
+                      { 'is-saving': isFieldSaving(classification.id, 'action') },
+                      { 'save-success': wasRecentlySaved(classification.id, 'action') },
+                    ]"
+                    :disabled="isFieldSaving(classification.id, 'action')"
+                  >
+                    <option value="FYI">FYI</option>
+                    <option value="RESPOND">RESPOND</option>
+                    <option value="TASK">TASK</option>
+                    <option value="PAYMENT">PAYMENT</option>
+                    <option value="CALENDAR">CALENDAR</option>
+                    <option value="NONE">NONE</option>
+                  </select>
+                </template>
                 <span
                   v-if="isFieldSaving(classification.id, 'action')"
                   class="field-spinner"

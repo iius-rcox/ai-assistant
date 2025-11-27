@@ -261,6 +261,7 @@ The system's effectiveness is measured by:
 - Supabase PostgreSQL (existing project: xmziovusqlmgygcrgyqt) with localStorage for undo state backup (007-instant-edit-undo)
 - TypeScript 5.9+ with Vue 3.5+ (ES2022 target) + Vue 3.5, Pinia 3.0, VueUse 11.3, Vite 7.1 (008-column-search-filters)
 - localStorage for filter persistence (optional), Supabase PostgreSQL for data (008-column-search-filters)
+- TypeScript 5.9+ (correction-ui), JavaScript (n8n Code nodes) + Vue 3.5+, Pinia 3.0, Supabase JS 2.84+, n8n native nodes (AI Agent, Gmail, Telegram, Google Calendar) (011-email-actions-v2)
 
 ## Production Systems
 
@@ -282,7 +283,7 @@ The system's effectiveness is measured by:
 **Database**: Supabase project xmziovusqlmgygcrgyqt with 47 emails, 33 classifications
 
 ## Recent Changes
+- 011-email-actions-v2: Added TypeScript 5.9+ (correction-ui), JavaScript (n8n Code nodes) + Vue 3.5+, Pinia 3.0, Supabase JS 2.84+, n8n native nodes (AI Agent, Gmail, Telegram, Google Calendar)
 - 010-shadcn-blue-theme: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 008-column-search-filters: Added TypeScript 5.9+ with Vue 3.5+ (ES2022 target) + Vue 3.5, Pinia 3.0, VueUse 11.3, Vite 7.1
-- 007-instant-edit-undo: Added TypeScript 5.9+ with Vue 3.5+ (ES2022 target) + Vue 3.5, Pinia 2.2+, Supabase JS 2.84+, VueUse 11+
 ...

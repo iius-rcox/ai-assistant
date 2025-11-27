@@ -11,8 +11,23 @@
 import { ref, computed, readonly, onUnmounted } from 'vue'
 import { supabase } from '@/services/supabase'
 import type { UndoEntry, UndoChange, UndoResult } from '@/types/undo'
-import type { Category, UrgencyLevel, ActionType } from '@/types/enums'
+import type { Category, UrgencyLevel, ActionType, ActionTypeV2 } from '@/types/enums'
 import { logAction, logError, logInfo } from '@/utils/logger'
+
+// V2 to V1 action mapping for backward compatibility with database constraints
+const v2ToV1Map: Record<ActionTypeV2, ActionType> = {
+  IGNORE: 'FYI',
+  SHIPMENT: 'NONE',
+  DRAFT_REPLY: 'RESPOND',
+  JUNK: 'NONE',
+  NOTIFY: 'FYI',
+  CALENDAR: 'CALENDAR',
+}
+
+// Check if a value is a v2 action type
+function isV2Action(value: unknown): value is ActionTypeV2 {
+  return typeof value === 'string' && ['IGNORE', 'SHIPMENT', 'DRAFT_REPLY', 'JUNK', 'NOTIFY', 'CALENDAR'].includes(value)
+}
 
 /** Undo window duration in milliseconds (30 seconds) */
 const UNDO_TIMEOUT_MS = 30000
@@ -250,6 +265,13 @@ async function restoreChange(change: UndoChange): Promise<{ success: boolean; er
     original_action: null,
     corrected_timestamp: null,
     corrected_by: null,
+  }
+
+  // Handle action field - map v2 actions to v1 for backward compatibility
+  if (change.field === 'action' && isV2Action(change.previousValue)) {
+    // Write v1 value to action column, v2 value to action_v2 column
+    updatePayload['action'] = v2ToV1Map[change.previousValue]
+    updatePayload['action_v2'] = change.previousValue
   }
 
   console.log('🔄 Undo restoreChange:', {

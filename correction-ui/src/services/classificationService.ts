@@ -2,6 +2,7 @@
  * Classification Service
  * Feature: 003-correction-ui
  * Tasks: T021, T022, T023
+ * Updated: 011-email-actions-v2 (T016, T017)
  *
  * Business logic for classification CRUD operations
  */
@@ -15,12 +16,19 @@ import type {
   PaginationParams,
   Classification,
 } from '@/types/models'
-import type { Category, UrgencyLevel, ActionType } from '@/types/enums'
+import type { Category, UrgencyLevel, ActionType, ActionTypeV2 } from '@/types/enums'
 import type {
   ClassificationWithDetails,
   CorrectionHistoryEntry,
   BulkActionResult,
 } from '@/types/table-enhancements'
+import { createActionLog } from './actionLogService'
+
+/**
+ * Feature flag for Email Actions V2 (011-email-actions-v2)
+ * Set to true after running database migrations (T007)
+ */
+export const USE_ACTION_V2 = true
 
 /**
  * List classifications with pagination, filtering, and sorting
@@ -205,12 +213,17 @@ export async function getClassification(id: number): Promise<ClassificationWithE
 /**
  * Update classification (save correction)
  * Task: T023
+ * Updated: 011-email-actions-v2 (T016, T017)
  * Requirements: FR-004 (save immediately), FR-005 (visual feedback)
  *
  * Database trigger `log_classification_correction` automatically:
  * - Preserves original values (on first correction)
  * - Sets corrected_timestamp and corrected_by
  * - Creates correction_log entries
+ *
+ * When USE_ACTION_V2 is enabled:
+ * - Updates action_v2 column instead of/in addition to action
+ * - Logs to action_logs table for audit trail (FR-011)
  */
 export async function updateClassification(request: {
   id: number
@@ -218,18 +231,30 @@ export async function updateClassification(request: {
     category: Category
     urgency: UrgencyLevel
     action: ActionType
+    action_v2?: ActionTypeV2
     correction_reason?: string | null
   }
+  /** Email ID for action logging (required when USE_ACTION_V2 is true) */
+  emailId?: number
+  /** Previous action value for logging */
+  previousAction?: ActionType | ActionTypeV2 | null
 }): Promise<{ classification: Classification }> {
   perfStart('updateClassification')
-  const { id, updates } = request
-  logInfo('Updating classification', { id, updates })
+  const { id, updates, emailId, previousAction } = request
+  logInfo('Updating classification', { id, updates, useActionV2: USE_ACTION_V2 })
 
-  const updatePayload = {
+  const updatePayload: Record<string, unknown> = {
     category: updates.category,
     urgency: updates.urgency,
     action: updates.action,
     updated_at: new Date().toISOString(),
+  }
+
+  // Add action_v2 fields when feature flag is enabled
+  if (USE_ACTION_V2 && updates.action_v2) {
+    updatePayload.action_v2 = updates.action_v2
+    // action_auto_assigned = false since this is a user correction
+    updatePayload.action_auto_assigned = false
   }
 
   const { data, error } = await (supabase.from('classifications') as any)
@@ -246,6 +271,25 @@ export async function updateClassification(request: {
   if (!data) {
     perfEnd('updateClassification', { noData: true, id })
     throw new Error(`Failed to update classification ${id}`)
+  }
+
+  // Log action change to action_logs table (T017)
+  // Only log if action_v2 is being used and we have email_id
+  if (USE_ACTION_V2 && updates.action_v2 && emailId) {
+    try {
+      await createActionLog({
+        email_id: emailId,
+        classification_id: id,
+        action: updates.action_v2,
+        previous_action: previousAction as ActionTypeV2 | null,
+        auto_assigned: false,
+        source: 'ui_manual',
+      })
+      logInfo('Action log created for classification update', { id, action: updates.action_v2 })
+    } catch (logError) {
+      // Don't fail the update if logging fails
+      logInfo('Failed to create action log', { id, error: logError })
+    }
   }
 
   perfEnd('updateClassification', { id, success: true })
@@ -510,4 +554,84 @@ export async function bulkUpdateClassifications(
     perfEnd('bulkUpdateClassifications', { error: true })
     throw error
   }
+}
+
+/**
+ * Update action_v2 field for a single classification
+ * Feature: 011-email-actions-v2
+ * Task: T016, T017
+ * Requirements: FR-004 (save immediately), FR-011 (log to action_logs)
+ *
+ * This is a specialized function for instant save of action changes
+ * that logs to action_logs for audit trail.
+ */
+export async function updateClassificationAction(params: {
+  classificationId: number
+  emailId: number
+  action: ActionTypeV2
+  previousAction?: ActionTypeV2 | null
+}): Promise<Classification> {
+  perfStart('updateClassificationAction')
+  const { classificationId, emailId, action, previousAction } = params
+  logInfo('Updating classification action_v2', { classificationId, action, previousAction })
+
+  // Update the classification with new action_v2
+  const updatePayload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  }
+
+  // When USE_ACTION_V2 is enabled, update action_v2 column
+  // Otherwise, fall back to legacy action column (with mapping)
+  if (USE_ACTION_V2) {
+    updatePayload.action_v2 = action
+    updatePayload.action_auto_assigned = false
+  } else {
+    // Map v2 action to v1 for backward compatibility
+    const v2ToV1Map: Record<ActionTypeV2, ActionType> = {
+      IGNORE: 'FYI',
+      SHIPMENT: 'NONE',
+      DRAFT_REPLY: 'RESPOND',
+      JUNK: 'NONE',
+      NOTIFY: 'FYI',
+      CALENDAR: 'CALENDAR',
+    }
+    updatePayload.action = v2ToV1Map[action]
+  }
+
+  const { data, error } = await (supabase.from('classifications') as any)
+    .update(updatePayload)
+    .eq('id', classificationId)
+    .select()
+    .single()
+
+  if (error) {
+    perfEnd('updateClassificationAction', { error: true, classificationId })
+    throw error
+  }
+
+  if (!data) {
+    perfEnd('updateClassificationAction', { noData: true, classificationId })
+    throw new Error(`Failed to update classification ${classificationId}`)
+  }
+
+  // Log to action_logs table (T017)
+  if (USE_ACTION_V2) {
+    try {
+      await createActionLog({
+        email_id: emailId,
+        classification_id: classificationId,
+        action,
+        previous_action: previousAction,
+        auto_assigned: false,
+        source: 'ui_manual',
+      })
+      logInfo('Action log created', { classificationId, action })
+    } catch (logError) {
+      // Don't fail the update if logging fails
+      logInfo('Failed to create action log (non-fatal)', { classificationId, error: logError })
+    }
+  }
+
+  perfEnd('updateClassificationAction', { classificationId, success: true })
+  return data as Classification
 }

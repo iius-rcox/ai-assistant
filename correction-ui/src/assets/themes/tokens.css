@@ -162,6 +162,14 @@
   --md-ext-color-urgency-low: initial;
   --md-ext-color-urgency-low-text: initial;
 
+  /* Action Badge Colors (Feature: 011-email-actions-v2) */
+  --md-ext-color-action-ignore: initial;
+  --md-ext-color-action-shipment: initial;
+  --md-ext-color-action-draft-reply: initial;
+  --md-ext-color-action-junk: initial;
+  --md-ext-color-action-notify: initial;
+  --md-ext-color-action-calendar: initial;
+
   /* ============================================
    * SHAPE TOKENS
    * ============================================ */

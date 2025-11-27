@@ -17,8 +17,24 @@ import { supabase } from '@/services/supabase'
 import type { InlineEditData, SaveResult, ConflictData, SaveStatus } from '@/types/inline-edit'
 import type { UndoChange } from '@/types/undo'
 import type { Classification } from '@/types/models'
-import type { Category, UrgencyLevel, ActionType } from '@/types/enums'
+import type { Category, UrgencyLevel, ActionType, ActionTypeV2 } from '@/types/enums'
 import { logAction, logError, logInfo } from '@/utils/logger'
+import { USE_ACTION_V2 } from '@/services/classificationService'
+
+// Map v2 action to v1 for backward compatibility with database constraints
+const v2ToV1Map: Record<ActionTypeV2, ActionType> = {
+  IGNORE: 'FYI',
+  SHIPMENT: 'NONE',
+  DRAFT_REPLY: 'RESPOND',
+  JUNK: 'NONE',
+  NOTIFY: 'FYI',
+  CALENDAR: 'CALENDAR',
+}
+
+// Check if a value is a v2 action type
+function isV2Action(value: string): value is ActionTypeV2 {
+  return ['IGNORE', 'SHIPMENT', 'DRAFT_REPLY', 'JUNK', 'NOTIFY', 'CALENDAR'].includes(value)
+}
 
 /**
  * Result of update operation with optimistic locking
@@ -184,9 +200,18 @@ export function useInlineEdit() {
     try {
       // Prepare update payload
       const updatePayload: Record<string, unknown> = {
-        [field]: newValue,
         corrected_timestamp: new Date().toISOString(),
         corrected_by: 'instant-edit',
+      }
+
+      // Handle action field specially for v2 compatibility
+      if (field === 'action' && USE_ACTION_V2 && isV2Action(newValue)) {
+        // Write to action_v2 column and map to v1 for legacy action column
+        updatePayload.action_v2 = newValue
+        updatePayload.action = v2ToV1Map[newValue as ActionTypeV2]
+        updatePayload.action_auto_assigned = false
+      } else {
+        updatePayload[field] = newValue
       }
 
       // Attempt update with version check for optimistic locking
@@ -362,12 +387,20 @@ export function useInlineEdit() {
   ): Promise<OptimisticUpdateResult> {
     try {
       // Attempt update with version check
-      const updatePayload = {
+      const updatePayload: Record<string, unknown> = {
         category: updates.category as Category,
         urgency: updates.urgency as UrgencyLevel,
-        action: updates.action as ActionType,
         corrected_timestamp: new Date().toISOString(),
         corrected_by: 'inline-edit',
+      }
+
+      // Handle action field for v2 compatibility
+      if (USE_ACTION_V2 && isV2Action(updates.action)) {
+        updatePayload.action_v2 = updates.action
+        updatePayload.action = v2ToV1Map[updates.action as ActionTypeV2]
+        updatePayload.action_auto_assigned = false
+      } else {
+        updatePayload.action = updates.action as ActionType
       }
 
       const { data, error } = await (supabase.from('classifications') as any)
@@ -540,12 +573,20 @@ export function useInlineEdit() {
 
     try {
       // Update without version check (force overwrite)
-      const updatePayload = {
+      const updatePayload: Record<string, unknown> = {
         category: updates.category as Category,
         urgency: updates.urgency as UrgencyLevel,
-        action: updates.action as ActionType,
         corrected_timestamp: new Date().toISOString(),
         corrected_by: 'inline-edit-force',
+      }
+
+      // Handle action field for v2 compatibility
+      if (USE_ACTION_V2 && isV2Action(updates.action)) {
+        updatePayload.action_v2 = updates.action
+        updatePayload.action = v2ToV1Map[updates.action as ActionTypeV2]
+        updatePayload.action_auto_assigned = false
+      } else {
+        updatePayload.action = updates.action as ActionType
       }
 
       const { data, error } = await (supabase.from('classifications') as any)

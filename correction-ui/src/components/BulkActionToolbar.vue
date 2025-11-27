@@ -12,7 +12,8 @@
 
 import { ref, computed } from 'vue'
 import type { BulkActionType, BulkActionResult } from '@/types/table-enhancements'
-import { CATEGORIES, URGENCY_LEVELS, ACTION_TYPES } from '@/constants/enums'
+import { CATEGORIES, URGENCY_LEVELS } from '@/constants/enums'
+import { ACTION_TYPES_V2, ACTION_V2_LABELS, ACTION_ICONS, type ActionTypeV2 } from '@/types/actions'
 
 // Props
 interface Props {
@@ -319,13 +320,16 @@ function closeModals() {
 
           <div class="modal-options">
             <label
-              v-for="action in ACTION_TYPES"
+              v-for="action in ACTION_TYPES_V2"
               :key="action"
               class="option-item"
               :class="{ selected: selectedValue === action }"
             >
               <input type="radio" :value="action" v-model="selectedValue" name="action" />
-              <span class="option-label">{{ action }}</span>
+              <span class="option-badge" :class="`badge-action-${action.toLowerCase()}`">
+                <span v-if="ACTION_ICONS[action as ActionTypeV2]" class="action-icon">{{ ACTION_ICONS[action as ActionTypeV2] }}</span>
+                {{ ACTION_V2_LABELS[action as ActionTypeV2] }}
+              </span>
             </label>
           </div>
 
@@ -596,6 +600,36 @@ function closeModals() {
 .badge-urgency-low {
   background-color: var(--md-ext-color-urgency-low);
   color: var(--md-ext-color-urgency-low-text);
+}
+
+/* Action V2 badges */
+.badge-action-ignore {
+  background-color: var(--md-ext-color-action-ignore, #78909c);
+  color: white;
+}
+.badge-action-shipment {
+  background-color: var(--md-ext-color-action-shipment, #8d6e63);
+  color: white;
+}
+.badge-action-draft_reply {
+  background-color: var(--md-ext-color-action-draft-reply, #5c6bc0);
+  color: white;
+}
+.badge-action-junk {
+  background-color: var(--md-sys-color-error, #dc2626);
+  color: white;
+}
+.badge-action-notify {
+  background-color: var(--md-ext-color-action-notify, #f59e0b);
+  color: white;
+}
+.badge-action-calendar {
+  background-color: var(--md-ext-color-action-calendar, #10b981);
+  color: white;
+}
+
+.action-icon {
+  margin-right: 0.25rem;
 }
 
 .modal-actions {

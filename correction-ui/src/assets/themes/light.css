@@ -1,69 +1,117 @@
 /**
- * Material Design 3 Light Theme
- * Feature: 006-material-design-themes
+ * Shadcn Blue Light Theme
+ * Feature: 010-shadcn-blue-theme (updated from 006-material-design-themes)
  *
- * Based on M3 baseline palette with seed color #6750A4
+ * Based on shadcn blue palette with primary hsl(221.2, 83.2%, 53.3%)
  * All color combinations meet WCAG AA contrast requirements (4.5:1)
  */
 
 :root.light {
   /* ============================================
-   * COLOR ROLE TOKENS
+   * SHADCN CORE TOKEN VALUES
    * ============================================ */
 
-  /* Primary */
-  --md-sys-color-primary: #6750a4;
-  --md-sys-color-on-primary: #ffffff;
-  --md-sys-color-primary-container: #eaddff;
-  --md-sys-color-on-primary-container: #21005d;
+  /* Background/Foreground */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+
+  /* Card */
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+
+  /* Popover */
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+
+  /* Primary (Blue) */
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
 
   /* Secondary */
-  --md-sys-color-secondary: #625b71;
-  --md-sys-color-on-secondary: #ffffff;
-  --md-sys-color-secondary-container: #e8def8;
-  --md-sys-color-on-secondary-container: #1d192b;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
 
-  /* Tertiary */
-  --md-sys-color-tertiary: #7d5260;
-  --md-sys-color-on-tertiary: #ffffff;
-  --md-sys-color-tertiary-container: #ffd8e4;
-  --md-sys-color-on-tertiary-container: #31111d;
+  /* Muted */
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
 
-  /* Error */
-  --md-sys-color-error: #b3261e;
-  --md-sys-color-on-error: #ffffff;
-  --md-sys-color-error-container: #f9dedc;
-  --md-sys-color-on-error-container: #410e0b;
+  /* Accent */
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+
+  /* Destructive */
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  /* Border/Input/Ring */
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+
+  /* Chart Colors */
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
 
   /* ============================================
-   * SURFACE TOKENS
+   * M3 COLOR ROLE TOKENS (Derived from shadcn)
    * ============================================ */
 
-  --md-sys-color-surface: #fef7ff;
-  --md-sys-color-on-surface: #1d1b20;
-  --md-sys-color-surface-variant: #e7e0ec;
-  --md-sys-color-on-surface-variant: #49454f;
+  /* Primary - Blue */
+  --md-sys-color-primary: hsl(var(--primary));
+  --md-sys-color-on-primary: hsl(var(--primary-foreground));
+  --md-sys-color-primary-container: hsl(210 100% 95%);
+  --md-sys-color-on-primary-container: hsl(221.2 83.2% 30%);
+
+  /* Secondary */
+  --md-sys-color-secondary: hsl(var(--secondary-foreground));
+  --md-sys-color-on-secondary: hsl(var(--secondary));
+  --md-sys-color-secondary-container: hsl(var(--secondary));
+  --md-sys-color-on-secondary-container: hsl(var(--secondary-foreground));
+
+  /* Tertiary - Accent */
+  --md-sys-color-tertiary: hsl(var(--accent-foreground));
+  --md-sys-color-on-tertiary: hsl(var(--accent));
+  --md-sys-color-tertiary-container: hsl(var(--accent));
+  --md-sys-color-on-tertiary-container: hsl(var(--accent-foreground));
+
+  /* Error */
+  --md-sys-color-error: hsl(var(--destructive));
+  --md-sys-color-on-error: hsl(var(--destructive-foreground));
+  --md-sys-color-error-container: hsl(0 84.2% 95%);
+  --md-sys-color-on-error-container: hsl(0 84.2% 30%);
+
+  /* ============================================
+   * SURFACE TOKENS (Derived from shadcn)
+   * ============================================ */
+
+  --md-sys-color-surface: hsl(var(--background));
+  --md-sys-color-on-surface: hsl(var(--foreground));
+  --md-sys-color-surface-variant: hsl(var(--muted));
+  --md-sys-color-on-surface-variant: hsl(var(--muted-foreground));
 
   /* Surface Container Hierarchy */
-  --md-sys-color-surface-container-lowest: #ffffff;
-  --md-sys-color-surface-container-low: #f7f2fa;
-  --md-sys-color-surface-container: #f3edf7;
-  --md-sys-color-surface-container-high: #ece6f0;
-  --md-sys-color-surface-container-highest: #e6e0e9;
+  --md-sys-color-surface-container-lowest: hsl(var(--background));
+  --md-sys-color-surface-container-low: hsl(var(--card));
+  --md-sys-color-surface-container: hsl(var(--muted));
+  --md-sys-color-surface-container-high: hsl(210 40% 93%);
+  --md-sys-color-surface-container-highest: hsl(210 40% 90%);
 
   /* Surface Variants */
-  --md-sys-color-surface-dim: #ded8e1;
-  --md-sys-color-surface-bright: #fef7ff;
+  --md-sys-color-surface-dim: hsl(210 40% 93%);
+  --md-sys-color-surface-bright: hsl(var(--background));
 
   /* ============================================
    * UTILITY TOKENS
    * ============================================ */
 
-  --md-sys-color-outline: #79747e;
-  --md-sys-color-outline-variant: #cac4d0;
-  --md-sys-color-inverse-surface: #322f35;
-  --md-sys-color-inverse-on-surface: #f5eff7;
-  --md-sys-color-inverse-primary: #d0bcff;
+  --md-sys-color-outline: hsl(var(--muted-foreground));
+  --md-sys-color-outline-variant: hsl(var(--border));
+  --md-sys-color-inverse-surface: hsl(var(--foreground));
+  --md-sys-color-inverse-on-surface: hsl(var(--background));
+  --md-sys-color-inverse-primary: hsl(217.2 91.2% 70%);
   --md-sys-color-scrim: #000000;
   --md-sys-color-shadow: #000000;
 
@@ -72,35 +120,35 @@
    * ============================================ */
 
   /* Success/Warning States */
-  --md-ext-color-success: #388e3c;
+  --md-ext-color-success: #16a34a;
   --md-ext-color-on-success: #ffffff;
-  --md-ext-color-success-container: #c8e6c9;
-  --md-ext-color-on-success-container: #1b5e20;
-  --md-ext-color-warning: #f57c00;
+  --md-ext-color-success-container: #dcfce7;
+  --md-ext-color-on-success-container: #166534;
+  --md-ext-color-warning: #ea580c;
   --md-ext-color-on-warning: #ffffff;
 
-  /* Category Badge Colors (WCAG AA 4.5:1 compliant) */
-  --md-ext-color-badge-kids: #5e35b1;
+  /* Category Badge Colors (WCAG AA 4.5:1 compliant - harmonized with blue) */
+  --md-ext-color-badge-kids: #4f46e5;
   --md-ext-color-badge-kids-text: #ffffff;
-  --md-ext-color-badge-robyn: #c2185b;
+  --md-ext-color-badge-robyn: #db2777;
   --md-ext-color-badge-robyn-text: #ffffff;
-  --md-ext-color-badge-work: #1565c0;
+  --md-ext-color-badge-work: #2563eb;
   --md-ext-color-badge-work-text: #ffffff;
-  --md-ext-color-badge-financial: #2e7d32;
+  --md-ext-color-badge-financial: #16a34a;
   --md-ext-color-badge-financial-text: #ffffff;
-  --md-ext-color-badge-shopping: #e65100;
+  --md-ext-color-badge-shopping: #ea580c;
   --md-ext-color-badge-shopping-text: #ffffff;
-  --md-ext-color-badge-church: #7b1fa2;
+  --md-ext-color-badge-church: #7c3aed;
   --md-ext-color-badge-church-text: #ffffff;
-  --md-ext-color-badge-other: #546e7a;
+  --md-ext-color-badge-other: #64748b;
   --md-ext-color-badge-other-text: #ffffff;
 
   /* Urgency Badge Colors */
-  --md-ext-color-urgency-high: #b3261e;
-  --md-ext-color-urgency-high-text: #ffffff;
-  --md-ext-color-urgency-medium: #7d5260;
+  --md-ext-color-urgency-high: hsl(var(--destructive));
+  --md-ext-color-urgency-high-text: hsl(var(--destructive-foreground));
+  --md-ext-color-urgency-medium: #ea580c;
   --md-ext-color-urgency-medium-text: #ffffff;
-  --md-ext-color-urgency-low: #79747e;
+  --md-ext-color-urgency-low: hsl(var(--muted-foreground));
   --md-ext-color-urgency-low-text: #ffffff;
 
   /* ============================================
@@ -128,7 +176,7 @@
 
   /* Brand colors */
   --color-primary: var(--md-sys-color-primary);
-  --color-primary-hover: #5640a0;
+  --color-primary-hover: hsl(221.2 83.2% 45%);
   --color-primary-light: var(--md-sys-color-primary-container);
 
   --color-success: var(--md-ext-color-success);

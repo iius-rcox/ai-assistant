@@ -1,15 +1,71 @@
 /**
- * Material Design 3 Token Contract
+ * Design Token Contract
  *
- * This file defines the CSS custom property interface for the M3 theme system.
+ * This file defines the CSS custom property interface for the theme system.
  * Theme files (light.css, dark.css) MUST provide values for all tokens defined here.
  *
- * Feature: 006-material-design-themes
- * Version: 1.0.0
- * Date: 2025-11-25
+ * Feature: 010-shadcn-blue-theme (updated from 006-material-design-themes)
+ * Version: 2.0.0
+ * Date: 2025-11-26
  */
 
 :root {
+  /* ============================================
+   * SHADCN CORE TOKENS
+   * ============================================
+   * All values use HSL format WITHOUT the hsl() wrapper:
+   *   --token: H S% L%
+   * Usage in CSS:
+   *   background-color: hsl(var(--background));
+   *   color: hsl(var(--foreground));
+   * ============================================ */
+
+  /* Page/app background */
+  --background: initial;
+  --foreground: initial;
+
+  /* Card/panel backgrounds */
+  --card: initial;
+  --card-foreground: initial;
+
+  /* Popover/dropdown backgrounds */
+  --popover: initial;
+  --popover-foreground: initial;
+
+  /* Primary action color (buttons, links) */
+  --primary: initial;
+  --primary-foreground: initial;
+
+  /* Secondary/less prominent actions */
+  --secondary: initial;
+  --secondary-foreground: initial;
+
+  /* Muted/subdued elements */
+  --muted: initial;
+  --muted-foreground: initial;
+
+  /* Accent highlights */
+  --accent: initial;
+  --accent-foreground: initial;
+
+  /* Destructive/error actions */
+  --destructive: initial;
+  --destructive-foreground: initial;
+
+  /* UI element tokens */
+  --border: initial;
+  --input: initial;
+  --ring: initial;
+
+  /* Shape tokens */
+  --radius: 0.5rem;
+
+  /* Chart tokens for data visualization */
+  --chart-1: initial;
+  --chart-2: initial;
+  --chart-3: initial;
+  --chart-4: initial;
+  --chart-5: initial;
   /* ============================================
    * COLOR ROLE TOKENS
    * ============================================ */
@@ -279,3 +335,30 @@
 .md-state-layer:active::before {
   opacity: var(--md-sys-state-pressed-opacity);
 }
+
+/* ============================================
+ * SHADCN-TO-M3 TOKEN BRIDGE
+ * ============================================
+ * These aliases allow M3 tokens to derive from shadcn tokens.
+ * This enables backward compatibility with existing components
+ * while using the new shadcn blue color palette.
+ *
+ * Note: The actual values are set in light.css and dark.css.
+ * This section just documents the conceptual mapping.
+ * ============================================
+ *
+ * Mapping Reference:
+ *   --md-sys-color-surface         ← hsl(var(--background))
+ *   --md-sys-color-on-surface      ← hsl(var(--foreground))
+ *   --md-sys-color-primary         ← hsl(var(--primary))
+ *   --md-sys-color-on-primary      ← hsl(var(--primary-foreground))
+ *   --md-sys-color-secondary       ← hsl(var(--secondary))
+ *   --md-sys-color-on-secondary    ← hsl(var(--secondary-foreground))
+ *   --md-sys-color-surface-variant ← hsl(var(--muted))
+ *   --md-sys-color-on-surface-variant ← hsl(var(--muted-foreground))
+ *   --md-sys-color-tertiary        ← hsl(var(--accent))
+ *   --md-sys-color-error           ← hsl(var(--destructive))
+ *   --md-sys-color-outline         ← hsl(var(--border))
+ *   --md-sys-color-surface-container ← hsl(var(--card))
+ *   --md-sys-color-surface-container-low ← hsl(var(--input))
+ * ============================================ */

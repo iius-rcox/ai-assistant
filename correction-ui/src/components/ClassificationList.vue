@@ -1,10 +1,10 @@
 <!--
   Classification List Component
-  Feature: 006-material-design-themes, 007-instant-edit-undo, 008-column-search-filters
-  Tasks: T012 (006), T015-T019 (007), T015-T024 (008)
+  Feature: 006-material-design-themes, 007-instant-edit-undo, 008-column-search-filters, 010-shadcn-blue-theme
+  Tasks: T012 (006), T015-T019 (007), T015-T024 (008), T026-T027 (010)
 
   Displays paginated list of classifications with inline editing support
-  Updated with M3 surface-container hierarchy
+  Updated with M3 surface-container hierarchy and shadcn pagination
 
   007-instant-edit-undo:
   - T015: Handle 'instant-save' event from InlineEditCell
@@ -16,6 +16,10 @@
   008-column-search-filters:
   - T015-T019: Add column search filter row with ColumnSearchInput components
   - T020-T024: Multi-column filtering with AND logic
+
+  010-shadcn-blue-theme:
+  - T026: Replace inline pagination with new Pagination component
+  - T027: Add "Showing X-Y of Z" info display
 -->
 
 <script setup lang="ts">
@@ -45,6 +49,16 @@ import ColumnSearchInput from './ColumnSearchInput.vue'
 import BulkActionToolbar from './BulkActionToolbar.vue'
 import ExpandableRowDetails from './ExpandableRowDetails.vue'
 import MobileColumnFilters from './MobileColumnFilters.vue'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from '@/components/ui/pagination'
+import { usePagination } from '@/composables/usePagination'
 import type { InlineEditData, ConflictData } from '@/types/inline-edit'
 import { useMediaQuery, useDebounceFn } from '@vueuse/core'
 import { formatTimestamp, formatConfidence } from '@/utils/formatters'
@@ -53,6 +67,32 @@ import { logAction, logInfo } from '@/utils/logger'
 
 const router = useRouter()
 const store = useClassificationStore()
+
+// Pagination composable (Feature: 010-shadcn-blue-theme, Tasks: T026-T027)
+const currentPageRef = computed({
+  get: () => store.currentPage,
+  set: (value: number) => store.setPage(value),
+})
+
+const { items: paginationItems } = usePagination(
+  currentPageRef,
+  computed(() => store.pageCount),
+  {
+    siblingCount: 1,
+    showEdges: true,
+    onChange: (page: number) => {
+      logAction('Page changed via pagination', { page })
+    },
+  }
+)
+
+// Pagination info computed (T027: "Showing X-Y of Z")
+const paginationInfo = computed(() => {
+  if (store.totalCount === 0) return null
+  const start = (store.currentPage - 1) * store.pageSize + 1
+  const end = Math.min(store.currentPage * store.pageSize, store.totalCount)
+  return { start, end, total: store.totalCount }
+})
 
 // Search composable (Feature: 005-table-enhancements, Task: T016)
 const {
@@ -1400,34 +1440,41 @@ const displayedClassifications = computed(() => {
       </table>
     </div>
 
-    <!-- Pagination controls (T027) -->
-    <div v-if="!store.isLoading && store.totalCount > 0" class="pagination">
+    <!-- Pagination controls (Feature: 010-shadcn-blue-theme, Tasks: T026-T027) -->
+    <div v-if="!store.isLoading && store.totalCount > 0" class="pagination-wrapper">
       <div class="pagination-info">
-        Showing {{ (store.currentPage - 1) * store.pageSize + 1 }}-{{
-          Math.min(store.currentPage * store.pageSize, store.totalCount)
-        }}
-        of {{ store.totalCount }}
+        Showing {{ paginationInfo?.start }}-{{ paginationInfo?.end }}
+        of {{ paginationInfo?.total }}
       </div>
 
-      <div class="pagination-controls">
-        <button
-          @click="store.setPage(store.currentPage - 1)"
-          :disabled="store.currentPage === 1"
-          class="btn-pagination"
-        >
-          Previous
-        </button>
+      <Pagination
+        :current-page="store.currentPage"
+        :total-pages="store.pageCount"
+        :sibling-count="1"
+        :show-edges="true"
+        @update:current-page="store.setPage($event)"
+        @change="(page: number) => logAction('Pagination changed', { page })"
+      >
+        <PaginationContent>
+          <template v-for="(item, index) in paginationItems" :key="index">
+            <PaginationItem v-if="item.type === 'previous'">
+              <PaginationPrevious :disabled="item.isDisabled" />
+            </PaginationItem>
 
-        <span class="page-indicator"> Page {{ store.currentPage }} of {{ store.pageCount }} </span>
+            <PaginationItem v-else-if="item.type === 'page'">
+              <PaginationLink :page="item.page!" :is-active="item.isActive" />
+            </PaginationItem>
 
-        <button
-          @click="store.setPage(store.currentPage + 1)"
-          :disabled="store.currentPage >= store.pageCount"
-          class="btn-pagination"
-        >
-          Next
-        </button>
-      </div>
+            <PaginationItem v-else-if="item.type === 'ellipsis'">
+              <PaginationEllipsis />
+            </PaginationItem>
+
+            <PaginationItem v-else-if="item.type === 'next'">
+              <PaginationNext :disabled="item.isDisabled" />
+            </PaginationItem>
+          </template>
+        </PaginationContent>
+      </Pagination>
     </div>
   </div>
 </template>
@@ -2101,56 +2148,23 @@ const displayedClassifications = computed(() => {
   color: var(--md-ext-color-urgency-low-text);
 }
 
-/* Pagination */
-.pagination {
+/* Pagination (Feature: 010-shadcn-blue-theme, Tasks: T026-T027) */
+.pagination-wrapper {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
   padding: 1rem;
-  background-color: var(--md-sys-color-surface-container-low);
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--md-sys-shape-corner-small);
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius, 0.5rem);
   margin-top: 1rem;
 }
 
 .pagination-info {
-  font-size: var(--md-sys-typescale-body-medium-size);
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.btn-pagination {
-  padding: 0.5rem 1rem;
-  background-color: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  border: none;
-  border-radius: var(--md-sys-shape-corner-small);
-  cursor: pointer;
-  font-size: var(--md-sys-typescale-label-large-size);
-  font-weight: var(--md-sys-typescale-label-large-weight);
-  transition: var(--md-sys-theme-transition);
-}
-
-.btn-pagination:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.btn-pagination:disabled {
-  background-color: var(--md-sys-color-surface-container-highest);
-  color: var(--md-sys-color-on-surface);
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.page-indicator {
-  font-size: var(--md-sys-typescale-body-medium-size);
-  color: var(--md-sys-color-on-surface-variant);
-  padding: 0 0.5rem;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
 }
 
 /* Inline Edit Styles (Feature: 004-inline-edit, T016-T020) */
@@ -2603,9 +2617,10 @@ const displayedClassifications = computed(() => {
     font-size: 0.85rem;
   }
 
-  .pagination {
+  .pagination-wrapper {
     flex-direction: column;
     gap: 1rem;
+    text-align: center;
   }
 
   /* Larger touch targets for mobile (T078) */

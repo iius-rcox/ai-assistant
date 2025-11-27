@@ -1,10 +1,11 @@
 /**
- * Base Styles - Material Design 3
- * Feature: 006-material-design-themes
- * Task: T007
+ * Base Styles
+ * Feature: 010-shadcn-blue-theme (updated from 006-material-design-themes)
+ * Task: T007 (006), T029 (010)
  *
  * Uses M3 token references for foundational styles.
  * Theme-specific values are provided by light.css and dark.css.
+ * M3 tokens now derive from shadcn blue theme values.
  */
 
 /* ============================================

@@ -1,13 +1,13 @@
 /**
  * Theme Composable
- * Feature: 006-material-design-themes
- * Tasks: T006
+ * Feature: 010-shadcn-blue-theme (updated from 006-material-design-themes)
+ * Tasks: T006, T009
  *
  * Provides dark/light theme functionality with:
  * - System preference detection via prefers-color-scheme
  * - localStorage persistence for user preference
  * - Toggle between dark and light modes
- * - M3 class application ('light'/'dark' on documentElement)
+ * - Theme class application ('light'/'dark' on documentElement)
  */
 
 import { ref, computed, watch, onMounted } from 'vue'
@@ -104,11 +104,11 @@ export function useTheme(options: UseThemeOptions = {}) {
     // Set color-scheme for native elements
     root.style.colorScheme = theme
 
-    // Update meta theme-color for mobile browsers with M3 surface colors
+    // Update meta theme-color for mobile browsers with shadcn blue theme colors
     const metaThemeColor = document.querySelector('meta[name="theme-color"]')
     if (metaThemeColor) {
-      // M3 surface colors: light #FEF7FF, dark #141218
-      metaThemeColor.setAttribute('content', theme === 'dark' ? '#141218' : '#FEF7FF')
+      // Shadcn blue theme: light #FFFFFF, dark #030712 (hsl(222.2, 84%, 4.9%))
+      metaThemeColor.setAttribute('content', theme === 'dark' ? '#030712' : '#FFFFFF')
     }
 
     logAction('Theme applied', { theme, preference: themePreference.value })

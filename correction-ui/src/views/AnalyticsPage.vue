@@ -1,7 +1,7 @@
 <!--
   Analytics Page
-  Feature: 003-correction-ui, 005-table-enhancements
-  Tasks: T068, T071, T080-T087
+  Feature: 006-material-design-themes
+  Task: T010
 
   Page displaying correction history and statistics with enhanced analytics
 -->
@@ -15,7 +15,7 @@ import type { CorrectionPattern } from '@/types/models'
 
 const store = useAnalyticsStore()
 
-// Fetch all analytics on mount (T087)
+// Fetch all analytics on mount
 onMounted(() => {
   logAction('Analytics page mounted')
   store.fetchAllAnalytics()
@@ -27,33 +27,39 @@ function handleRefresh() {
   store.refreshStatistics()
 }
 
-// Handle pattern click (T067)
+// Handle pattern click
 function handlePatternClick(pattern: CorrectionPattern) {
   logAction('Pattern clicked', {
     field: pattern.field_name,
     original: pattern.original_value,
     corrected: pattern.corrected_value,
-    count: pattern.occurrence_count
+    count: pattern.occurrence_count,
   })
 
   // TODO: Show modal with example emails
-  alert(`Pattern: ${pattern.original_value} → ${pattern.corrected_value}\nOccurrences: ${pattern.occurrence_count}\n\nExample emails will be shown in a modal (future enhancement)`)
+  alert(
+    `Pattern: ${pattern.original_value} → ${pattern.corrected_value}\nOccurrences: ${pattern.occurrence_count}\n\nExample emails will be shown in a modal (future enhancement)`
+  )
 }
 
-// Handle export (T086)
+// Handle export
 function handleExport(type: 'trends' | 'categories' | 'patterns') {
   logAction('Export requested', { type })
   store.exportAnalytics(type)
 }
 
-// Handle drill-down (T085)
+// Handle drill-down
 function handleDrillDown(type: string, value: string | number) {
   logAction('Drill-down requested', { type, value })
   // TODO: Implement drill-down navigation/filtering
   if (type === 'category') {
-    alert(`Filtering by category: ${value}\n\nDrill-down navigation will be implemented in a future enhancement`)
+    alert(
+      `Filtering by category: ${value}\n\nDrill-down navigation will be implemented in a future enhancement`
+    )
   } else if (type === 'trend') {
-    alert(`Showing details for: ${value}\n\nDrill-down navigation will be implemented in a future enhancement`)
+    alert(
+      `Showing details for: ${value}\n\nDrill-down navigation will be implemented in a future enhancement`
+    )
   }
 }
 </script>
@@ -77,5 +83,7 @@ function handleDrillDown(type: string, value: string | number) {
 <style scoped>
 .analytics-page {
   width: 100%;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
 }
 </style>

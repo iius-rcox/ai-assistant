@@ -51,7 +51,7 @@ const changedFields = computed(() => {
         name: key,
         mine: props.myChanges[key],
         server: serverValue,
-        original: originalValue
+        original: originalValue,
       })
     }
   }
@@ -94,8 +94,8 @@ function handleClose() {
 
           <div class="modal-body">
             <p class="conflict-description">
-              This record was modified by another user while you were editing.
-              Please choose how to resolve the conflict:
+              This record was modified by another user while you were editing. Please choose how to
+              resolve the conflict:
             </p>
 
             <div v-if="changedFields.length > 0" class="conflict-details">
@@ -121,15 +121,9 @@ function handleClose() {
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-primary" @click="handleKeepMine">
-              Keep My Changes
-            </button>
-            <button class="btn btn-secondary" @click="handleUseServer">
-              Use Server Values
-            </button>
-            <button class="btn btn-outline" @click="handleMerge">
-              Merge (Review Each)
-            </button>
+            <button class="btn btn-primary" @click="handleKeepMine">Keep My Changes</button>
+            <button class="btn btn-secondary" @click="handleUseServer">Use Server Values</button>
+            <button class="btn btn-outline" @click="handleMerge">Merge (Review Each)</button>
           </div>
         </div>
       </div>
@@ -144,7 +138,7 @@ function handleClose() {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--md-sys-color-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -152,9 +146,9 @@ function handleClose() {
 }
 
 .modal-content {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: var(--md-sys-shape-corner-large);
+  box-shadow: var(--md-sys-elevation-3);
   max-width: 600px;
   width: 90%;
   max-height: 90vh;
@@ -166,14 +160,15 @@ function handleClose() {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e0e0e0;
-  background-color: #fff3cd;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-ext-color-warning-container);
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.25rem;
-  color: #856404;
+  font-size: var(--md-sys-typescale-title-large-size);
+  font-weight: var(--md-sys-typescale-title-large-weight);
+  color: var(--md-ext-color-on-warning-container);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -187,24 +182,27 @@ function handleClose() {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #856404;
+  color: var(--md-ext-color-on-warning-container);
   cursor: pointer;
   padding: 0;
   line-height: 1;
+  transition: var(--md-sys-theme-transition);
 }
 
 .modal-close:hover {
-  color: #533f03;
+  opacity: 0.7;
 }
 
 .modal-body {
   padding: 1.5rem;
+  background-color: var(--md-sys-color-surface-container-high);
 }
 
 .conflict-description {
   margin: 0 0 1.5rem;
-  color: #555;
+  color: var(--md-sys-color-on-surface-variant);
   line-height: 1.5;
+  font-size: var(--md-sys-typescale-body-large-size);
 }
 
 .conflict-details {
@@ -214,39 +212,40 @@ function handleClose() {
 .conflict-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
 }
 
 .conflict-table th,
 .conflict-table td {
   padding: 0.75rem;
   text-align: left;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .conflict-table th {
-  background-color: #f8f9fa;
-  font-weight: 600;
-  color: #2c3e50;
+  background-color: var(--md-sys-color-surface-container);
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  color: var(--md-sys-color-on-surface);
 }
 
 .field-name {
   font-weight: 500;
+  color: var(--md-sys-color-on-surface);
 }
 
 .field-original {
-  color: #6c757d;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .field-mine {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: var(--md-ext-color-success-container);
+  color: var(--md-ext-color-on-success-container);
   font-weight: 500;
 }
 
 .field-server {
-  background-color: #cce5ff;
-  color: #004085;
+  background-color: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
   font-weight: 500;
 }
 
@@ -254,51 +253,50 @@ function handleClose() {
   display: flex;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  border-top: 1px solid #e0e0e0;
-  background-color: #f8f9fa;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-sys-color-surface-container);
   flex-wrap: wrap;
 }
 
 .btn {
   padding: 0.6rem 1.2rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--md-sys-theme-transition);
   flex: 1;
   min-width: 120px;
 }
 
 .btn-primary {
-  background-color: #27ae60;
-  color: white;
+  background-color: var(--md-ext-color-success);
+  color: var(--md-ext-color-on-success);
   border: none;
 }
 
 .btn-primary:hover {
-  background-color: #219a52;
+  opacity: 0.9;
 }
 
 .btn-secondary {
-  background-color: #3498db;
-  color: white;
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
   border: none;
 }
 
 .btn-secondary:hover {
-  background-color: #2980b9;
+  opacity: 0.9;
 }
 
 .btn-outline {
   background-color: transparent;
-  color: #6c757d;
-  border: 1px solid #6c757d;
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px solid var(--md-sys-color-outline);
 }
 
 .btn-outline:hover {
-  background-color: #6c757d;
-  color: white;
+  background-color: var(--md-sys-color-surface-container-highest);
 }
 
 /* Transitions */

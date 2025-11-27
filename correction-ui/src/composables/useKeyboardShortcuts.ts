@@ -1,13 +1,14 @@
 /**
  * Keyboard Shortcuts Composable
- * Feature: 005-table-enhancements
- * Tasks: T041, T044, T046
- * Requirements: FR-019, FR-020, FR-021, FR-022, FR-023
+ * Feature: 005-table-enhancements, 007-instant-edit-undo
+ * Tasks: T041, T044, T046 (005), T038-T042 (007)
+ * Requirements: FR-019, FR-020, FR-021, FR-022, FR-023 (005), FR-007, FR-008 (007)
  *
  * Provides global keyboard shortcuts for the application:
  * - "/" to focus search input
  * - "?" to show shortcuts help modal
  * - "Escape" to close modals/cancel operations
+ * - "Ctrl/Cmd+Z" to undo last change (007-instant-edit-undo)
  */
 
 import { ref, onMounted, onUnmounted } from 'vue'
@@ -31,6 +32,8 @@ export interface UseKeyboardShortcutsOptions {
   onSave?: () => void
   /** Callback when Escape is pressed */
   onEscape?: () => void
+  /** T038: Callback when Ctrl/Cmd+Z is pressed (undo last change) */
+  onUndo?: () => void
   /** Whether shortcuts are enabled */
   enabled?: boolean
 }
@@ -53,6 +56,7 @@ export const KEYBOARD_SHORTCUTS: KeyboardShortcut[] = [
   { key: 'Space', description: 'Toggle row selection', category: 'actions' },
   { key: 'e', description: 'Expand/collapse row details', category: 'actions' },
   { key: 's', description: 'Save current edit', category: 'actions', modifier: 'ctrl' },
+  { key: 'z', description: 'Undo last change', category: 'actions', modifier: 'ctrl' },
 
   // General
   { key: '?', description: 'Show keyboard shortcuts', category: 'general' },
@@ -66,7 +70,8 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions = {}) 
     onToggleExpand,
     onSave,
     onEscape,
-    enabled = true
+    onUndo, // T038: Undo callback
+    enabled = true,
   } = options
 
   const isHelpModalOpen = ref(false)
@@ -127,6 +132,14 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions = {}) 
       event.preventDefault()
       logAction('Keyboard shortcut: Save')
       onSave?.()
+      return
+    }
+
+    // T038: Ctrl/Cmd + Z - Undo last change
+    if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
+      event.preventDefault()
+      logAction('Keyboard shortcut: Undo')
+      onUndo?.()
       return
     }
 
@@ -193,7 +206,7 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions = {}) 
     openHelpModal,
     closeHelpModal,
     enable,
-    disable
+    disable,
   }
 }
 

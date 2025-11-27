@@ -1,15 +1,16 @@
 <!--
   Corrections Chart Component
-  Feature: 005-table-enhancements
-  Task: T083
+  Feature: 005-table-enhancements / 006-material-design-themes
+  Task: T083, T056
   Requirements: FR-040, FR-041
 
-  ApexCharts multi-line chart showing corrections vs classifications trends
+  ApexCharts multi-line chart showing corrections vs classifications trends with M3 theming
 -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
+import { useChartTheme } from '@/composables/useChartTheme'
 
 interface Props {
   dates: string[]
@@ -24,9 +25,13 @@ const emit = defineEmits<{
   'point-click': [date: string, type: 'corrections' | 'classifications' | 'rate']
 }>()
 
-// Chart options
+const { lineChartOptions, getTrendColors, chartColors, isDark } = useChartTheme()
+
+// Chart options with M3 theming
 const chartOptions = computed(() => ({
+  ...lineChartOptions.value,
   chart: {
+    ...lineChartOptions.value.chart,
     id: 'corrections-trends',
     type: 'line' as const,
     toolbar: {
@@ -38,119 +43,88 @@ const chartOptions = computed(() => ({
         zoomin: true,
         zoomout: true,
         pan: false,
-        reset: true
-      }
-    },
-    animations: {
-      enabled: true,
-      easing: 'easeinout',
-      speed: 400
+        reset: true,
+      },
     },
     events: {
       dataPointSelection: (_event: any, _chartContext: any, config: any) => {
         const date = props.dates[config.dataPointIndex] ?? ''
-        const seriesName = config.seriesIndex === 0 ? 'corrections'
-          : config.seriesIndex === 1 ? 'classifications' : 'rate'
+        const seriesName =
+          config.seriesIndex === 0
+            ? 'corrections'
+            : config.seriesIndex === 1
+              ? 'classifications'
+              : 'rate'
         emit('point-click', date, seriesName as 'corrections' | 'classifications' | 'rate')
-      }
-    }
+      },
+    },
   },
   stroke: {
     curve: 'smooth' as const,
-    width: [3, 3, 2]
+    width: [3, 3, 2],
   },
-  colors: ['var(--color-danger, #e74c3c)', 'var(--color-primary, #3498db)', 'var(--color-success, #27ae60)'],
+  colors: getTrendColors(),
   xaxis: {
+    ...lineChartOptions.value.xaxis,
     type: 'datetime' as const,
     categories: props.dates.map(d => new Date(d).getTime()),
     title: {
       text: 'Date',
-      style: {
-        color: 'var(--text-secondary, #495057)'
-      }
+      style: lineChartOptions.value.xaxis?.title?.style,
     },
     labels: {
       format: 'MMM dd',
-      style: {
-        colors: 'var(--text-secondary, #495057)'
-      }
+      style: lineChartOptions.value.xaxis?.labels?.style,
     },
-    axisBorder: {
-      color: 'var(--border-primary, #dee2e6)'
-    },
-    axisTicks: {
-      color: 'var(--border-primary, #dee2e6)'
-    }
   },
   yaxis: [
     {
       title: {
         text: 'Count',
-        style: {
-          color: 'var(--text-secondary, #495057)'
-        }
+        style: lineChartOptions.value.yaxis?.title?.style,
       },
       labels: {
         formatter: (value: number) => Math.floor(value).toString(),
-        style: {
-          colors: 'var(--text-secondary, #495057)'
-        }
-      }
+        style: lineChartOptions.value.yaxis?.labels?.style,
+      },
     },
     {
       opposite: true,
       title: {
         text: 'Correction Rate %',
-        style: {
-          color: 'var(--text-secondary, #495057)'
-        }
+        style: lineChartOptions.value.yaxis?.title?.style,
       },
       labels: {
         formatter: (value: number) => `${value.toFixed(0)}%`,
-        style: {
-          colors: 'var(--text-secondary, #495057)'
-        }
+        style: lineChartOptions.value.yaxis?.labels?.style,
       },
       min: 0,
-      max: 100
-    }
+      max: 100,
+    },
   ],
   title: {
     text: 'Correction Trends (Last 30 Days)',
     align: 'left' as const,
-    style: {
-      fontSize: '16px',
-      fontWeight: 600,
-      color: 'var(--text-primary, #2c3e50)'
-    }
+    style: lineChartOptions.value.title?.style,
   },
   legend: {
     position: 'top' as const,
     horizontalAlign: 'right' as const,
-    labels: {
-      colors: 'var(--text-primary, #2c3e50)'
-    }
+    labels: lineChartOptions.value.legend?.labels,
   },
   tooltip: {
     shared: true,
     intersect: false,
-    theme: document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light',
+    theme: isDark.value ? 'dark' : 'light',
     x: {
-      format: 'MMM dd, yyyy'
-    }
+      format: 'MMM dd, yyyy',
+    },
   },
-  grid: {
-    borderColor: 'var(--border-primary, #e0e0e0)',
-    strokeDashArray: 4
-  },
+  grid: lineChartOptions.value.grid,
   markers: {
-    size: 4,
-    strokeWidth: 2,
-    strokeColors: 'var(--bg-primary, #fff)',
-    hover: {
-      size: 6
-    }
-  }
+    ...lineChartOptions.value.markers,
+    strokeColors: chartColors.value.surface,
+  },
 }))
 
 // Chart series
@@ -158,18 +132,18 @@ const chartSeries = computed(() => [
   {
     name: 'Corrections',
     type: 'line',
-    data: props.corrections
+    data: props.corrections,
   },
   {
     name: 'Classifications',
     type: 'line',
-    data: props.classifications
+    data: props.classifications,
   },
   {
     name: 'Correction Rate',
     type: 'line',
-    data: props.rates
-  }
+    data: props.rates,
+  },
 ])
 
 const hasData = computed(() => props.dates.length > 0)
@@ -181,34 +155,29 @@ const hasData = computed(() => props.dates.length > 0)
       <p>No trend data available yet. Start classifying and correcting emails to see trends.</p>
     </div>
 
-    <VueApexCharts
-      v-else
-      type="line"
-      :options="chartOptions"
-      :series="chartSeries"
-      height="350"
-    />
+    <VueApexCharts v-else type="line" :options="chartOptions" :series="chartSeries" height="350" />
   </div>
 </template>
 
 <style scoped>
 .corrections-chart {
-  background-color: var(--bg-primary, white);
+  background-color: var(--md-sys-color-surface);
   padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.05));
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-1);
   margin-bottom: 1.5rem;
-  border: 1px solid var(--border-primary, #e0e0e0);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: var(--md-sys-theme-transition);
 }
 
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: var(--text-muted, #95a5a6);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .empty-state p {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
 }
 </style>

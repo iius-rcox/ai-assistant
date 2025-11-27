@@ -10,11 +10,7 @@
  * Reference: research.md Section 3 - Offline/Network Resilience
  */
 
-import {
-  STORAGE_PREFIX,
-  STORAGE_VERSION,
-  STORAGE_TTL
-} from '@/constants/storage'
+import { STORAGE_PREFIX, STORAGE_VERSION, STORAGE_TTL } from '@/constants/storage'
 import type { CleanupResult, DraftData } from '@/types/storage'
 
 /**
@@ -98,7 +94,7 @@ export function cleanupStaleStorage(): CleanupResult {
   return {
     keysRemoved: keysToRemove.length,
     removedKeys: keysToRemove,
-    bytesFreed
+    bytesFreed,
   }
 }
 
@@ -253,7 +249,7 @@ export function getStorageStats(): {
     totalBytes,
     appBytes,
     draftCount,
-    pendingCount
+    pendingCount,
   }
 }
 

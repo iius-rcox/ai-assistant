@@ -13,8 +13,8 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY
 if (!supabaseUrl || !supabaseKey) {
   throw new Error(
     'Missing Supabase environment variables. ' +
-    'Please create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_SERVICE_KEY. ' +
-    'See .env.template for reference.'
+      'Please create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_SERVICE_KEY. ' +
+      'See .env.template for reference.'
   )
 }
 

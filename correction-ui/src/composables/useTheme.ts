@@ -1,13 +1,13 @@
 /**
  * Theme Composable
- * Feature: 005-table-enhancements
- * Tasks: T067, T068, T069
- * Requirements: FR-032, FR-033, FR-034, FR-035
+ * Feature: 010-shadcn-blue-theme (updated from 006-material-design-themes)
+ * Tasks: T006, T009
  *
  * Provides dark/light theme functionality with:
  * - System preference detection via prefers-color-scheme
  * - localStorage persistence for user preference
  * - Toggle between dark and light modes
+ * - Theme class application ('light'/'dark' on documentElement)
  */
 
 import { ref, computed, watch, onMounted } from 'vue'
@@ -25,10 +25,7 @@ export interface UseThemeOptions {
 }
 
 export function useTheme(options: UseThemeOptions = {}) {
-  const {
-    defaultTheme = 'system',
-    onThemeChange
-  } = options
+  const { defaultTheme = 'system', onThemeChange } = options
 
   // State
   const themePreference = ref<Theme>(defaultTheme)
@@ -81,7 +78,7 @@ export function useTheme(options: UseThemeOptions = {}) {
       systemPrefersDark.value = mediaQuery.matches
 
       // Listen for changes
-      mediaQuery.addEventListener('change', (e) => {
+      mediaQuery.addEventListener('change', e => {
         systemPrefersDark.value = e.matches
         if (themePreference.value === 'system') {
           applyTheme()
@@ -92,24 +89,26 @@ export function useTheme(options: UseThemeOptions = {}) {
 
   /**
    * Apply theme to document
+   * Uses M3 class names: 'light' and 'dark' directly on documentElement
    */
   function applyTheme() {
     const theme = resolvedTheme.value
     const root = document.documentElement
 
-    // Remove existing theme classes
-    root.classList.remove('theme-light', 'theme-dark')
+    // Remove existing theme classes (both legacy and M3)
+    root.classList.remove('theme-light', 'theme-dark', 'light', 'dark')
 
-    // Add new theme class
-    root.classList.add(`theme-${theme}`)
+    // Add M3 theme class directly
+    root.classList.add(theme)
 
     // Set color-scheme for native elements
     root.style.colorScheme = theme
 
-    // Update meta theme-color for mobile browsers
+    // Update meta theme-color for mobile browsers with shadcn blue theme colors
     const metaThemeColor = document.querySelector('meta[name="theme-color"]')
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', theme === 'dark' ? '#1a1a2e' : '#ffffff')
+      // Shadcn blue theme: light #FFFFFF, dark #030712 (hsl(222.2, 84%, 4.9%))
+      metaThemeColor.setAttribute('content', theme === 'dark' ? '#030712' : '#FFFFFF')
     }
 
     logAction('Theme applied', { theme, preference: themePreference.value })
@@ -177,7 +176,7 @@ export function useTheme(options: UseThemeOptions = {}) {
     setTheme,
     toggleTheme,
     cycleTheme,
-    resetToSystem
+    resetToSystem,
   }
 }
 

@@ -78,7 +78,7 @@ export function formatEmailBody(
     return {
       preview: '',
       isTruncated: false,
-      fullLength: 0
+      fullLength: 0,
     }
   }
 
@@ -88,7 +88,7 @@ export function formatEmailBody(
   return {
     preview: isTruncated ? body.slice(0, maxChars) : body,
     isTruncated,
-    fullLength
+    fullLength,
   }
 }
 

@@ -1,3 +1,11 @@
+/* M3 Token System - must load first */
+@import './themes/tokens.css';
+
+/* Theme-specific values (one applies based on class) */
+@import './themes/light.css';
+@import './themes/dark.css';
+
+/* Base styles */
 @import './base.css';
 
 #app {

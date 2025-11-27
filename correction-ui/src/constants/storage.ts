@@ -43,7 +43,7 @@ export const storageKeys = {
    * Session edit state for auth redirect recovery
    * TTL: 1 hour
    */
-  sessionEditState: () => `${STORAGE_PREFIX}:${STORAGE_VERSION}:session`
+  sessionEditState: () => `${STORAGE_PREFIX}:${STORAGE_VERSION}:session`,
 } as const
 
 /**
@@ -53,7 +53,7 @@ export const STORAGE_TTL = {
   DRAFT_EDIT: 24 * 60 * 60 * 1000, // 24 hours
   PENDING_QUEUE: 7 * 24 * 60 * 60 * 1000, // 7 days
   SESSION_STATE: 60 * 60 * 1000, // 1 hour
-  USER_PREFS: Infinity // Never expires
+  USER_PREFS: Infinity, // Never expires
 } as const
 
 /**
@@ -62,7 +62,7 @@ export const STORAGE_TTL = {
 export const STORAGE_LIMITS = {
   MAX_PENDING_QUEUE_SIZE: 50, // Maximum number of pending submissions
   MAX_DRAFT_AGE_MS: STORAGE_TTL.DRAFT_EDIT,
-  MAX_SESSION_AGE_MS: STORAGE_TTL.SESSION_STATE
+  MAX_SESSION_AGE_MS: STORAGE_TTL.SESSION_STATE,
 } as const
 
 /**
@@ -72,7 +72,7 @@ export const STORAGE_LIMITS = {
 export const STORAGE_KEYS = {
   INLINE_EDIT_DRAFT: `${STORAGE_PREFIX}:${STORAGE_VERSION}:draft:current`,
   PENDING_QUEUE: `${STORAGE_PREFIX}:${STORAGE_VERSION}:pending:queue`,
-  SESSION_STATE: `${STORAGE_PREFIX}:${STORAGE_VERSION}:session:state`
+  SESSION_STATE: `${STORAGE_PREFIX}:${STORAGE_VERSION}:session:state`,
 } as const
 
 /**
@@ -91,7 +91,7 @@ export const TABLE_STORAGE_KEYS = {
   /** Theme preference (light/dark/system) */
   THEME: `${STORAGE_PREFIX}:${STORAGE_VERSION}:theme`,
   /** Search query cache */
-  SEARCH_CACHE: `${STORAGE_PREFIX}:${STORAGE_VERSION}:search:cache`
+  SEARCH_CACHE: `${STORAGE_PREFIX}:${STORAGE_VERSION}:search:cache`,
 } as const
 
 /**

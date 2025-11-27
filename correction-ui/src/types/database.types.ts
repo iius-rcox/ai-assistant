@@ -8,13 +8,7 @@
  *   npx supabase gen types typescript --project-id xmziovusqlmgygcrgyqt > src/types/database.types.ts
  */
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
   public: {
@@ -70,10 +64,17 @@ export interface Database {
         Row: {
           id: number
           email_id: number
-          category: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'OTHER'
+          category: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'CHURCH' | 'OTHER'
           urgency: 'HIGH' | 'MEDIUM' | 'LOW'
           action: 'FYI' | 'RESPOND' | 'TASK' | 'PAYMENT' | 'CALENDAR' | 'NONE'
+          // Email Actions V2 (011-email-actions-v2)
+          action_v2: 'IGNORE' | 'SHIPMENT' | 'DRAFT_REPLY' | 'JUNK' | 'NOTIFY' | 'CALENDAR'
+          action_confidence: number | null
+          action_auto_assigned: boolean
+          has_tracking_info: boolean
+          has_date_info: boolean
           confidence_score: number
+          summary: string | null
           extracted_names: string[] | null
           extracted_dates: string[] | null
           extracted_amounts: string[] | null
@@ -92,10 +93,17 @@ export interface Database {
         Insert: {
           id?: number
           email_id: number
-          category: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'OTHER'
+          category: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'CHURCH' | 'OTHER'
           urgency: 'HIGH' | 'MEDIUM' | 'LOW'
           action: 'FYI' | 'RESPOND' | 'TASK' | 'PAYMENT' | 'CALENDAR' | 'NONE'
+          // Email Actions V2 (011-email-actions-v2)
+          action_v2: 'IGNORE' | 'SHIPMENT' | 'DRAFT_REPLY' | 'JUNK' | 'NOTIFY' | 'CALENDAR'
+          action_confidence?: number | null
+          action_auto_assigned?: boolean
+          has_tracking_info?: boolean
+          has_date_info?: boolean
           confidence_score: number
+          summary?: string | null
           extracted_names?: string[] | null
           extracted_dates?: string[] | null
           extracted_amounts?: string[] | null
@@ -112,10 +120,17 @@ export interface Database {
         Update: {
           id?: number
           email_id?: number
-          category?: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'OTHER'
+          category?: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'CHURCH' | 'OTHER'
           urgency?: 'HIGH' | 'MEDIUM' | 'LOW'
           action?: 'FYI' | 'RESPOND' | 'TASK' | 'PAYMENT' | 'CALENDAR' | 'NONE'
+          // Email Actions V2 (011-email-actions-v2)
+          action_v2?: 'IGNORE' | 'SHIPMENT' | 'DRAFT_REPLY' | 'JUNK' | 'NOTIFY' | 'CALENDAR'
+          action_confidence?: number | null
+          action_auto_assigned?: boolean
+          has_tracking_info?: boolean
+          has_date_info?: boolean
           confidence_score?: number
+          summary?: string | null
           extracted_names?: string[] | null
           extracted_dates?: string[] | null
           extracted_amounts?: string[] | null
@@ -186,7 +201,12 @@ export interface Database {
         Update: {
           id?: number
           email_id?: number
-          action_type?: 'LABEL_APPLIED' | 'MARKED_READ' | 'ARCHIVED' | 'MARKED_UNREAD' | 'UNARCHIVED'
+          action_type?:
+            | 'LABEL_APPLIED'
+            | 'MARKED_READ'
+            | 'ARCHIVED'
+            | 'MARKED_UNREAD'
+            | 'UNARCHIVED'
           action_details?: Json | null
           action_timestamp?: string
           success_status?: boolean
@@ -236,6 +256,48 @@ export interface Database {
           scheduled_for?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      // Email Actions V2 audit trail (011-email-actions-v2)
+      action_logs: {
+        Row: {
+          id: number
+          email_id: number
+          classification_id: number
+          action: 'IGNORE' | 'SHIPMENT' | 'DRAFT_REPLY' | 'JUNK' | 'NOTIFY' | 'CALENDAR'
+          previous_action: 'IGNORE' | 'SHIPMENT' | 'DRAFT_REPLY' | 'JUNK' | 'NOTIFY' | 'CALENDAR' | null
+          confidence_score: number | null
+          auto_assigned: boolean
+          assignment_reason: string | null
+          extracted_data: Json | null
+          source: 'workflow' | 'ui_manual' | 'ui_bulk' | 'telegram' | 'system'
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          email_id: number
+          classification_id: number
+          action: 'IGNORE' | 'SHIPMENT' | 'DRAFT_REPLY' | 'JUNK' | 'NOTIFY' | 'CALENDAR'
+          previous_action?: 'IGNORE' | 'SHIPMENT' | 'DRAFT_REPLY' | 'JUNK' | 'NOTIFY' | 'CALENDAR' | null
+          confidence_score?: number | null
+          auto_assigned: boolean
+          assignment_reason?: string | null
+          extracted_data?: Json | null
+          source: 'workflow' | 'ui_manual' | 'ui_bulk' | 'telegram' | 'system'
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          email_id?: number
+          classification_id?: number
+          action?: 'IGNORE' | 'SHIPMENT' | 'DRAFT_REPLY' | 'JUNK' | 'NOTIFY' | 'CALENDAR'
+          previous_action?: 'IGNORE' | 'SHIPMENT' | 'DRAFT_REPLY' | 'JUNK' | 'NOTIFY' | 'CALENDAR' | null
+          confidence_score?: number | null
+          auto_assigned?: boolean
+          assignment_reason?: string | null
+          extracted_data?: Json | null
+          source?: 'workflow' | 'ui_manual' | 'ui_bulk' | 'telegram' | 'system'
+          created_at?: string
         }
       }
     }

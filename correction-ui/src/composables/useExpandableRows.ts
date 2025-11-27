@@ -121,7 +121,7 @@ export function useExpandableRows(options: UseExpandableRowsOptions = {}) {
       logAction('Row expanded (fetched)', {
         id,
         hasBody: !!details.email?.body,
-        historyCount: details.correctionHistory?.length || 0
+        historyCount: details.correctionHistory?.length || 0,
       })
 
       onExpand?.(id, details)
@@ -213,7 +213,7 @@ export function useExpandableRows(options: UseExpandableRowsOptions = {}) {
     collapseAll,
     clearCache,
     clearAllCache,
-    refreshDetails
+    refreshDetails,
   }
 }
 

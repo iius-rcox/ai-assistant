@@ -1,15 +1,16 @@
 <!--
   Timeline Chart Component
-  Feature: 003-correction-ui
-  Task: T065
+  Feature: 003-correction-ui / 006-material-design-themes
+  Task: T065, T057
   Requirement: FR-008
 
-  ApexCharts line chart showing corrections over time
+  ApexCharts line chart showing corrections over time with M3 theming
 -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
+import { useChartTheme } from '@/composables/useChartTheme'
 import type { CorrectionTimepoint } from '@/types/models'
 
 interface Props {
@@ -18,9 +19,13 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Chart options
+const { lineChartOptions, chartColors, isDark } = useChartTheme()
+
+// Chart options with M3 theming
 const chartOptions = computed(() => ({
+  ...lineChartOptions.value,
   chart: {
+    ...lineChartOptions.value.chart,
     id: 'correction-timeline',
     type: 'line' as const,
     toolbar: {
@@ -31,64 +36,55 @@ const chartOptions = computed(() => ({
         zoomin: false,
         zoomout: false,
         pan: false,
-        reset: false
-      }
+        reset: false,
+      },
     },
-    animations: {
-      enabled: true,
-      easing: 'easeinout',
-      speed: 400
-    }
   },
-  stroke: {
-    curve: 'smooth' as const,
-    width: 3
-  },
-  colors: ['#3498db'],
+  stroke: lineChartOptions.value.stroke,
+  colors: [chartColors.value.primary],
   xaxis: {
+    ...lineChartOptions.value.xaxis,
     type: 'datetime' as const,
     title: {
-      text: 'Date'
+      text: 'Date',
+      style: lineChartOptions.value.xaxis?.title?.style,
     },
     labels: {
-      format: 'MMM dd'
-    }
+      format: 'MMM dd',
+      style: lineChartOptions.value.xaxis?.labels?.style,
+    },
   },
   yaxis: {
+    ...lineChartOptions.value.yaxis,
     title: {
-      text: 'Corrections'
+      text: 'Corrections',
+      style: lineChartOptions.value.yaxis?.title?.style,
     },
     labels: {
-      formatter: (value: number) => Math.floor(value).toString()
-    }
+      formatter: (value: number) => Math.floor(value).toString(),
+      style: lineChartOptions.value.yaxis?.labels?.style,
+    },
   },
   title: {
     text: 'Corrections Over Time',
     align: 'left' as const,
-    style: {
-      fontSize: '16px',
-      fontWeight: 600,
-      color: '#2c3e50'
-    }
+    style: lineChartOptions.value.title?.style,
   },
   tooltip: {
+    theme: isDark.value ? 'dark' : 'light',
     x: {
-      format: 'MMM dd, yyyy'
+      format: 'MMM dd, yyyy',
     },
     y: {
-      formatter: (value: number) => `${value} correction${value !== 1 ? 's' : ''}`
-    }
+      formatter: (value: number) => `${value} correction${value !== 1 ? 's' : ''}`,
+    },
   },
-  grid: {
-    borderColor: '#e0e0e0',
-    strokeDashArray: 4
-  },
+  grid: lineChartOptions.value.grid,
   markers: {
-    size: 4,
-    colors: ['#3498db'],
-    strokeWidth: 2,
-    strokeColors: '#fff'
-  }
+    ...lineChartOptions.value.markers,
+    colors: [chartColors.value.primary],
+    strokeColors: chartColors.value.surface,
+  },
 }))
 
 // Chart series
@@ -97,9 +93,9 @@ const chartSeries = computed(() => [
     name: 'Corrections',
     data: props.timeline.map(point => ({
       x: new Date(point.date).getTime(),
-      y: point.count
-    }))
-  }
+      y: point.count,
+    })),
+  },
 ])
 
 const hasData = computed(() => props.timeline.length > 0)
@@ -111,33 +107,29 @@ const hasData = computed(() => props.timeline.length > 0)
       <p>No correction timeline data available yet.</p>
     </div>
 
-    <VueApexCharts
-      v-else
-      type="line"
-      :options="chartOptions"
-      :series="chartSeries"
-      height="350"
-    />
+    <VueApexCharts v-else type="line" :options="chartOptions" :series="chartSeries" height="350" />
   </div>
 </template>
 
 <style scoped>
 .timeline-chart {
-  background-color: white;
+  background-color: var(--md-sys-color-surface);
   padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-1);
   margin-bottom: 1.5rem;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: var(--md-sys-theme-transition);
 }
 
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #95a5a6;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .empty-state p {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
 }
 </style>

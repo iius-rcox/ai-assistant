@@ -1,43 +1,22 @@
 <!--
   App Root Component
-  Feature: 003-correction-ui
-  Tasks: T016, T088, T089, T090
+  Feature: 006-material-design-themes
+  Task: T008
 
-  Provides navigation shell, router-view, toast notifications, and theme support
+  Provides navigation shell, router-view, toast notifications, and M3 theme support
 -->
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import Toast from '@/components/shared/Toast.vue'
+import { useTheme } from '@/composables/useTheme'
 
-// Dark mode support (T090)
-const isDarkMode = ref(false)
-
-onMounted(() => {
-  // Check for saved preference or system preference
-  const saved = localStorage.getItem('darkMode')
-  if (saved !== null) {
-    isDarkMode.value = saved === 'true'
-  } else {
-    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-  }
-  applyTheme()
-})
-
-function toggleDarkMode() {
-  isDarkMode.value = !isDarkMode.value
-  localStorage.setItem('darkMode', String(isDarkMode.value))
-  applyTheme()
-}
-
-function applyTheme() {
-  document.documentElement.classList.toggle('dark-mode', isDarkMode.value)
-}
+// Use the theme composable for M3 theme management
+const { isDark, toggleTheme } = useTheme()
 </script>
 
 <template>
-  <div class="app" :class="{ 'dark': isDarkMode }">
+  <div class="app">
     <header class="app-header">
       <div class="header-content">
         <h1 class="app-title">Email Classification Corrections</h1>
@@ -48,11 +27,12 @@ function applyTheme() {
       </div>
       <button
         class="theme-toggle"
-        @click="toggleDarkMode"
-        :aria-label="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
-        :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+        @click="toggleTheme"
+        :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+        :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+        data-testid="theme-toggle"
       >
-        <span v-if="isDarkMode">☀️</span>
+        <span v-if="isDark">☀️</span>
         <span v-else>🌙</span>
       </button>
     </header>
@@ -61,7 +41,7 @@ function applyTheme() {
       <RouterView />
     </main>
 
-    <!-- Toast notifications (T088) -->
+    <!-- Toast notifications -->
     <Toast />
   </div>
 </template>
@@ -71,16 +51,16 @@ function applyTheme() {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-color, #f5f6fa);
-  color: var(--text-color, #2c3e50);
-  transition: background-color 0.3s, color 0.3s;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  transition: var(--md-sys-theme-transition);
 }
 
 .app-header {
-  background-color: var(--header-bg, #2c3e50);
-  color: white;
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
   padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--md-sys-color-shadow);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -94,8 +74,10 @@ function applyTheme() {
 
 .app-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--md-sys-typescale-title-large-size);
+  line-height: var(--md-sys-typescale-title-large-line-height);
   font-weight: 600;
+  color: inherit;
 }
 
 .app-nav {
@@ -104,63 +86,65 @@ function applyTheme() {
 }
 
 .nav-link {
-  color: #ecf0f1;
+  color: var(--md-sys-color-on-primary);
   text-decoration: none;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  border-radius: var(--md-sys-shape-corner-small);
+  transition: var(--md-sys-theme-transition);
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  opacity: 0.9;
 }
 
 .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+  text-decoration: none;
 }
 
 .nav-link.router-link-active {
-  background-color: #3498db;
-  color: white;
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  opacity: 1;
 }
 
-/* Theme toggle button (T090) */
+/* Theme toggle button */
 .theme-toggle {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  border-radius: var(--md-sys-shape-corner-full);
+  width: 44px;
+  height: 44px;
   cursor: pointer;
   font-size: 1.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s, transform 0.2s;
+  transition: var(--md-sys-theme-transition);
+  color: var(--md-sys-color-on-primary);
+  padding: 0;
 }
 
 .theme-toggle:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
 }
 
-.theme-toggle:focus {
-  outline: 2px solid #3498db;
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--md-sys-color-on-primary);
   outline-offset: 2px;
 }
 
 .app-main {
   flex: 1;
-  padding: 1rem 1.5rem;
+  padding: 1.5rem;
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  background-color: var(--md-sys-color-surface);
 }
 
-/* Dark mode styles (T090) */
-.app.dark {
-  --bg-color: #1a1a2e;
-  --text-color: #eaeaea;
-  --header-bg: #16213e;
-}
-
-/* Responsive layout (T089) */
+/* Responsive layout */
 @media (max-width: 768px) {
   .app-header {
     padding: 0.75rem 1rem;
@@ -174,7 +158,7 @@ function applyTheme() {
   }
 
   .app-title {
-    font-size: 1.1rem;
+    font-size: var(--md-sys-typescale-title-medium-size);
     text-align: center;
   }
 
@@ -186,15 +170,15 @@ function applyTheme() {
 
   .nav-link {
     padding: 0.4rem 0.75rem;
-    font-size: 0.85rem;
+    font-size: var(--md-sys-typescale-label-medium-size);
   }
 
   .theme-toggle {
     position: absolute;
     top: 0.75rem;
     right: 0.75rem;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     font-size: 1rem;
   }
 
@@ -205,12 +189,12 @@ function applyTheme() {
 
 @media (max-width: 480px) {
   .app-title {
-    font-size: 1rem;
+    font-size: var(--md-sys-typescale-title-small-size);
   }
 
   .nav-link {
     padding: 0.35rem 0.6rem;
-    font-size: 0.8rem;
+    font-size: var(--md-sys-typescale-label-small-size);
   }
 
   .app-main {

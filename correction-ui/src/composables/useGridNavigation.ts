@@ -26,17 +26,10 @@ export interface GridNavigationOptions {
 }
 
 export function useGridNavigation(options: GridNavigationOptions) {
-  const {
-    rowCount,
-    columnCount,
-    onEnter,
-    onEscape,
-    onSpace,
-    isEditing = () => false
-  } = options
+  const { rowCount, columnCount, onEnter, onEscape, onSpace, isEditing = () => false } = options
 
-  // Current focused position
-  const focusedRow = ref(0)
+  // Current focused position (-1 means no focus)
+  const focusedRow = ref(-1)
   const focusedCol = ref(0)
 
   // Track if grid navigation is active
@@ -117,6 +110,25 @@ export function useGridNavigation(options: GridNavigationOptions) {
         // Don't prevent default - let save handler work
         return
       }
+      return
+    }
+
+    // Initialize focus to first row if not yet focused
+    const navigationKeys = [
+      'ArrowUp',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowRight',
+      'Enter',
+      ' ',
+      'Home',
+      'End',
+      'PageUp',
+      'PageDown',
+    ]
+    if (focusedRow.value === -1 && navigationKeys.includes(event.key)) {
+      focusCell(0, 0)
+      event.preventDefault()
       return
     }
 
@@ -221,7 +233,7 @@ export function useGridNavigation(options: GridNavigationOptions) {
       'aria-rowindex': rowIndex + 1,
       'aria-colindex': colIndex + 1,
       'aria-selected': isFocused ? 'true' : undefined,
-      tabindex: isFocused ? 0 : -1
+      tabindex: isFocused ? 0 : -1,
     }
   }
 
@@ -231,7 +243,7 @@ export function useGridNavigation(options: GridNavigationOptions) {
   function getRowAttributes(rowIndex: number) {
     return {
       role: 'row',
-      'aria-rowindex': rowIndex + 1
+      'aria-rowindex': rowIndex + 1,
     }
   }
 
@@ -243,7 +255,7 @@ export function useGridNavigation(options: GridNavigationOptions) {
       role: 'grid',
       'aria-rowcount': rowCount(),
       'aria-colcount': columnCount,
-      'aria-activedescendant': activeCellId.value
+      'aria-activedescendant': activeCellId.value,
     }
   }
 
@@ -269,6 +281,6 @@ export function useGridNavigation(options: GridNavigationOptions) {
     // ARIA attribute helpers
     getCellAttributes,
     getRowAttributes,
-    getGridAttributes
+    getGridAttributes,
   }
 }

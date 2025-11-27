@@ -20,7 +20,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   correctedTimestamp: null,
   correctedBy: null,
-  variant: 'small'
+  variant: 'small',
 })
 
 const isCorrected = computed(() => !!props.correctedTimestamp)
@@ -66,25 +66,26 @@ const tooltipText = computed(() => {
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  border-radius: var(--md-sys-shape-corner-full);
+  font-size: var(--md-sys-typescale-label-small-size);
+  font-weight: var(--md-sys-typescale-label-small-weight);
   white-space: nowrap;
+  transition: var(--md-sys-theme-transition);
 }
 
 .badge-corrected {
-  background-color: #27ae60;
-  color: white;
+  background-color: var(--md-ext-color-success);
+  color: var(--md-ext-color-on-success);
 }
 
 .badge-small {
   padding: 0.2rem 0.5rem;
-  font-size: 0.7rem;
+  font-size: var(--md-sys-typescale-label-small-size);
 }
 
 .badge-large {
   padding: 0.4rem 0.8rem;
-  font-size: 0.85rem;
+  font-size: var(--md-sys-typescale-label-medium-size);
 }
 
 .badge-icon {

@@ -1,88 +1,247 @@
 /**
- * Dark Theme CSS Variables
- * Feature: 005-table-enhancements
- * Task: T071
- * Requirements: FR-032, FR-034
+ * Shadcn Blue Dark Theme
+ * Feature: 010-shadcn-blue-theme (updated from 006-material-design-themes)
+ *
+ * Based on shadcn blue palette with primary hsl(217.2, 91.2%, 59.8%)
+ * Uses tonal elevation per design guidelines
+ * All color combinations meet WCAG AA contrast requirements (4.5:1)
  */
 
-:root.theme-dark {
+:root.dark {
+  /* ============================================
+   * SHADCN CORE TOKEN VALUES
+   * ============================================ */
+
+  /* Background/Foreground */
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+
+  /* Card */
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+
+  /* Popover */
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+
+  /* Primary (Blue) */
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+
+  /* Secondary */
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+
+  /* Muted */
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+
+  /* Accent */
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+
+  /* Destructive */
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  /* Border/Input/Ring */
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 48%;
+
+  /* Chart Colors (Dark mode optimized) */
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
+
+  /* ============================================
+   * M3 COLOR ROLE TOKENS (Derived from shadcn)
+   * ============================================ */
+
+  /* Primary - Blue */
+  --md-sys-color-primary: hsl(var(--primary));
+  --md-sys-color-on-primary: hsl(var(--primary-foreground));
+  --md-sys-color-primary-container: hsl(217.2 91.2% 25%);
+  --md-sys-color-on-primary-container: hsl(217.2 91.2% 80%);
+
+  /* Secondary */
+  --md-sys-color-secondary: hsl(var(--secondary-foreground));
+  --md-sys-color-on-secondary: hsl(var(--secondary));
+  --md-sys-color-secondary-container: hsl(var(--secondary));
+  --md-sys-color-on-secondary-container: hsl(var(--secondary-foreground));
+
+  /* Tertiary - Accent */
+  --md-sys-color-tertiary: hsl(var(--accent-foreground));
+  --md-sys-color-on-tertiary: hsl(var(--accent));
+  --md-sys-color-tertiary-container: hsl(var(--accent));
+  --md-sys-color-on-tertiary-container: hsl(var(--accent-foreground));
+
+  /* Error */
+  --md-sys-color-error: hsl(0 62.8% 55%);
+  --md-sys-color-on-error: hsl(var(--destructive-foreground));
+  --md-sys-color-error-container: hsl(var(--destructive));
+  --md-sys-color-on-error-container: hsl(0 62.8% 80%);
+
+  /* ============================================
+   * SURFACE TOKENS (Derived from shadcn)
+   * ============================================ */
+
+  --md-sys-color-surface: hsl(var(--background));
+  --md-sys-color-on-surface: hsl(var(--foreground));
+  --md-sys-color-surface-variant: hsl(var(--muted));
+  --md-sys-color-on-surface-variant: hsl(var(--muted-foreground));
+
+  /* Surface Container Hierarchy (Tonal Elevation) */
+  --md-sys-color-surface-container-lowest: hsl(222.2 84% 3%);
+  --md-sys-color-surface-container-low: hsl(222.2 84% 6%);
+  --md-sys-color-surface-container: hsl(var(--muted));
+  --md-sys-color-surface-container-high: hsl(217.2 32.6% 20%);
+  --md-sys-color-surface-container-highest: hsl(217.2 32.6% 25%);
+
+  /* Surface Variants */
+  --md-sys-color-surface-dim: hsl(var(--background));
+  --md-sys-color-surface-bright: hsl(217.2 32.6% 25%);
+
+  /* ============================================
+   * UTILITY TOKENS
+   * ============================================ */
+
+  --md-sys-color-outline: hsl(var(--muted-foreground));
+  --md-sys-color-outline-variant: hsl(var(--border));
+  --md-sys-color-inverse-surface: hsl(var(--foreground));
+  --md-sys-color-inverse-on-surface: hsl(var(--background));
+  --md-sys-color-inverse-primary: hsl(221.2 83.2% 53.3%);
+  --md-sys-color-scrim: #000000;
+  --md-sys-color-shadow: #000000;
+
+  /* ============================================
+   * EXTENDED COLOR TOKENS (Application-Specific)
+   * ============================================ */
+
+  /* Success/Warning States */
+  --md-ext-color-success: #4ade80;
+  --md-ext-color-on-success: #14532d;
+  --md-ext-color-success-container: #166534;
+  --md-ext-color-on-success-container: #bbf7d0;
+  --md-ext-color-warning: #fb923c;
+  --md-ext-color-on-warning: #1a1a1a;
+
+  /* Category Badge Colors (Adjusted for dark mode - lighter tones) */
+  --md-ext-color-badge-kids: #818cf8;
+  --md-ext-color-badge-kids-text: #1e1b4b;
+  --md-ext-color-badge-robyn: #f472b6;
+  --md-ext-color-badge-robyn-text: #500724;
+  --md-ext-color-badge-work: #60a5fa;
+  --md-ext-color-badge-work-text: #1e3a8a;
+  --md-ext-color-badge-financial: #4ade80;
+  --md-ext-color-badge-financial-text: #14532d;
+  --md-ext-color-badge-shopping: #fb923c;
+  --md-ext-color-badge-shopping-text: #431407;
+  --md-ext-color-badge-church: #a78bfa;
+  --md-ext-color-badge-church-text: #2e1065;
+  --md-ext-color-badge-other: #94a3b8;
+  --md-ext-color-badge-other-text: #1e293b;
+
+  /* Urgency Badge Colors */
+  --md-ext-color-urgency-high: hsl(0 62.8% 55%);
+  --md-ext-color-urgency-high-text: #1a1a1a;
+  --md-ext-color-urgency-medium: #fb923c;
+  --md-ext-color-urgency-medium-text: #1a1a1a;
+  --md-ext-color-urgency-low: hsl(var(--muted-foreground));
+  --md-ext-color-urgency-low-text: #1a1a1a;
+
+  /* Action Badge Colors (Feature: 011-email-actions-v2) */
+  --md-ext-color-action-ignore: #90a4ae;
+  --md-ext-color-action-shipment: #a1887f;
+  --md-ext-color-action-draft-reply: #7986cb;
+  --md-ext-color-action-junk: hsl(0 62.8% 55%);
+  --md-ext-color-action-notify: #fbbf24;
+  --md-ext-color-action-calendar: #34d399;
+
+  /* ============================================
+   * LEGACY TOKEN ALIASES (Migration Support)
+   * ============================================ */
+
   /* Background colors */
-  --bg-primary: #1a1a2e;
-  --bg-secondary: #16213e;
-  --bg-tertiary: #0f3460;
-  --bg-hover: #1f4068;
-  --bg-active: #0f3460;
+  --bg-primary: var(--md-sys-color-surface);
+  --bg-secondary: var(--md-sys-color-surface-container);
+  --bg-tertiary: var(--md-sys-color-surface-container-high);
+  --bg-hover: var(--md-sys-color-surface-container-high);
+  --bg-active: var(--md-sys-color-surface-container-highest);
 
   /* Text colors */
-  --text-primary: #e4e4e4;
-  --text-secondary: #b4b4b4;
-  --text-muted: #8a8a8a;
-  --text-disabled: #5a5a5a;
-  --text-inverse: #1a1a2e;
+  --text-primary: var(--md-sys-color-on-surface);
+  --text-secondary: var(--md-sys-color-on-surface-variant);
+  --text-muted: var(--md-sys-color-outline);
+  --text-disabled: var(--md-sys-color-outline-variant);
+  --text-inverse: var(--md-sys-color-inverse-on-surface);
 
   /* Border colors */
-  --border-primary: #2d3748;
-  --border-secondary: #1f2937;
-  --border-focus: #4a90d9;
+  --border-primary: var(--md-sys-color-outline-variant);
+  --border-secondary: var(--md-sys-color-surface-variant);
+  --border-focus: var(--md-sys-color-primary);
 
   /* Brand colors */
-  --color-primary: #4a90d9;
-  --color-primary-hover: #5ba3ec;
-  --color-primary-light: #1a3a5c;
+  --color-primary: var(--md-sys-color-primary);
+  --color-primary-hover: hsl(217.2 91.2% 70%);
+  --color-primary-light: var(--md-sys-color-primary-container);
 
-  --color-success: #2ecc71;
-  --color-success-light: #1a3f2a;
-  --color-success-dark: #a8e6cf;
+  --color-success: var(--md-ext-color-success);
+  --color-success-light: var(--md-ext-color-success-container);
+  --color-success-dark: var(--md-ext-color-on-success-container);
 
-  --color-warning: #f1c40f;
-  --color-warning-light: #3d3519;
-  --color-warning-dark: #f7dc6f;
+  --color-warning: var(--md-ext-color-warning);
+  --color-warning-light: #4a3a20;
+  --color-warning-dark: #ffe0b2;
 
-  --color-danger: #e74c3c;
-  --color-danger-light: #3d1f1f;
-  --color-danger-dark: #f5b7b1;
+  --color-danger: var(--md-sys-color-error);
+  --color-danger-light: var(--md-sys-color-error-container);
+  --color-danger-dark: var(--md-sys-color-on-error-container);
 
-  --color-info: #3498db;
-  --color-info-light: #1a3a5c;
-  --color-info-dark: #85c1e9;
+  --color-info: var(--md-sys-color-primary);
+  --color-info-light: var(--md-sys-color-primary-container);
+  --color-info-dark: var(--md-sys-color-on-primary-container);
 
-  /* Category badge colors (slightly adjusted for dark mode) */
-  --badge-kids: #a569bd;
-  --badge-robyn: #ec407a;
-  --badge-work: #5dade2;
-  --badge-financial: #58d68d;
-  --badge-shopping: #f5b041;
-  --badge-other: #aab7b8;
+  /* Category badge colors (legacy) */
+  --badge-kids: var(--md-ext-color-badge-kids);
+  --badge-robyn: var(--md-ext-color-badge-robyn);
+  --badge-work: var(--md-ext-color-badge-work);
+  --badge-financial: var(--md-ext-color-badge-financial);
+  --badge-shopping: var(--md-ext-color-badge-shopping);
+  --badge-church: var(--md-ext-color-badge-church);
+  --badge-other: var(--md-ext-color-badge-other);
 
-  /* Urgency badge colors */
-  --badge-urgency-high: #ec7063;
-  --badge-urgency-medium: #f5b041;
-  --badge-urgency-low: #aab7b8;
+  /* Urgency badge colors (legacy) */
+  --badge-urgency-high: var(--md-ext-color-urgency-high);
+  --badge-urgency-medium: var(--md-ext-color-urgency-medium);
+  --badge-urgency-low: var(--md-ext-color-urgency-low);
 
   /* Table styles */
-  --table-header-bg: #16213e;
-  --table-row-hover: #1f4068;
-  --table-row-expanded: #0f3460;
-  --table-row-selected: #1a3a5c;
-  --table-border: #2d3748;
+  --table-header-bg: var(--md-sys-color-surface-container);
+  --table-row-hover: var(--md-sys-color-surface-container-high);
+  --table-row-expanded: var(--md-sys-color-primary-container);
+  --table-row-selected: var(--md-sys-color-secondary-container);
+  --table-border: var(--md-sys-color-outline-variant);
 
   /* Input styles */
-  --input-bg: #16213e;
-  --input-border: #2d3748;
-  --input-focus-border: #4a90d9;
-  --input-placeholder: #6c757d;
+  --input-bg: var(--md-sys-color-surface-container-low);
+  --input-border: var(--md-sys-color-outline-variant);
+  --input-focus-border: var(--md-sys-color-primary);
+  --input-placeholder: var(--md-sys-color-on-surface-variant);
 
-  /* Shadow */
+  /* Shadow - minimal in dark mode (tonal elevation preferred) */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
 
   /* Modal/overlay */
-  --overlay-bg: rgba(0, 0, 0, 0.7);
-  --modal-bg: #16213e;
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+  --modal-bg: var(--md-sys-color-surface-container-high);
 
   /* Scrollbar */
-  --scrollbar-track: #16213e;
-  --scrollbar-thumb: #4a5568;
-  --scrollbar-thumb-hover: #5a6778;
+  --scrollbar-track: var(--md-sys-color-surface-container);
+  --scrollbar-thumb: var(--md-sys-color-outline-variant);
+  --scrollbar-thumb-hover: var(--md-sys-color-outline);
 }

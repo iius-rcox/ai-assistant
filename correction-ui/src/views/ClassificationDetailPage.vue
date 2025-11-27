@@ -1,7 +1,7 @@
 <!--
   Classification Detail Page
-  Feature: 003-correction-ui
-  Task: T040
+  Feature: 006-material-design-themes
+  Task: T011
 
   Page for viewing and editing individual classification
 -->
@@ -53,7 +53,7 @@ async function handleSave(updates: any) {
   // Update local classification with new values
   classification.value = {
     ...classification.value,
-    ...updated
+    ...updated,
   }
 }
 
@@ -68,9 +68,7 @@ function handleSaved() {
 <template>
   <div class="detail-page">
     <div class="page-header">
-      <button @click="router.push({ name: 'home' })" class="btn-back">
-        ← Back to List
-      </button>
+      <button @click="router.push({ name: 'home' })" class="btn-back">← Back to List</button>
       <h2>Edit Classification</h2>
     </div>
 
@@ -83,9 +81,7 @@ function handleSaved() {
     <!-- Error state -->
     <div v-else-if="error" class="error-state">
       <p class="error-text">{{ error }}</p>
-      <button @click="router.push({ name: 'home' })" class="btn-back-home">
-        Return to List
-      </button>
+      <button @click="router.push({ name: 'home' })" class="btn-back-home">Return to List</button>
     </div>
 
     <!-- Classification detail -->
@@ -101,6 +97,7 @@ function handleSaved() {
 <style scoped>
 .detail-page {
   width: 100%;
+  background-color: var(--md-sys-color-surface);
 }
 
 .page-header {
@@ -109,24 +106,33 @@ function handleSaved() {
 
 .page-header h2 {
   margin: 0.5rem 0 0 0;
-  color: #2c3e50;
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-headline-small-size);
+  line-height: var(--md-sys-typescale-headline-small-line-height);
 }
 
 .btn-back,
 .btn-back-home {
   padding: 0.5rem 1rem;
-  background-color: #95a5a6;
-  color: white;
-  border: none;
-  border-radius: 4px;
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  transition: var(--md-sys-theme-transition);
 }
 
 .btn-back:hover,
 .btn-back-home:hover {
-  background-color: #7f8c8d;
+  background-color: var(--md-sys-color-surface-container-highest);
+}
+
+.btn-back:focus-visible,
+.btn-back-home:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
 }
 
 .loading-state,
@@ -136,8 +142,8 @@ function handleSaved() {
 }
 
 .spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
+  border: 4px solid var(--md-sys-color-surface-container);
+  border-top: 4px solid var(--md-sys-color-primary);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -146,16 +152,25 @@ function handleSaved() {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-state p {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-large-size);
 }
 
 .error-state {
-  color: #e74c3c;
+  color: var(--md-sys-color-error);
 }
 
 .error-text {
   margin-bottom: 1rem;
-  font-size: 1.1rem;
+  font-size: var(--md-sys-typescale-body-large-size);
 }
 </style>

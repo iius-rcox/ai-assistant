@@ -1,25 +1,41 @@
 /**
  * Classification Store
- * Feature: 003-correction-ui, 004-inline-edit, 005-table-enhancements
- * Tasks: T020, T024, T025, T013, T007
+ * Feature: 003-correction-ui, 004-inline-edit, 005-table-enhancements, 008-column-search-filters
+ * Tasks: T020, T024, T025, T013, T007, T026
  *
  * Global state management for classifications using Pinia
  */
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { ClassificationWithEmail, ClassificationFilters, PaginationParams } from '@/types/models'
-import type { InlineEditState, InlineEditData, SaveStatus, DisplayMode, ConflictData } from '@/types/inline-edit'
-import type { SortState, SearchState, SelectionState, ExpandedRowData } from '@/types/table-enhancements'
+import type {
+  ClassificationWithEmail,
+  ClassificationFilters,
+  PaginationParams,
+} from '@/types/models'
+import type {
+  InlineEditState,
+  InlineEditData,
+  SaveStatus,
+  DisplayMode,
+  ConflictData,
+} from '@/types/inline-edit'
+import type {
+  SortState,
+  SearchState,
+  SelectionState,
+  ExpandedRowData,
+} from '@/types/table-enhancements'
 import * as classificationService from '@/services/classificationService'
 import { logAction, logError } from '@/utils/logger'
+import { PAGINATION_CONFIG } from '@/constants/table'
 
 export const useClassificationStore = defineStore('classification', () => {
   // State - List View
   const classifications = ref<ClassificationWithEmail[]>([])
   const totalCount = ref(0)
   const currentPage = ref(1)
-  const pageSize = ref(20)
+  const pageSize = ref<number>(PAGINATION_CONFIG.DEFAULT_PAGE_SIZE) // T026: Default 50 rows
   const filters = ref<ClassificationFilters>({})
   const sortBy = ref('classified_timestamp')
   const sortDir = ref<'asc' | 'desc'>('desc')
@@ -63,13 +79,12 @@ export const useClassificationStore = defineStore('classification', () => {
 
   // Table enhancement getters (Feature: 005-table-enhancements, Task: T007)
   const selectedCount = computed(() => selectedIds.value.size)
-  const isAllSelected = computed(() =>
-    classifications.value.length > 0 &&
-    classifications.value.every(c => selectedIds.value.has(c.id))
+  const isAllSelected = computed(
+    () =>
+      classifications.value.length > 0 &&
+      classifications.value.every(c => selectedIds.value.has(c.id))
   )
-  const isIndeterminate = computed(() =>
-    selectedIds.value.size > 0 && !isAllSelected.value
-  )
+  const isIndeterminate = computed(() => selectedIds.value.size > 0 && !isAllSelected.value)
   const hasSearch = computed(() => searchQuery.value.length > 0)
 
   // Inline edit getters (Feature: 004-inline-edit, Task: T013)
@@ -94,7 +109,7 @@ export const useClassificationStore = defineStore('classification', () => {
       logAction('Fetching classifications', {
         page: currentPage.value,
         pageSize: pageSize.value,
-        filters: filters.value
+        filters: filters.value,
       })
 
       const result = await classificationService.listClassifications({
@@ -102,7 +117,7 @@ export const useClassificationStore = defineStore('classification', () => {
         pageSize: pageSize.value,
         filters: filters.value,
         sortBy: sortBy.value,
-        sortDir: sortDir.value
+        sortDir: sortDir.value,
       })
 
       classifications.value = result.data
@@ -111,7 +126,7 @@ export const useClassificationStore = defineStore('classification', () => {
       logAction('Classifications fetched successfully', {
         count: result.data.length,
         total: result.totalCount,
-        page: currentPage.value
+        page: currentPage.value,
       })
     } catch (e) {
       error.value = e as Error
@@ -134,12 +149,16 @@ export const useClassificationStore = defineStore('classification', () => {
    * Update classification (save correction)
    * Task: T025
    */
-  async function updateClassification(id: number, updates: {
-    category: string
-    urgency: string
-    action: string
-    correction_reason?: string | null
-  }) {
+  async function updateClassification(
+    id: number,
+    updates: {
+      category: string
+      urgency: string
+      action: string
+      action_v2?: string
+      correction_reason?: string | null
+    }
+  ) {
     try {
       logAction('Updating classification', { id, updates })
 
@@ -149,8 +168,9 @@ export const useClassificationStore = defineStore('classification', () => {
           category: updates.category as any,
           urgency: updates.urgency as any,
           action: updates.action as any,
-          correction_reason: updates.correction_reason
-        }
+          action_v2: updates.action_v2 as any,
+          correction_reason: updates.correction_reason,
+        },
       })
 
       // Update local state
@@ -158,7 +178,11 @@ export const useClassificationStore = defineStore('classification', () => {
       if (index !== -1) {
         const current = classifications.value[index]
         if (current && current.email) {
-          classifications.value[index] = { ...current, ...updated.classification, email: current.email } as any
+          classifications.value[index] = {
+            ...current,
+            ...updated.classification,
+            email: current.email,
+          } as any
         }
       }
 
@@ -233,7 +257,7 @@ export const useClassificationStore = defineStore('classification', () => {
     originalData.value = {
       category: classification.category,
       urgency: classification.urgency,
-      action: classification.action
+      action: classification.action,
     }
     originalVersion.value = classification.version
     currentData.value = { ...originalData.value }
@@ -250,10 +274,7 @@ export const useClassificationStore = defineStore('classification', () => {
    * Task: T013
    * Requirement: FR-002
    */
-  function updateEditField<K extends keyof InlineEditData>(
-    field: K,
-    value: InlineEditData[K]
-  ) {
+  function updateEditField<K extends keyof InlineEditData>(field: K, value: InlineEditData[K]) {
     if (!currentData.value) return
 
     currentData.value[field] = value
@@ -365,6 +386,6 @@ export const useClassificationStore = defineStore('classification', () => {
     cancelEditing,
     setSaveStatus,
     setConflictData,
-    setDisplayMode
+    setDisplayMode,
   }
 })

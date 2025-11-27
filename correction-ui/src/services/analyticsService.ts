@@ -36,7 +36,7 @@ export async function getCorrectionRate(): Promise<{
   return {
     total: totalCount || 0,
     corrected: correctedCount || 0,
-    rate: (correctedCount || 0) / (totalCount || 1)
+    rate: (correctedCount || 0) / (totalCount || 1),
   }
 }
 
@@ -68,7 +68,7 @@ export async function getCorrectionPatterns(): Promise<CorrectionPattern[]> {
         original_value: log.original_value,
         corrected_value: log.corrected_value,
         occurrence_count: 0,
-        example_emails: []
+        example_emails: [],
       })
     }
 
@@ -160,17 +160,17 @@ export async function getCorrectionStatistics(): Promise<CorrectionStatistics> {
     getCorrectionRate(),
     getCorrectionPatterns(),
     getCorrectionTimeline(),
-    getMostCorrectedCategory()
+    getMostCorrectedCategory(),
   ])
 
   return {
     summary: {
       totalCorrections: rateData.corrected,
       correctionRate: rateData.rate * 100, // Convert to percentage
-      mostCorrectedCategory: mostCorrected
+      mostCorrectedCategory: mostCorrected,
     },
     patterns,
-    timeline
+    timeline,
   }
 }
 
@@ -245,10 +245,8 @@ export async function getCorrectionTrends(days: number = 30): Promise<{
     classifications: sortedDates.map(d => dateMap.get(d)!.classifications),
     rates: sortedDates.map(d => {
       const entry = dateMap.get(d)!
-      return entry.classifications > 0
-        ? (entry.corrections / entry.classifications) * 100
-        : 0
-    })
+      return entry.classifications > 0 ? (entry.corrections / entry.classifications) * 100 : 0
+    }),
   }
 }
 
@@ -263,9 +261,7 @@ export async function getCategoryDistribution(): Promise<{
   counts: number[]
   percentages: number[]
 }> {
-  const { data, error } = await supabase
-    .from('classifications')
-    .select('category')
+  const { data, error } = await supabase.from('classifications').select('category')
 
   if (error) throw error
 
@@ -279,13 +275,12 @@ export async function getCategoryDistribution(): Promise<{
   })
 
   // Sort by count descending
-  const sorted = Array.from(categoryCount.entries())
-    .sort((a, b) => b[1] - a[1])
+  const sorted = Array.from(categoryCount.entries()).sort((a, b) => b[1] - a[1])
 
   return {
     categories: sorted.map(([cat]) => cat),
     counts: sorted.map(([, count]) => count),
-    percentages: sorted.map(([, count]) => total > 0 ? (count / total) * 100 : 0)
+    percentages: sorted.map(([, count]) => (total > 0 ? (count / total) * 100 : 0)),
   }
 }
 
@@ -344,7 +339,7 @@ export async function getAccuracyTrends(days: number = 30): Promise<{
       const entry = dateMap.get(d)!
       return entry.total > 0 ? (entry.accurate / entry.total) * 100 : 100
     }),
-    totalPerDay: sortedDates.map(d => dateMap.get(d)!.total)
+    totalPerDay: sortedDates.map(d => dateMap.get(d)!.total),
   }
 }
 
@@ -354,15 +349,15 @@ export async function getAccuracyTrends(days: number = 30): Promise<{
  * Task: T086
  * Requirements: FR-044
  */
-export function exportAnalyticsCSV(data: {
-  headers: string[]
-  rows: (string | number)[][]
-}, filename: string = 'analytics-export.csv'): void {
+export function exportAnalyticsCSV(
+  data: {
+    headers: string[]
+    rows: (string | number)[][]
+  },
+  filename: string = 'analytics-export.csv'
+): void {
   // Create CSV content
-  const csvContent = [
-    data.headers.join(','),
-    ...data.rows.map(row => row.join(','))
-  ].join('\n')
+  const csvContent = [data.headers.join(','), ...data.rows.map(row => row.join(','))].join('\n')
 
   // Create blob and download
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })

@@ -1,10 +1,10 @@
 <!--
   Classification Detail Component
-  Feature: 003-correction-ui
-  Tasks: T031-T038, T043
+  Feature: 003-correction-ui / 006-material-design-themes
+  Tasks: T031-T038, T043, T061
   Requirements: FR-002, FR-003, FR-004, FR-005, FR-013, FR-019, FR-020, FR-021, FR-022
 
-  Displays email content with inline editing form for corrections
+  Displays email content with inline editing form for corrections with M3 theming
 -->
 
 <script setup lang="ts">
@@ -13,7 +13,14 @@ import { useRouter } from 'vue-router'
 import type { ClassificationWithEmail } from '@/types/models'
 import Dropdown from './shared/Dropdown.vue'
 import ConfirmDialog from './shared/ConfirmDialog.vue'
-import { CATEGORIES, URGENCY_LEVELS, ACTION_TYPES, CATEGORY_LABELS, URGENCY_LABELS, ACTION_LABELS } from '@/types/enums'
+import {
+  CATEGORIES,
+  URGENCY_LEVELS,
+  ACTION_TYPES,
+  CATEGORY_LABELS,
+  URGENCY_LABELS,
+  ACTION_LABELS,
+} from '@/types/enums'
 import { formatTimestamp, formatEmailBody } from '@/utils/formatters'
 import { validateClassificationEdit } from '@/utils/validation'
 import { logAction } from '@/utils/logger'
@@ -29,7 +36,7 @@ const router = useRouter()
 const formData = ref({
   category: props.classification.category,
   urgency: props.classification.urgency,
-  action: props.classification.action
+  action: props.classification.action,
 })
 
 // Track if form has changed (for unsaved changes warning - T037)
@@ -51,7 +58,7 @@ const emailBodyFormatted = computed(() => {
     return {
       preview: props.classification.email.body || '',
       isTruncated: false,
-      fullLength: formatted.fullLength
+      fullLength: formatted.fullLength,
     }
   }
 
@@ -74,8 +81,8 @@ const isValid = computed(() => validationErrors.value.length === 0)
 
 // Emit events
 const emit = defineEmits<{
-  'save': [updates: typeof formData.value]
-  'saved': []
+  save: [updates: typeof formData.value]
+  saved: []
 }>()
 
 // Save handler (T035)
@@ -92,7 +99,7 @@ async function handleSave() {
   try {
     logAction('Saving classification correction', {
       id: props.classification.id,
-      changes: formData.value
+      changes: formData.value,
     })
 
     emit('save', formData.value)
@@ -102,7 +109,7 @@ async function handleSave() {
     originalData.value = { ...formData.value }
 
     logAction('Classification correction saved successfully', {
-      id: props.classification.id
+      id: props.classification.id,
     })
 
     // Auto-hide success message after 3 seconds
@@ -168,9 +175,12 @@ onMounted(() => {
 })
 
 // Cleanup
-watch(() => props.classification.id, () => {
-  document.removeEventListener('keydown', handleKeydown)
-})
+watch(
+  () => props.classification.id,
+  () => {
+    document.removeEventListener('keydown', handleKeydown)
+  }
+)
 </script>
 
 <template>
@@ -205,11 +215,7 @@ watch(() => props.classification.id, () => {
           >
             Show More ({{ emailBodyFormatted.fullLength }} characters total)
           </button>
-          <button
-            v-if="showFullBody"
-            @click="showFullBody = false"
-            class="btn-show-more"
-          >
+          <button v-if="showFullBody" @click="showFullBody = false" class="btn-show-more">
             Show Less
           </button>
         </div>
@@ -265,9 +271,7 @@ watch(() => props.classification.id, () => {
       <!-- Note: correction_reason field will be added in future phase when database schema is updated -->
 
       <!-- Success/Error messages -->
-      <div v-if="saveSuccess" class="success-message">
-        ✓ Correction saved successfully!
-      </div>
+      <div v-if="saveSuccess" class="success-message">✓ Correction saved successfully!</div>
 
       <div v-if="saveError" class="error-message">
         {{ saveError }}
@@ -275,12 +279,7 @@ watch(() => props.classification.id, () => {
 
       <!-- Action buttons (T035-T036) -->
       <div class="form-actions">
-        <button
-          @click="handleCancel"
-          type="button"
-          class="btn btn-secondary"
-          :disabled="isSaving"
-        >
+        <button @click="handleCancel" type="button" class="btn btn-secondary" :disabled="isSaving">
           Cancel
         </button>
         <button
@@ -294,9 +293,7 @@ watch(() => props.classification.id, () => {
       </div>
 
       <!-- Keyboard hints -->
-      <p class="keyboard-hint">
-        Press <kbd>Enter</kbd> to save, <kbd>Esc</kbd> to cancel
-      </p>
+      <p class="keyboard-hint">Press <kbd>Enter</kbd> to save, <kbd>Esc</kbd> to cancel</p>
     </section>
 
     <!-- Unsaved changes confirmation dialog (T037 - FR-020) -->
@@ -320,18 +317,22 @@ watch(() => props.classification.id, () => {
 
 .email-preview,
 .classification-form {
-  background-color: white;
+  background-color: var(--md-sys-color-surface);
   padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-1);
   margin-bottom: 1.5rem;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: var(--md-sys-theme-transition);
 }
 
 .email-preview h3,
 .classification-form h3 {
   margin-top: 0;
   margin-bottom: 1rem;
-  color: #2c3e50;
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-title-medium-size);
+  font-weight: var(--md-sys-typescale-title-medium-weight);
 }
 
 .email-field {
@@ -340,27 +341,27 @@ watch(() => props.classification.id, () => {
 
 .email-field label {
   display: block;
-  font-weight: 600;
-  color: #555;
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  color: var(--md-sys-color-on-surface-variant);
   margin-bottom: 0.25rem;
-  font-size: 0.9rem;
+  font-size: var(--md-sys-typescale-label-medium-size);
 }
 
 .email-field p {
   margin: 0;
-  color: #2c3e50;
+  color: var(--md-sys-color-on-surface);
 }
 
 .email-subject {
   font-weight: 500;
-  font-size: 1.1rem;
+  font-size: var(--md-sys-typescale-body-large-size);
 }
 
 .email-body {
-  background-color: #f8f9fa;
+  background-color: var(--md-sys-color-surface-container-low);
   padding: 1rem;
-  border-radius: 4px;
-  border: 1px solid #e0e0e0;
+  border-radius: var(--md-sys-shape-corner-small);
+  border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .body-text {
@@ -368,25 +369,28 @@ watch(() => props.classification.id, () => {
   word-wrap: break-word;
   margin: 0 0 0.5rem 0;
   line-height: 1.6;
+  color: var(--md-sys-color-on-surface);
 }
 
 .btn-show-more {
   padding: 0.4rem 0.8rem;
-  background-color: #3498db;
-  color: white;
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--md-sys-shape-corner-small);
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: var(--md-sys-typescale-label-medium-size);
+  transition: var(--md-sys-theme-transition);
 }
 
 .btn-show-more:hover {
-  background-color: #2980b9;
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
 }
 
 .section-divider {
   border: none;
-  border-top: 2px solid #e0e0e0;
+  border-top: 2px solid var(--md-sys-color-outline-variant);
   margin: 2rem 0;
 }
 
@@ -403,64 +407,67 @@ watch(() => props.classification.id, () => {
 
 .form-field label {
   display: block;
-  font-weight: 600;
-  color: #555;
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  color: var(--md-sys-color-on-surface-variant);
   margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  font-size: var(--md-sys-typescale-label-medium-size);
 }
 
 .confidence-bar {
   height: 8px;
-  background-color: #e0e0e0;
-  border-radius: 4px;
+  background-color: var(--md-sys-color-surface-container-highest);
+  border-radius: var(--md-sys-shape-corner-full);
   overflow: hidden;
 }
 
 .confidence-fill {
   height: 100%;
-  background-color: #27ae60;
-  transition: width 0.3s ease;
+  background-color: var(--md-ext-color-success);
+  transition: width var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-standard);
 }
 
 .textarea-field {
   width: 100%;
   padding: 0.6rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
   resize: vertical;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  transition: var(--md-sys-theme-transition);
 }
 
 .textarea-field:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 3px var(--md-sys-color-primary-container);
 }
 
 .char-count {
   display: block;
   text-align: right;
-  font-size: 0.8rem;
-  color: #95a5a6;
+  font-size: var(--md-sys-typescale-label-small-size);
+  color: var(--md-sys-color-on-surface-variant);
   margin-top: 0.25rem;
 }
 
 .success-message {
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
-  color: #155724;
+  background-color: var(--md-ext-color-success-container);
+  border: 1px solid var(--md-ext-color-success);
+  color: var(--md-ext-color-on-success-container);
   padding: 0.75rem 1rem;
-  border-radius: 4px;
+  border-radius: var(--md-sys-shape-corner-small);
   margin-bottom: 1rem;
 }
 
 .error-message {
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
+  background-color: var(--md-sys-color-error-container);
+  border: 1px solid var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error-container);
   padding: 0.75rem 1rem;
-  border-radius: 4px;
+  border-radius: var(--md-sys-shape-corner-small);
   margin-bottom: 1rem;
 }
 
@@ -473,11 +480,11 @@ watch(() => props.classification.id, () => {
 .btn {
   padding: 0.6rem 1.5rem;
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: var(--md-sys-typescale-label-large-size);
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-  font-weight: 500;
+  transition: var(--md-sys-theme-transition);
+  font-weight: var(--md-sys-typescale-label-large-weight);
 }
 
 .btn:hover:not(:disabled) {
@@ -494,37 +501,40 @@ watch(() => props.classification.id, () => {
 }
 
 .btn-secondary {
-  background-color: #95a5a6;
-  color: white;
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid var(--md-sys-color-outline);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: #7f8c8d;
+  background-color: var(--md-sys-color-surface-container-highest);
 }
 
 .btn-primary {
-  background-color: #27ae60;
-  color: white;
+  background-color: var(--md-ext-color-success);
+  color: var(--md-ext-color-on-success);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #229954;
+  background-color: var(--md-ext-color-success-container);
+  color: var(--md-ext-color-on-success-container);
 }
 
 .keyboard-hint {
   margin-top: 1rem;
   text-align: center;
-  font-size: 0.85rem;
-  color: #95a5a6;
+  font-size: var(--md-sys-typescale-label-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .keyboard-hint kbd {
   padding: 0.2rem 0.4rem;
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 3px;
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-extra-small);
   font-family: monospace;
   font-size: 0.9em;
+  color: var(--md-sys-color-on-surface);
 }
 
 @media (max-width: 768px) {

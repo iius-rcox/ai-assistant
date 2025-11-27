@@ -16,7 +16,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: 'all',
-  label: 'Date Range'
+  label: 'Date Range',
 })
 
 const emit = defineEmits<{
@@ -28,7 +28,7 @@ const dateRanges = [
   { value: 'last-week', label: 'Last Week' },
   { value: 'last-15', label: 'Last 15 Days' },
   { value: 'last-30', label: 'Last 30 Days' },
-  { value: 'last-45', label: 'Last 45 Days' }
+  { value: 'last-45', label: 'Last 45 Days' },
 ]
 
 function handleChange(event: Event) {
@@ -40,16 +40,8 @@ function handleChange(event: Event) {
 <template>
   <div class="date-range-dropdown">
     <label class="dropdown-label">{{ label }}</label>
-    <select
-      :value="modelValue"
-      @change="handleChange"
-      class="dropdown-select"
-    >
-      <option
-        v-for="range in dateRanges"
-        :key="range.value"
-        :value="range.value"
-      >
+    <select :value="modelValue" @change="handleChange" class="dropdown-select">
+      <option v-for="range in dateRanges" :key="range.value" :value="range.value">
         {{ range.label }}
       </option>
     </select>
@@ -64,28 +56,29 @@ function handleChange(event: Event) {
 }
 
 .dropdown-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #2c3e50;
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  font-size: var(--md-sys-typescale-label-large-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .dropdown-select {
   padding: 0.6rem 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  background-color: white;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: var(--md-sys-typescale-body-medium-size);
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: var(--md-sys-theme-transition);
 }
 
 .dropdown-select:hover {
-  border-color: #3498db;
+  border-color: var(--md-sys-color-primary);
 }
 
 .dropdown-select:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 3px var(--md-sys-color-primary-container);
 }
 </style>

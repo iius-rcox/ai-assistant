@@ -37,23 +37,13 @@ export interface UsePendingQueueOptions {
 }
 
 export function usePendingQueue(options: UsePendingQueueOptions) {
-  const {
-    maxRetries = 3,
-    retryDelayMs = 2000,
-    saveOperation,
-    onSuccess,
-    onFailed
-  } = options
+  const { maxRetries = 3, retryDelayMs = 2000, saveOperation, onSuccess, onFailed } = options
 
   // Track online status using VueUse (T061)
   const isOnline = useOnline()
 
   // Persist queue to localStorage
-  const queue = useStorage<PendingOperation[]>(
-    STORAGE_KEYS.PENDING_QUEUE,
-    [],
-    localStorage
-  )
+  const queue = useStorage<PendingOperation[]>(STORAGE_KEYS.PENDING_QUEUE, [], localStorage)
 
   const isProcessing = ref(false)
   let retryTimeout: ReturnType<typeof setTimeout> | null = null
@@ -74,7 +64,7 @@ export function usePendingQueue(options: UsePendingQueueOptions) {
       version,
       timestamp: Date.now(),
       retryCount: 0,
-      lastError: error
+      lastError: error,
     }
 
     queue.value.push(operation)
@@ -112,7 +102,10 @@ export function usePendingQueue(options: UsePendingQueueOptions) {
    */
   async function processOperation(operation: PendingOperation): Promise<boolean> {
     try {
-      logInfo('Processing pending operation', { id: operation.id, attempt: operation.retryCount + 1 })
+      logInfo('Processing pending operation', {
+        id: operation.id,
+        attempt: operation.retryCount + 1,
+      })
 
       const success = await saveOperation(operation.rowId, operation.data, operation.version)
 
@@ -135,7 +128,10 @@ export function usePendingQueue(options: UsePendingQueueOptions) {
         return false
       }
 
-      logWarn('Pending operation failed, will retry', { id: operation.id, retryCount: operation.retryCount })
+      logWarn('Pending operation failed, will retry', {
+        id: operation.id,
+        retryCount: operation.retryCount,
+      })
       return false
     }
   }
@@ -237,6 +233,6 @@ export function usePendingQueue(options: UsePendingQueueOptions) {
     dequeue,
     clearQueue,
     processQueue,
-    processOperation
+    processOperation,
   }
 }

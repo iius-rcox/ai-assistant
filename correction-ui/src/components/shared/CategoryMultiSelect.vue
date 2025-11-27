@@ -19,7 +19,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: () => [],
-  label: 'Categories'
+  label: 'Categories',
 })
 
 const emit = defineEmits<{
@@ -82,9 +82,7 @@ function selectNone() {
       </label>
     </div>
 
-    <div class="selection-count">
-      {{ modelValue.length }} of {{ CATEGORIES.length }} selected
-    </div>
+    <div class="selection-count">{{ modelValue.length }} of {{ CATEGORIES.length }} selected</div>
   </div>
 </template>
 
@@ -102,9 +100,9 @@ function selectNone() {
 }
 
 .multiselect-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #2c3e50;
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  font-size: var(--md-sys-typescale-label-large-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .header-actions {
@@ -116,20 +114,21 @@ function selectNone() {
 .btn-link {
   background: none;
   border: none;
-  color: #3498db;
+  color: var(--md-sys-color-primary);
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: var(--md-sys-typescale-label-medium-size);
   padding: 0.25rem 0.5rem;
   text-decoration: underline;
+  transition: var(--md-sys-theme-transition);
 }
 
 .btn-link:hover {
-  color: #2980b9;
+  color: var(--md-sys-color-tertiary);
 }
 
 .separator {
-  color: #ccc;
-  font-size: 0.85rem;
+  color: var(--md-sys-color-outline-variant);
+  font-size: var(--md-sys-typescale-label-medium-size);
 }
 
 .checkbox-grid {
@@ -137,9 +136,10 @@ function selectNone() {
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 0.5rem;
   padding: 0.75rem;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  border: 1px solid #e0e0e0;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--md-sys-shape-corner-small);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: var(--md-sys-theme-transition);
 }
 
 .checkbox-item {
@@ -147,35 +147,36 @@ function selectNone() {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--md-sys-shape-corner-extra-small);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: var(--md-sys-theme-transition);
   user-select: none;
 }
 
 .checkbox-item:hover {
-  background-color: rgba(52, 152, 219, 0.1);
+  background-color: var(--md-sys-color-primary-container);
 }
 
 .checkbox-selected {
-  background-color: rgba(52, 152, 219, 0.15);
+  background-color: var(--md-sys-color-primary-container);
 }
 
 .checkbox-input {
   cursor: pointer;
   width: 16px;
   height: 16px;
+  accent-color: var(--md-sys-color-primary);
 }
 
 .checkbox-label {
-  font-size: 0.9rem;
-  color: #2c3e50;
+  font-size: var(--md-sys-typescale-body-medium-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .selection-count {
   text-align: right;
-  font-size: 0.85rem;
-  color: #7f8c8d;
+  font-size: var(--md-sys-typescale-label-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
   font-style: italic;
 }
 

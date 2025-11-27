@@ -43,25 +43,33 @@ const emit = defineEmits<{
 const localData = ref<InlineEditData>({
   category: '',
   urgency: '',
-  action: ''
+  action: '',
 })
 
 // Sync local data with props
-watch(() => props.editData, (newData) => {
-  if (newData) {
-    localData.value = { ...newData }
-  }
-}, { immediate: true })
-
-watch(() => props.classification, (classification) => {
-  if (classification && !props.editData) {
-    localData.value = {
-      category: classification.category,
-      urgency: classification.urgency,
-      action: classification.action
+watch(
+  () => props.editData,
+  newData => {
+    if (newData) {
+      localData.value = { ...newData }
     }
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
+
+watch(
+  () => props.classification,
+  classification => {
+    if (classification && !props.editData) {
+      localData.value = {
+        category: classification.category,
+        urgency: classification.urgency,
+        action: classification.action,
+      }
+    }
+  },
+  { immediate: true }
+)
 
 const isSaving = computed(() => props.saveStatus === 'saving')
 
@@ -92,7 +100,12 @@ function handleClose() {
   <Teleport to="body">
     <Transition name="modal-slide">
       <div v-if="isOpen" class="mobile-edit-overlay" @click.self="handleClose">
-        <div class="mobile-edit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div
+          class="mobile-edit-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
           <!-- Header -->
           <div class="modal-header">
             <h2 id="modal-title" class="modal-title">Edit Classification</h2>
@@ -124,6 +137,7 @@ function handleClose() {
                 <option value="WORK">WORK</option>
                 <option value="FINANCIAL">FINANCIAL</option>
                 <option value="SHOPPING">SHOPPING</option>
+                <option value="CHURCH">CHURCH</option>
                 <option value="OTHER">OTHER</option>
               </select>
             </div>
@@ -136,7 +150,11 @@ function handleClose() {
                   v-for="level in ['HIGH', 'MEDIUM', 'LOW']"
                   :key="level"
                   type="button"
-                  :class="['urgency-btn', `urgency-${level.toLowerCase()}`, { active: localData.urgency === level }]"
+                  :class="[
+                    'urgency-btn',
+                    `urgency-${level.toLowerCase()}`,
+                    { active: localData.urgency === level },
+                  ]"
                   @click="handleFieldChange('urgency', level)"
                   :disabled="isSaving"
                 >
@@ -167,18 +185,10 @@ function handleClose() {
 
           <!-- Footer Actions -->
           <div class="modal-footer">
-            <button
-              class="btn btn-cancel"
-              @click="handleCancel"
-              :disabled="isSaving"
-            >
+            <button class="btn btn-cancel" @click="handleCancel" :disabled="isSaving">
               Cancel
             </button>
-            <button
-              class="btn btn-save"
-              @click="handleSave"
-              :disabled="!isDirty || isSaving"
-            >
+            <button class="btn btn-save" @click="handleSave" :disabled="!isDirty || isSaving">
               <span v-if="isSaving" class="btn-spinner"></span>
               <span v-else>Save Changes</span>
             </button>
@@ -196,21 +206,21 @@ function handleClose() {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--md-sys-color-scrim);
   z-index: 10000;
   display: flex;
   align-items: flex-end;
 }
 
 .mobile-edit-modal {
-  background-color: white;
+  background-color: var(--md-sys-color-surface-container-high);
   width: 100%;
   max-height: 90vh;
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--md-sys-shape-corner-extra-large) var(--md-sys-shape-corner-extra-large) 0 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--md-sys-elevation-3);
 }
 
 .modal-header {
@@ -218,15 +228,15 @@ function handleClose() {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid #e0e0e0;
-  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-sys-color-surface-container);
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2c3e50;
+  font-size: var(--md-sys-typescale-title-large-size);
+  font-weight: var(--md-sys-typescale-title-large-weight);
+  color: var(--md-sys-color-on-surface);
 }
 
 .modal-close {
@@ -237,32 +247,32 @@ function handleClose() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: var(--md-sys-shape-corner-full);
   width: 44px;
   height: 44px;
-  transition: background-color 0.2s;
+  transition: var(--md-sys-theme-transition);
 }
 
 .modal-close:hover {
-  background-color: #e9ecef;
+  background-color: var(--md-sys-color-surface-container-highest);
 }
 
 .close-icon {
   font-size: 1.75rem;
-  color: #6c757d;
+  color: var(--md-sys-color-on-surface-variant);
   line-height: 1;
 }
 
 .email-preview {
   padding: 1rem 1.25rem;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e0e0e0;
+  background-color: var(--md-sys-color-surface-container);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .preview-subject {
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 0.95rem;
+  font-weight: var(--md-sys-typescale-title-medium-weight);
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-body-large-size);
   margin-bottom: 0.25rem;
   white-space: nowrap;
   overflow: hidden;
@@ -270,14 +280,15 @@ function handleClose() {
 }
 
 .preview-sender {
-  font-size: 0.85rem;
-  color: #6c757d;
+  font-size: var(--md-sys-typescale-body-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .modal-body {
   padding: 1.5rem 1.25rem;
   overflow-y: auto;
   flex: 1;
+  background-color: var(--md-sys-color-surface-container-high);
 }
 
 .form-group {
@@ -290,35 +301,39 @@ function handleClose() {
 
 .form-label {
   display: block;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #495057;
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  color: var(--md-sys-color-on-surface);
   margin-bottom: 0.5rem;
 }
 
 .form-select {
   width: 100%;
   padding: 0.875rem 1rem;
-  font-size: 1rem;
-  border: 1px solid #ced4da;
-  border-radius: 8px;
-  background-color: white;
+  font-size: var(--md-sys-typescale-body-large-size);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2379747e' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   min-height: 44px; /* Touch target */
+  transition: var(--md-sys-theme-transition);
 }
 
 .form-select:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 3px var(--md-sys-color-primary-container);
 }
 
 .form-select:disabled {
-  background-color: #e9ecef;
+  background-color: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface-variant);
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* Urgency Button Group */
@@ -330,13 +345,14 @@ function handleClose() {
 .urgency-btn {
   flex: 1;
   padding: 0.875rem 0.5rem;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  background-color: white;
-  font-size: 0.85rem;
-  font-weight: 600;
+  border: 2px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-small);
+  background-color: var(--md-sys-color-surface);
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  color: var(--md-sys-color-on-surface);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--md-sys-theme-transition);
   min-height: 44px; /* Touch target */
 }
 
@@ -345,33 +361,33 @@ function handleClose() {
 }
 
 .urgency-btn.urgency-high {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: var(--md-ext-color-urgency-high);
+  color: var(--md-ext-color-urgency-high);
 }
 
 .urgency-btn.urgency-high.active {
-  background-color: #e74c3c;
-  color: white;
+  background-color: var(--md-ext-color-urgency-high);
+  color: var(--md-ext-color-urgency-high-text);
 }
 
 .urgency-btn.urgency-medium {
-  border-color: #f39c12;
-  color: #f39c12;
+  border-color: var(--md-ext-color-urgency-medium);
+  color: var(--md-ext-color-urgency-medium);
 }
 
 .urgency-btn.urgency-medium.active {
-  background-color: #f39c12;
-  color: white;
+  background-color: var(--md-ext-color-urgency-medium);
+  color: var(--md-ext-color-urgency-medium-text);
 }
 
 .urgency-btn.urgency-low {
-  border-color: #95a5a6;
-  color: #95a5a6;
+  border-color: var(--md-ext-color-urgency-low);
+  color: var(--md-ext-color-urgency-low);
 }
 
 .urgency-btn.urgency-low.active {
-  background-color: #95a5a6;
-  color: white;
+  background-color: var(--md-ext-color-urgency-low);
+  color: var(--md-ext-color-urgency-low-text);
 }
 
 .urgency-btn:disabled {
@@ -384,19 +400,19 @@ function handleClose() {
   display: flex;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  border-top: 1px solid #e0e0e0;
-  background-color: #f8f9fa;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-sys-color-surface-container);
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); /* iOS safe area */
 }
 
 .btn {
   flex: 1;
   padding: 1rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--md-sys-theme-transition);
   min-height: 52px; /* Large touch target */
   display: flex;
   align-items: center;
@@ -404,23 +420,23 @@ function handleClose() {
 }
 
 .btn-cancel {
-  background-color: white;
-  color: #6c757d;
-  border: 1px solid #ced4da;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid var(--md-sys-color-outline);
 }
 
 .btn-cancel:hover:not(:disabled) {
-  background-color: #f8f9fa;
+  background-color: var(--md-sys-color-surface-container-high);
 }
 
 .btn-save {
-  background-color: #27ae60;
-  color: white;
+  background-color: var(--md-ext-color-success);
+  color: var(--md-ext-color-on-success);
   border: none;
 }
 
 .btn-save:hover:not(:disabled) {
-  background-color: #219a52;
+  opacity: 0.9;
 }
 
 .btn:disabled {
@@ -433,10 +449,11 @@ function handleClose() {
   display: inline-block;
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
+  border: 2px solid var(--md-ext-color-on-success);
+  border-top-color: transparent;
+  border-radius: var(--md-sys-shape-corner-full);
   animation: spin 0.8s linear infinite;
+  opacity: 0.7;
 }
 
 @keyframes spin {
@@ -472,7 +489,7 @@ function handleClose() {
     max-width: 480px;
     margin: 0 auto;
     max-height: 80vh;
-    border-radius: 16px;
+    border-radius: var(--md-sys-shape-corner-extra-large);
   }
 
   .mobile-edit-overlay {

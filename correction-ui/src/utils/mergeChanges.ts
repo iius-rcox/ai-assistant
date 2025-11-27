@@ -10,11 +10,7 @@
  * Reference: research.md Section 2 - Optimistic Locking
  */
 
-import type {
-  InlineEditData,
-  MergeResult,
-  ConflictField
-} from '@/types/inline-edit'
+import type { InlineEditData, MergeResult, ConflictField } from '@/types/inline-edit'
 import type { Classification } from '@/types/models'
 
 /**
@@ -82,14 +78,14 @@ export function mergeNonConflicting(
       baseValue: String(originalValue),
       clientValue: String(clientValue),
       serverValue: String(serverValue),
-      canAutoMerge: false
+      canAutoMerge: false,
     })
   }
 
   return {
     merged,
     conflicts,
-    success: conflicts.length === 0
+    success: conflicts.length === 0,
   }
 }
 
@@ -145,7 +141,7 @@ export function getServerChanges(
       changes.push({
         field,
         from: originalValue,
-        to: serverValue
+        to: serverValue,
       })
     }
   }
@@ -194,7 +190,7 @@ export function describeConflict(conflict: ConflictField): string {
   const fieldLabels: Record<keyof InlineEditData, string> = {
     category: 'Category',
     urgency: 'Urgency',
-    action: 'Action Type'
+    action: 'Action Type',
   }
 
   const label = fieldLabels[conflict.fieldName] || conflict.fieldName
@@ -213,7 +209,7 @@ export function allConflictsResolved(
   conflicts: ConflictField[],
   resolutions: Map<keyof InlineEditData, 'client' | 'server'>
 ): boolean {
-  return conflicts.every((conflict) => resolutions.has(conflict.fieldName))
+  return conflicts.every(conflict => resolutions.has(conflict.fieldName))
 }
 
 export default mergeNonConflicting

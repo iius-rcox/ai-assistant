@@ -12,9 +12,24 @@
 import { ref, computed, watch } from 'vue'
 import { useClassificationStore } from '@/stores/classificationStore'
 import { logAction, logError } from '@/utils/logger'
-import type { BulkActionPayload, BulkActionResult, BulkActionType } from '@/types/table-enhancements'
+import type {
+  BulkActionPayload,
+  BulkActionResult,
+  BulkActionType,
+} from '@/types/table-enhancements'
 import type { ClassificationWithEmail } from '@/types/models'
 import { BULK_ACTION_CONFIG } from '@/constants/table'
+import type { ActionTypeV2 } from '@/types/actions'
+
+// V2 to V1 action mapping for backward compatibility
+const V2_TO_V1_ACTION_MAP: Record<ActionTypeV2, string> = {
+  IGNORE: 'FYI',
+  SHIPMENT: 'NONE',
+  DRAFT_REPLY: 'RESPOND',
+  JUNK: 'NONE',
+  NOTIFY: 'FYI',
+  CALENDAR: 'CALENDAR',
+}
 
 export interface UseBulkActionsOptions {
   /** Maximum items that can be selected */
@@ -27,7 +42,11 @@ export interface UseBulkActionsOptions {
 
 export function useBulkActions(options: UseBulkActionsOptions = {}) {
   const store = useClassificationStore()
-  const { maxSelection = BULK_ACTION_CONFIG.MAX_SELECTION, onSelectionChange, onActionComplete } = options
+  const {
+    maxSelection = BULK_ACTION_CONFIG.MAX_SELECTION,
+    onSelectionChange,
+    onActionComplete,
+  } = options
 
   // State
   const selectedIds = ref<Set<number>>(new Set())
@@ -43,15 +62,11 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
     return classifications.every(c => selectedIds.value.has(c.id))
   })
 
-  const isIndeterminate = computed(() =>
-    selectedIds.value.size > 0 && !isAllSelected.value
-  )
+  const isIndeterminate = computed(() => selectedIds.value.size > 0 && !isAllSelected.value)
 
   const hasSelection = computed(() => selectedIds.value.size > 0)
 
-  const canSelectMore = computed(() =>
-    selectedIds.value.size < maxSelection
-  )
+  const canSelectMore = computed(() => selectedIds.value.size < maxSelection)
 
   const selectedClassifications = computed(() =>
     store.classifications.filter(c => selectedIds.value.has(c.id))
@@ -172,9 +187,7 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
 
     if (startIndex === -1 || endIndex === -1) return
 
-    const [from, to] = startIndex < endIndex
-      ? [startIndex, endIndex]
-      : [endIndex, startIndex]
+    const [from, to] = startIndex < endIndex ? [startIndex, endIndex] : [endIndex, startIndex]
 
     const newSelection = new Set(selectedIds.value)
     let added = 0
@@ -216,7 +229,7 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
 
     const result: BulkActionResult = {
       success: [],
-      failed: []
+      failed: [],
     }
 
     try {
@@ -228,7 +241,7 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
         } catch (error) {
           result.failed.push({
             id,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Unknown error',
           })
         }
       }
@@ -236,7 +249,7 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
       logAction('Bulk action completed', {
         actionType,
         success: result.success.length,
-        failed: result.failed.length
+        failed: result.failed.length,
       })
 
       // Clear selection on success
@@ -293,7 +306,9 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
         if (!value) throw new Error('Action value required')
         updates.category = classification.category
         updates.urgency = classification.urgency
-        updates.action = value
+        // Set both v1 and v2 action fields
+        updates.action = V2_TO_V1_ACTION_MAP[value as ActionTypeV2] || 'NONE'
+        updates.action_v2 = value
         break
 
       case 'mark_reviewed':
@@ -354,7 +369,7 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
     selectRange,
 
     // Action methods
-    executeBulkAction
+    executeBulkAction,
   }
 }
 

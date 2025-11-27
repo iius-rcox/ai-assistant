@@ -18,7 +18,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: 'all',
-  label: 'Category'
+  label: 'Category',
 })
 
 const emit = defineEmits<{
@@ -39,7 +39,9 @@ onMounted(async () => {
     if (error) throw error
 
     // Get unique categories
-    const uniqueCategories = [...new Set((data as any[]).map(item => item.category).filter((c): c is string => c !== null))]
+    const uniqueCategories = [
+      ...new Set((data as any[]).map(item => item.category).filter((c): c is string => c !== null)),
+    ]
     categories.value = uniqueCategories.sort()
   } catch (error) {
     console.error('Failed to fetch categories:', error)
@@ -66,11 +68,7 @@ function handleChange(event: Event) {
       class="dropdown-select"
     >
       <option value="all">All Categories</option>
-      <option
-        v-for="category in categories"
-        :key="category"
-        :value="category"
-      >
+      <option v-for="category in categories" :key="category" :value="category">
         {{ category }}
       </option>
     </select>
@@ -86,40 +84,42 @@ function handleChange(event: Event) {
 }
 
 .dropdown-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #2c3e50;
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  font-size: var(--md-sys-typescale-label-large-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .dropdown-select {
   padding: 0.6rem 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  background-color: white;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: var(--md-sys-typescale-body-medium-size);
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: var(--md-sys-theme-transition);
 }
 
 .dropdown-select:hover:not(:disabled) {
-  border-color: #3498db;
+  border-color: var(--md-sys-color-primary);
 }
 
 .dropdown-select:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 3px var(--md-sys-color-primary-container);
 }
 
 .dropdown-select:disabled {
-  background-color: #f5f5f5;
+  background-color: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface-variant);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 .loading-text {
-  font-size: 0.85rem;
-  color: #95a5a6;
+  font-size: var(--md-sys-typescale-body-small-size);
+  color: var(--md-sys-color-on-surface-variant);
   font-style: italic;
 }
 </style>

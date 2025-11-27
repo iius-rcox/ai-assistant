@@ -1,0 +1,197 @@
+/**
+ * CSS Token Contract
+ * Feature: 010-shadcn-blue-theme
+ * Date: 2025-11-26
+ *
+ * Defines the required CSS custom properties for the shadcn blue theme.
+ * Theme implementations (light.css, dark.css) MUST provide values for all tokens.
+ */
+
+/* ============================================
+ * SHADCN TOKEN CONTRACT
+ * ============================================
+ *
+ * All values use HSL format WITHOUT the hsl() wrapper:
+ *   --token: H S% L%
+ *
+ * Usage in CSS:
+ *   background-color: hsl(var(--background));
+ *   color: hsl(var(--foreground));
+ * ============================================ */
+
+:root {
+  /* ============================================
+   * CORE SEMANTIC TOKENS
+   * ============================================ */
+
+  /* Page/app background */
+  --background: initial;
+
+  /* Primary text color */
+  --foreground: initial;
+
+  /* ============================================
+   * COMPONENT TOKENS
+   * ============================================ */
+
+  /* Card/panel backgrounds */
+  --card: initial;
+  --card-foreground: initial;
+
+  /* Popover/dropdown backgrounds */
+  --popover: initial;
+  --popover-foreground: initial;
+
+  /* ============================================
+   * INTERACTIVE TOKENS
+   * ============================================ */
+
+  /* Primary action color (buttons, links) */
+  --primary: initial;
+  --primary-foreground: initial;
+
+  /* Secondary/less prominent actions */
+  --secondary: initial;
+  --secondary-foreground: initial;
+
+  /* Muted/subdued elements */
+  --muted: initial;
+  --muted-foreground: initial;
+
+  /* Accent highlights */
+  --accent: initial;
+  --accent-foreground: initial;
+
+  /* ============================================
+   * STATE TOKENS
+   * ============================================ */
+
+  /* Destructive/error actions */
+  --destructive: initial;
+  --destructive-foreground: initial;
+
+  /* ============================================
+   * UI ELEMENT TOKENS
+   * ============================================ */
+
+  /* Border color */
+  --border: initial;
+
+  /* Input field backgrounds */
+  --input: initial;
+
+  /* Focus ring color */
+  --ring: initial;
+
+  /* ============================================
+   * SHAPE TOKENS
+   * ============================================ */
+
+  /* Default border radius */
+  --radius: 0.5rem;
+
+  /* ============================================
+   * CHART TOKENS
+   * ============================================ */
+
+  /* Data visualization colors */
+  --chart-1: initial;
+  --chart-2: initial;
+  --chart-3: initial;
+  --chart-4: initial;
+  --chart-5: initial;
+}
+
+/* ============================================
+ * LIGHT THEME VALUES (Reference)
+ * ============================================ */
+
+/*
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
+}
+*/
+
+/* ============================================
+ * DARK THEME VALUES (Reference)
+ * ============================================ */
+
+/*
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 48%;
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
+}
+*/
+
+/* ============================================
+ * LEGACY M3 TOKEN ALIASES
+ * ============================================
+ *
+ * These aliases map shadcn tokens to Material Design 3
+ * token names for backward compatibility with existing
+ * components.
+ * ============================================ */
+
+/*
+:root {
+  --md-sys-color-surface: hsl(var(--background));
+  --md-sys-color-on-surface: hsl(var(--foreground));
+  --md-sys-color-primary: hsl(var(--primary));
+  --md-sys-color-on-primary: hsl(var(--primary-foreground));
+  --md-sys-color-secondary: hsl(var(--secondary));
+  --md-sys-color-on-secondary: hsl(var(--secondary-foreground));
+  --md-sys-color-surface-variant: hsl(var(--muted));
+  --md-sys-color-on-surface-variant: hsl(var(--muted-foreground));
+  --md-sys-color-tertiary: hsl(var(--accent));
+  --md-sys-color-error: hsl(var(--destructive));
+  --md-sys-color-outline: hsl(var(--border));
+  --md-sys-color-surface-container: hsl(var(--card));
+  --md-sys-color-surface-container-low: hsl(var(--input));
+}
+*/

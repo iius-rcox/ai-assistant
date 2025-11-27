@@ -1,0 +1,372 @@
+/**
+ * Design Token Contract
+ *
+ * This file defines the CSS custom property interface for the theme system.
+ * Theme files (light.css, dark.css) MUST provide values for all tokens defined here.
+ *
+ * Feature: 010-shadcn-blue-theme (updated from 006-material-design-themes)
+ * Version: 2.0.0
+ * Date: 2025-11-26
+ */
+
+:root {
+  /* ============================================
+   * SHADCN CORE TOKENS
+   * ============================================
+   * All values use HSL format WITHOUT the hsl() wrapper:
+   *   --token: H S% L%
+   * Usage in CSS:
+   *   background-color: hsl(var(--background));
+   *   color: hsl(var(--foreground));
+   * ============================================ */
+
+  /* Page/app background */
+  --background: initial;
+  --foreground: initial;
+
+  /* Card/panel backgrounds */
+  --card: initial;
+  --card-foreground: initial;
+
+  /* Popover/dropdown backgrounds */
+  --popover: initial;
+  --popover-foreground: initial;
+
+  /* Primary action color (buttons, links) */
+  --primary: initial;
+  --primary-foreground: initial;
+
+  /* Secondary/less prominent actions */
+  --secondary: initial;
+  --secondary-foreground: initial;
+
+  /* Muted/subdued elements */
+  --muted: initial;
+  --muted-foreground: initial;
+
+  /* Accent highlights */
+  --accent: initial;
+  --accent-foreground: initial;
+
+  /* Destructive/error actions */
+  --destructive: initial;
+  --destructive-foreground: initial;
+
+  /* UI element tokens */
+  --border: initial;
+  --input: initial;
+  --ring: initial;
+
+  /* Shape tokens */
+  --radius: 0.5rem;
+
+  /* Chart tokens for data visualization */
+  --chart-1: initial;
+  --chart-2: initial;
+  --chart-3: initial;
+  --chart-4: initial;
+  --chart-5: initial;
+  /* ============================================
+   * COLOR ROLE TOKENS
+   * ============================================ */
+
+  /* Primary */
+  --md-sys-color-primary: initial;
+  --md-sys-color-on-primary: initial;
+  --md-sys-color-primary-container: initial;
+  --md-sys-color-on-primary-container: initial;
+
+  /* Secondary */
+  --md-sys-color-secondary: initial;
+  --md-sys-color-on-secondary: initial;
+  --md-sys-color-secondary-container: initial;
+  --md-sys-color-on-secondary-container: initial;
+
+  /* Tertiary */
+  --md-sys-color-tertiary: initial;
+  --md-sys-color-on-tertiary: initial;
+  --md-sys-color-tertiary-container: initial;
+  --md-sys-color-on-tertiary-container: initial;
+
+  /* Error */
+  --md-sys-color-error: initial;
+  --md-sys-color-on-error: initial;
+  --md-sys-color-error-container: initial;
+  --md-sys-color-on-error-container: initial;
+
+  /* ============================================
+   * SURFACE TOKENS
+   * ============================================ */
+
+  --md-sys-color-surface: initial;
+  --md-sys-color-on-surface: initial;
+  --md-sys-color-surface-variant: initial;
+  --md-sys-color-on-surface-variant: initial;
+
+  /* Surface Container Hierarchy */
+  --md-sys-color-surface-container-lowest: initial;
+  --md-sys-color-surface-container-low: initial;
+  --md-sys-color-surface-container: initial;
+  --md-sys-color-surface-container-high: initial;
+  --md-sys-color-surface-container-highest: initial;
+
+  /* Surface Variants */
+  --md-sys-color-surface-dim: initial;
+  --md-sys-color-surface-bright: initial;
+
+  /* ============================================
+   * UTILITY TOKENS
+   * ============================================ */
+
+  --md-sys-color-outline: initial;
+  --md-sys-color-outline-variant: initial;
+  --md-sys-color-inverse-surface: initial;
+  --md-sys-color-inverse-on-surface: initial;
+  --md-sys-color-inverse-primary: initial;
+  --md-sys-color-scrim: initial;
+  --md-sys-color-shadow: initial;
+
+  /* ============================================
+   * EXTENDED COLOR TOKENS (Application-Specific)
+   * ============================================ */
+
+  /* Success/Warning States */
+  --md-ext-color-success: initial;
+  --md-ext-color-on-success: initial;
+  --md-ext-color-success-container: initial;
+  --md-ext-color-on-success-container: initial;
+  --md-ext-color-warning: initial;
+  --md-ext-color-on-warning: initial;
+
+  /* Category Badge Colors */
+  --md-ext-color-badge-kids: initial;
+  --md-ext-color-badge-kids-text: initial;
+  --md-ext-color-badge-robyn: initial;
+  --md-ext-color-badge-robyn-text: initial;
+  --md-ext-color-badge-work: initial;
+  --md-ext-color-badge-work-text: initial;
+  --md-ext-color-badge-financial: initial;
+  --md-ext-color-badge-financial-text: initial;
+  --md-ext-color-badge-shopping: initial;
+  --md-ext-color-badge-shopping-text: initial;
+  --md-ext-color-badge-church: initial;
+  --md-ext-color-badge-church-text: initial;
+  --md-ext-color-badge-other: initial;
+  --md-ext-color-badge-other-text: initial;
+
+  /* Urgency Badge Colors */
+  --md-ext-color-urgency-high: initial;
+  --md-ext-color-urgency-high-text: initial;
+  --md-ext-color-urgency-medium: initial;
+  --md-ext-color-urgency-medium-text: initial;
+  --md-ext-color-urgency-low: initial;
+  --md-ext-color-urgency-low-text: initial;
+
+  /* Action Badge Colors (Feature: 011-email-actions-v2) */
+  --md-ext-color-action-ignore: initial;
+  --md-ext-color-action-shipment: initial;
+  --md-ext-color-action-draft-reply: initial;
+  --md-ext-color-action-junk: initial;
+  --md-ext-color-action-notify: initial;
+  --md-ext-color-action-calendar: initial;
+
+  /* ============================================
+   * SHAPE TOKENS
+   * ============================================ */
+
+  --md-sys-shape-corner-none: 0px;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 9999px;
+
+  /* ============================================
+   * TYPOGRAPHY TOKENS
+   * ============================================ */
+
+  /* Display */
+  --md-sys-typescale-display-large-size: 57px;
+  --md-sys-typescale-display-large-line-height: 64px;
+  --md-sys-typescale-display-large-weight: 400;
+
+  /* Headline */
+  --md-sys-typescale-headline-large-size: 32px;
+  --md-sys-typescale-headline-large-line-height: 40px;
+  --md-sys-typescale-headline-large-weight: 400;
+
+  --md-sys-typescale-headline-medium-size: 28px;
+  --md-sys-typescale-headline-medium-line-height: 36px;
+  --md-sys-typescale-headline-medium-weight: 400;
+
+  --md-sys-typescale-headline-small-size: 24px;
+  --md-sys-typescale-headline-small-line-height: 32px;
+  --md-sys-typescale-headline-small-weight: 400;
+
+  /* Title */
+  --md-sys-typescale-title-large-size: 22px;
+  --md-sys-typescale-title-large-line-height: 28px;
+  --md-sys-typescale-title-large-weight: 400;
+
+  --md-sys-typescale-title-medium-size: 16px;
+  --md-sys-typescale-title-medium-line-height: 24px;
+  --md-sys-typescale-title-medium-weight: 500;
+
+  --md-sys-typescale-title-small-size: 14px;
+  --md-sys-typescale-title-small-line-height: 20px;
+  --md-sys-typescale-title-small-weight: 500;
+
+  /* Body */
+  --md-sys-typescale-body-large-size: 16px;
+  --md-sys-typescale-body-large-line-height: 24px;
+  --md-sys-typescale-body-large-weight: 400;
+
+  --md-sys-typescale-body-medium-size: 14px;
+  --md-sys-typescale-body-medium-line-height: 20px;
+  --md-sys-typescale-body-medium-weight: 400;
+
+  --md-sys-typescale-body-small-size: 12px;
+  --md-sys-typescale-body-small-line-height: 16px;
+  --md-sys-typescale-body-small-weight: 400;
+
+  /* Label */
+  --md-sys-typescale-label-large-size: 14px;
+  --md-sys-typescale-label-large-line-height: 20px;
+  --md-sys-typescale-label-large-weight: 500;
+
+  --md-sys-typescale-label-medium-size: 12px;
+  --md-sys-typescale-label-medium-line-height: 16px;
+  --md-sys-typescale-label-medium-weight: 500;
+
+  --md-sys-typescale-label-small-size: 11px;
+  --md-sys-typescale-label-small-line-height: 16px;
+  --md-sys-typescale-label-small-weight: 500;
+
+  /* ============================================
+   * STATE LAYER TOKENS
+   * ============================================ */
+
+  --md-sys-state-hover-opacity: 0.08;
+  --md-sys-state-focus-opacity: 0.12;
+  --md-sys-state-pressed-opacity: 0.12;
+  --md-sys-state-dragged-opacity: 0.16;
+  --md-sys-state-disabled-opacity: 0.38;
+  --md-sys-state-disabled-container-opacity: 0.12;
+
+  /* ============================================
+   * MOTION TOKENS
+   * ============================================ */
+
+  --md-sys-motion-duration-short: 100ms;
+  --md-sys-motion-duration-medium: 300ms;
+  --md-sys-motion-duration-long: 500ms;
+  --md-sys-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-easing-decelerated: cubic-bezier(0, 0, 0, 1);
+  --md-sys-motion-easing-accelerated: cubic-bezier(0.3, 0, 1, 1);
+
+  /* ============================================
+   * THEME TRANSITION
+   * ============================================ */
+
+  --md-sys-theme-transition:
+    color var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-standard),
+    background-color var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-standard),
+    border-color var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-standard),
+    box-shadow var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-standard);
+}
+
+/* ============================================
+ * REDUCED MOTION SUPPORT
+ * ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --md-sys-motion-duration-short: 0ms;
+    --md-sys-motion-duration-medium: 0ms;
+    --md-sys-motion-duration-long: 0ms;
+    --md-sys-theme-transition: none;
+  }
+}
+
+/* ============================================
+ * UTILITY CLASSES
+ * ============================================ */
+
+/* Surface elevation classes for dark mode tonal elevation */
+.md-elevation-0 {
+  background-color: var(--md-sys-color-surface);
+}
+
+.md-elevation-1 {
+  background-color: var(--md-sys-color-surface-container-low);
+}
+
+.md-elevation-2 {
+  background-color: var(--md-sys-color-surface-container);
+}
+
+.md-elevation-3 {
+  background-color: var(--md-sys-color-surface-container-high);
+}
+
+.md-elevation-4,
+.md-elevation-5 {
+  background-color: var(--md-sys-color-surface-container-highest);
+}
+
+/* State layer mixin pattern (to be applied via component styles) */
+.md-state-layer {
+  position: relative;
+}
+
+.md-state-layer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  background-color: var(--md-sys-color-primary);
+  pointer-events: none;
+  transition: opacity var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+}
+
+.md-state-layer:hover::before {
+  opacity: var(--md-sys-state-hover-opacity);
+}
+
+.md-state-layer:focus-visible::before {
+  opacity: var(--md-sys-state-focus-opacity);
+}
+
+.md-state-layer:active::before {
+  opacity: var(--md-sys-state-pressed-opacity);
+}
+
+/* ============================================
+ * SHADCN-TO-M3 TOKEN BRIDGE
+ * ============================================
+ * These aliases allow M3 tokens to derive from shadcn tokens.
+ * This enables backward compatibility with existing components
+ * while using the new shadcn blue color palette.
+ *
+ * Note: The actual values are set in light.css and dark.css.
+ * This section just documents the conceptual mapping.
+ * ============================================
+ *
+ * Mapping Reference:
+ *   --md-sys-color-surface         ← hsl(var(--background))
+ *   --md-sys-color-on-surface      ← hsl(var(--foreground))
+ *   --md-sys-color-primary         ← hsl(var(--primary))
+ *   --md-sys-color-on-primary      ← hsl(var(--primary-foreground))
+ *   --md-sys-color-secondary       ← hsl(var(--secondary))
+ *   --md-sys-color-on-secondary    ← hsl(var(--secondary-foreground))
+ *   --md-sys-color-surface-variant ← hsl(var(--muted))
+ *   --md-sys-color-on-surface-variant ← hsl(var(--muted-foreground))
+ *   --md-sys-color-tertiary        ← hsl(var(--accent))
+ *   --md-sys-color-error           ← hsl(var(--destructive))
+ *   --md-sys-color-outline         ← hsl(var(--border))
+ *   --md-sys-color-surface-container ← hsl(var(--card))
+ *   --md-sys-color-surface-container-low ← hsl(var(--input))
+ * ============================================ */

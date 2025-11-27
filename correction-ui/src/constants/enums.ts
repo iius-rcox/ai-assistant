@@ -7,33 +7,15 @@
  */
 
 // Categories (from Type: Category in types/enums.ts)
-export const CATEGORIES = [
-  'KIDS',
-  'ROBYN',
-  'WORK',
-  'FINANCIAL',
-  'SHOPPING',
-  'OTHER'
-] as const
+export const CATEGORIES = ['KIDS', 'ROBYN', 'WORK', 'FINANCIAL', 'SHOPPING', 'CHURCH', 'OTHER'] as const
 
 // Urgency levels (from Type: UrgencyLevel in types/enums.ts)
-export const URGENCY_LEVELS = [
-  'HIGH',
-  'MEDIUM',
-  'LOW'
-] as const
+export const URGENCY_LEVELS = ['HIGH', 'MEDIUM', 'LOW'] as const
 
 // Action types (from Type: ActionType in types/enums.ts)
-export const ACTION_TYPES = [
-  'FYI',
-  'RESPOND',
-  'TASK',
-  'PAYMENT',
-  'CALENDAR',
-  'NONE'
-] as const
+export const ACTION_TYPES = ['FYI', 'RESPOND', 'TASK', 'PAYMENT', 'CALENDAR', 'NONE'] as const
 
 // Export types derived from constants
-export type CategoryValue = typeof CATEGORIES[number]
-export type UrgencyValue = typeof URGENCY_LEVELS[number]
-export type ActionValue = typeof ACTION_TYPES[number]
+export type CategoryValue = (typeof CATEGORIES)[number]
+export type UrgencyValue = (typeof URGENCY_LEVELS)[number]
+export type ActionValue = (typeof ACTION_TYPES)[number]

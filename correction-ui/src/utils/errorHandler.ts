@@ -26,7 +26,11 @@ export function handleSupabaseError(error: any): string {
   }
 
   // Authentication errors
-  if (error.message?.includes('JWT') || error.message?.includes('auth') || error.message?.includes('apikey')) {
+  if (
+    error.message?.includes('JWT') ||
+    error.message?.includes('auth') ||
+    error.message?.includes('apikey')
+  ) {
     return 'Authentication failed. Please check SUPABASE_SERVICE_KEY in .env file.'
   }
 
@@ -81,12 +85,10 @@ export function isRetryableError(error: any): boolean {
     'ECONNREFUSED',
     '503', // Service unavailable
     '504', // Gateway timeout
-    '429'  // Too many requests
+    '429', // Too many requests
   ]
 
   const errorString = JSON.stringify(error).toLowerCase()
 
-  return retryableCodes.some(code =>
-    errorString.includes(code.toLowerCase())
-  )
+  return retryableCodes.some(code => errorString.includes(code.toLowerCase()))
 }

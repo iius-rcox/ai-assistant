@@ -255,6 +255,12 @@ The system's effectiveness is measured by:
 - Supabase PostgreSQL (project: xmziovusqlmgygcrgyqt) with localStorage for offline drafts (004-inline-edit)
 - TypeScript 5.6+ with Vue 3.5+ (ES2022 target) + Vue 3.5+, Pinia 2.2+, Supabase JS 2.45+, VueUse 11+, ApexCharts 3.54+, Vite 5.4+ (005-table-enhancements)
 - Supabase PostgreSQL (project: xmziovusqlmgygcrgyqt) with localStorage for user preferences (005-table-enhancements)
+- TypeScript 5.9, Vue 3.5, CSS3 + Vue 3.5, Vite 7.1, ApexCharts 5.3, VueUse 11.3, Pinia 3.0 (006-material-design-themes)
+- localStorage (theme preference persistence - existing) (006-material-design-themes)
+- TypeScript 5.9+ with Vue 3.5+ (ES2022 target) + Vue 3.5, Pinia 2.2+, Supabase JS 2.84+, VueUse 11+ (007-instant-edit-undo)
+- Supabase PostgreSQL (existing project: xmziovusqlmgygcrgyqt) with localStorage for undo state backup (007-instant-edit-undo)
+- TypeScript 5.9+ with Vue 3.5+ (ES2022 target) + Vue 3.5, Pinia 3.0, VueUse 11.3, Vite 7.1 (008-column-search-filters)
+- localStorage for filter persistence (optional), Supabase PostgreSQL for data (008-column-search-filters)
 
 ## Production Systems
 
@@ -276,7 +282,7 @@ The system's effectiveness is measured by:
 **Database**: Supabase project xmziovusqlmgygcrgyqt with 47 emails, 33 classifications
 
 ## Recent Changes
-- 005-table-enhancements: Added TypeScript 5.6+ with Vue 3.5+ (ES2022 target) + Vue 3.5+, Pinia 2.2+, Supabase JS 2.45+, VueUse 11+, ApexCharts 3.54+, Vite 5.4+
-- 004-inline-edit: Added TypeScript 5.6+ with Vue 3.4+ (ES2022 target) + Vue 3.5+, Pinia 2.2+, Supabase JS 2.45+, VueUse 11+, Vite 5.4+
-- 003-correction-ui: Added TypeScript 5.6+ with Vue 3.4+ (ES2022 target) + Vue 3, Vite 5.4, Supabase JS 2.45, ApexCharts 3.54, Pinia 2.2
+- 010-shadcn-blue-theme: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+- 008-column-search-filters: Added TypeScript 5.9+ with Vue 3.5+ (ES2022 target) + Vue 3.5, Pinia 3.0, VueUse 11.3, Vite 7.1
+- 007-instant-edit-undo: Added TypeScript 5.9+ with Vue 3.5+ (ES2022 target) + Vue 3.5, Pinia 2.2+, Supabase JS 2.84+, VueUse 11+
 ...

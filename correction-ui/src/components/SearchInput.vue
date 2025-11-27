@@ -32,15 +32,15 @@ const props = withDefaults(defineProps<Props>(), {
   debounceMs: SEARCH_CONFIG.DEBOUNCE_MS,
   isLoading: false,
   disabled: false,
-  resultCount: null
+  resultCount: null,
 })
 
 // Emits
 const emit = defineEmits<{
   'update:modelValue': [value: string]
-  'search': [query: string]
-  'clear': []
-  'focus': []
+  search: [query: string]
+  clear: []
+  focus: []
 }>()
 
 // Refs
@@ -50,12 +50,11 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
 // Computed
 const hasValue = computed(() => localValue.value.length > 0)
-const isQueryValid = computed(() =>
-  localValue.value.length === 0 ||
-  localValue.value.length >= SEARCH_CONFIG.MIN_QUERY_LENGTH
+const isQueryValid = computed(
+  () => localValue.value.length === 0 || localValue.value.length >= SEARCH_CONFIG.MIN_QUERY_LENGTH
 )
-const showResultCount = computed(() =>
-  props.resultCount !== null && hasValue.value && !props.isLoading
+const showResultCount = computed(
+  () => props.resultCount !== null && hasValue.value && !props.isLoading
 )
 
 // Methods
@@ -118,7 +117,7 @@ function handleGlobalKeydown(event: KeyboardEvent) {
 // Watch for external modelValue changes
 watch(
   () => props.modelValue,
-  (newValue) => {
+  newValue => {
     if (newValue !== localValue.value) {
       localValue.value = newValue
     }
@@ -233,11 +232,7 @@ defineExpose({ focus })
     <slot name="suffix" />
 
     <!-- Validation Message -->
-    <div
-      v-if="!isQueryValid && localValue.length > 0"
-      class="search-validation"
-      role="alert"
-    >
+    <div v-if="!isQueryValid && localValue.length > 0" class="search-validation" role="alert">
       Type at least {{ SEARCH_CONFIG.MIN_QUERY_LENGTH }} characters
     </div>
   </div>
@@ -250,19 +245,20 @@ defineExpose({ focus })
   align-items: center;
   width: 100%;
   max-width: 400px;
-  background: var(--color-bg-secondary, #f8f9fa);
-  border: 1px solid var(--color-border, #dee2e6);
-  border-radius: 8px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-medium);
+  transition: var(--md-sys-theme-transition);
 }
 
 .search-input:focus-within {
-  border-color: var(--color-primary, #3b82f6);
-  box-shadow: 0 0 0 3px var(--color-primary-alpha, rgba(59, 130, 246, 0.1));
+  border-color: var(--md-sys-color-primary);
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .search-input.is-disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   pointer-events: none;
 }
 
@@ -271,7 +267,7 @@ defineExpose({ focus })
   align-items: center;
   justify-content: center;
   padding-left: 12px;
-  color: var(--color-text-muted, #6c757d);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .search-field {
@@ -279,20 +275,27 @@ defineExpose({ focus })
   padding: 10px 12px;
   border: none;
   background: transparent;
-  font-size: 14px;
-  color: var(--color-text, #212529);
+  font-size: var(--md-sys-typescale-body-medium-size);
+  color: var(--md-sys-color-on-surface);
   outline: none;
+  box-shadow: none;
+}
+
+.search-field:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 .search-field::placeholder {
-  color: var(--color-text-muted, #6c757d);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .search-spinner {
   display: flex;
   align-items: center;
   padding-right: 8px;
-  color: var(--color-primary, #3b82f6);
+  color: var(--md-sys-color-primary);
 }
 
 .spinner-icon {
@@ -310,8 +313,8 @@ defineExpose({ focus })
 
 .search-result-count {
   padding-right: 8px;
-  font-size: 12px;
-  color: var(--color-text-muted, #6c757d);
+  font-size: var(--md-sys-typescale-label-small-size);
+  color: var(--md-sys-color-on-surface-variant);
   white-space: nowrap;
 }
 
@@ -323,19 +326,19 @@ defineExpose({ focus })
   margin-right: 4px;
   border: none;
   background: transparent;
-  color: var(--color-text-muted, #6c757d);
+  color: var(--md-sys-color-on-surface-variant);
   cursor: pointer;
-  border-radius: 4px;
-  transition: color 0.2s, background-color 0.2s;
+  border-radius: var(--md-sys-shape-corner-extra-small);
+  transition: var(--md-sys-theme-transition);
 }
 
 .search-clear:hover {
-  color: var(--color-text, #212529);
-  background: var(--color-bg-hover, #e9ecef);
+  color: var(--md-sys-color-on-surface);
+  background: var(--md-sys-color-surface-container-high);
 }
 
 .search-clear:focus {
-  outline: 2px solid var(--color-primary, #3b82f6);
+  outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
 
@@ -352,12 +355,12 @@ defineExpose({ focus })
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
-  font-size: 11px;
+  font-size: var(--md-sys-typescale-label-small-size);
   font-family: inherit;
-  color: var(--color-text-muted, #6c757d);
-  background: var(--color-bg, #fff);
-  border: 1px solid var(--color-border, #dee2e6);
-  border-radius: 4px;
+  color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-extra-small);
 }
 
 .search-validation {
@@ -366,28 +369,11 @@ defineExpose({ focus })
   left: 0;
   right: 0;
   padding: 4px 12px;
-  font-size: 12px;
-  color: var(--color-warning, #f59e0b);
-  background: var(--color-bg, #fff);
-  border: 1px solid var(--color-border, #dee2e6);
+  font-size: var(--md-sys-typescale-label-small-size);
+  color: var(--md-ext-color-warning);
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
   border-top: none;
-  border-radius: 0 0 8px 8px;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .search-input {
-    background: var(--color-bg-secondary, #1f2937);
-    border-color: var(--color-border, #374151);
-  }
-
-  .search-field {
-    color: var(--color-text, #f3f4f6);
-  }
-
-  .search-shortcut kbd {
-    background: var(--color-bg, #111827);
-    border-color: var(--color-border, #374151);
-  }
+  border-radius: 0 0 var(--md-sys-shape-corner-medium) var(--md-sys-shape-corner-medium);
 }
 </style>

@@ -18,7 +18,7 @@ export function logError(message: string, error: Error | unknown, context?: LogC
   console.error(`[ERROR] ${message}`, {
     error,
     context,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 }
 
@@ -28,7 +28,7 @@ export function logError(message: string, error: Error | unknown, context?: LogC
 export function logWarn(message: string, context?: LogContext): void {
   console.warn(`[WARN] ${message}`, {
     context,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 }
 
@@ -38,7 +38,7 @@ export function logWarn(message: string, context?: LogContext): void {
 export function logInfo(message: string, context?: LogContext): void {
   console.info(`[INFO] ${message}`, {
     context,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 }
 
@@ -49,7 +49,7 @@ export function logInfo(message: string, context?: LogContext): void {
 export function logAction(action: string, details?: LogContext): void {
   console.log(`[ACTION] ${action}`, {
     details,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 }
 
@@ -86,7 +86,7 @@ export function perfEnd(label: string, context?: LogContext): number {
   console.log(`[PERF] ${label}: ${duration.toFixed(2)}ms`, {
     duration,
     context,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 
   // Warn if operation is slow (>1s)
@@ -123,7 +123,7 @@ export function logRender(componentName: string, renderTime?: number): void {
   if (import.meta.env.DEV) {
     console.log(`[RENDER] ${componentName}`, {
       renderTime: renderTime !== undefined ? `${renderTime.toFixed(2)}ms` : 'mounted',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     })
   }
 }
@@ -137,5 +137,5 @@ export default {
   perfStart,
   perfEnd,
   perfMeasure,
-  logRender
+  logRender,
 }

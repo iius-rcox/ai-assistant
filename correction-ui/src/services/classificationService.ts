@@ -13,10 +13,14 @@ import type {
   ClassificationFilters,
   PaginatedResponse,
   PaginationParams,
-  Classification
+  Classification,
 } from '@/types/models'
 import type { Category, UrgencyLevel, ActionType } from '@/types/enums'
-import type { ClassificationWithDetails, CorrectionHistoryEntry, BulkActionResult } from '@/types/table-enhancements'
+import type {
+  ClassificationWithDetails,
+  CorrectionHistoryEntry,
+  BulkActionResult,
+} from '@/types/table-enhancements'
 
 /**
  * List classifications with pagination, filtering, and sorting
@@ -33,9 +37,11 @@ export async function listClassifications(params: {
   perfStart('listClassifications')
   const { page, pageSize, filters, sortBy = 'classified_timestamp', sortDir = 'desc' } = params
 
-  let query = supabase
-    .from('classifications')
-    .select(`
+  // Check if we have email table filters (subject/sender) that require client-side filtering
+  const hasEmailFilters = !!(filters?.subjectSearch || filters?.senderSearch)
+
+  let query = supabase.from('classifications').select(
+    `
       *,
       email:emails (
         id,
@@ -45,7 +51,9 @@ export async function listClassifications(params: {
         body,
         received_timestamp
       )
-    `, { count: 'exact' })
+    `,
+    { count: 'exact' }
+  )
 
   // Apply filters
   if (filters) {
@@ -69,14 +77,36 @@ export async function listClassifications(params: {
     if (filters.dateTo) {
       query = query.lte('classified_timestamp', filters.dateTo)
     }
+    // Column search filters (Feature: 008-column-search-filters)
+    // Note: subject/sender filters are on joined 'emails' table - PostgREST doesn't support
+    // filtering on embedded tables, so those are handled after fetch below.
+    // Only category/urgency/action can be filtered server-side (they're on classifications table)
+    if (filters.categorySearch) {
+      query = query.ilike('category', `%${filters.categorySearch}%`)
+    }
+    if (filters.urgencySearch) {
+      query = query.ilike('urgency', `%${filters.urgencySearch}%`)
+    }
+    if (filters.actionSearch) {
+      query = query.ilike('action', `%${filters.actionSearch}%`)
+    }
   }
 
   // Apply sorting
   // Note: PostgREST doesn't support sorting on embedded/joined table columns directly
   // Map sortBy to valid classification columns, or skip server-side sort for email fields
   const classificationColumns = [
-    'id', 'email_id', 'category', 'urgency', 'action', 'confidence_score',
-    'classified_timestamp', 'corrected_timestamp', 'version', 'created_at', 'updated_at'
+    'id',
+    'email_id',
+    'category',
+    'urgency',
+    'action',
+    'confidence_score',
+    'classified_timestamp',
+    'corrected_timestamp',
+    'version',
+    'created_at',
+    'updated_at',
   ]
 
   // Only apply server-side sorting for classification table columns
@@ -88,10 +118,13 @@ export async function listClassifications(params: {
     query = query.order('classified_timestamp', { ascending: false })
   }
 
-  // Apply pagination
-  const start = (page - 1) * pageSize
-  const end = start + pageSize - 1
-  query = query.range(start, end)
+  // If we have email filters (subject/sender), fetch all records for client-side filtering
+  // Otherwise, apply server-side pagination
+  if (!hasEmailFilters) {
+    const start = (page - 1) * pageSize
+    const end = start + pageSize - 1
+    query = query.range(start, end)
+  }
 
   const { data, error, count } = await query
 
@@ -100,14 +133,40 @@ export async function listClassifications(params: {
     throw error
   }
 
-  perfEnd('listClassifications', { page, pageSize, resultCount: data?.length || 0 })
-  logInfo('Classifications loaded', { page, pageSize, totalCount: count })
+  let results = (data || []) as ClassificationWithEmail[]
+
+  // Apply client-side filtering for email fields (subject/sender)
+  if (hasEmailFilters && filters) {
+    const subjectFilter = filters.subjectSearch?.toLowerCase()
+    const senderFilter = filters.senderSearch?.toLowerCase()
+
+    results = results.filter(item => {
+      const subjectMatch = !subjectFilter ||
+        (item.email?.subject?.toLowerCase().includes(subjectFilter) ?? false)
+      const senderMatch = !senderFilter ||
+        (item.email?.sender?.toLowerCase().includes(senderFilter) ?? false)
+      return subjectMatch && senderMatch
+    })
+  }
+
+  // Calculate totals based on filtered results
+  const totalFiltered = hasEmailFilters ? results.length : (count || 0)
+
+  // Apply client-side pagination if we fetched all records
+  if (hasEmailFilters) {
+    const start = (page - 1) * pageSize
+    const end = start + pageSize
+    results = results.slice(start, end)
+  }
+
+  perfEnd('listClassifications', { page, pageSize, resultCount: results.length, hasEmailFilters })
+  logInfo('Classifications loaded', { page, pageSize, totalCount: totalFiltered, hasEmailFilters })
 
   return {
-    data: (data || []) as ClassificationWithEmail[],
-    totalCount: count || 0,
-    pageCount: Math.ceil((count || 0) / pageSize),
-    currentPage: page
+    data: results,
+    totalCount: totalFiltered,
+    pageCount: Math.ceil(totalFiltered / pageSize),
+    currentPage: page,
   }
 }
 
@@ -120,10 +179,12 @@ export async function getClassification(id: number): Promise<ClassificationWithE
   perfStart('getClassification')
   const { data, error } = await supabase
     .from('classifications')
-    .select(`
+    .select(
+      `
       *,
       email:emails (*)
-    `)
+    `
+    )
     .eq('id', id)
     .single()
 
@@ -168,11 +229,10 @@ export async function updateClassification(request: {
     category: updates.category,
     urgency: updates.urgency,
     action: updates.action,
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   }
 
-  const { data, error } = await (supabase
-    .from('classifications') as any)
+  const { data, error } = await (supabase.from('classifications') as any)
     .update(updatePayload)
     .eq('id', id)
     .select()
@@ -192,7 +252,7 @@ export async function updateClassification(request: {
   logInfo('Classification updated successfully', { id })
 
   return {
-    classification: data as Classification
+    classification: data as Classification,
   }
 }
 
@@ -213,7 +273,8 @@ export async function getClassificationWithDetails(id: number): Promise<Classifi
   // Note: Database uses original_* columns, not corrected_* columns
   const { data: classification, error: classError } = await supabase
     .from('classifications')
-    .select(`
+    .select(
+      `
       id,
       category,
       urgency,
@@ -233,7 +294,8 @@ export async function getClassificationWithDetails(id: number): Promise<Classifi
         body,
         received_timestamp
       )
-    `)
+    `
+    )
     .eq('id', id)
     .single()
 
@@ -276,27 +338,29 @@ export async function getClassificationWithDetails(id: number): Promise<Classifi
         correctedAt: timestamp,
         correctedBy: c.corrected_by,
         source: c.corrected_by === 'system' ? 'system' : 'user',
-        changes: {}
+        changes: {},
       })
     }
     const group = correctionGroups.get(timestamp)!
     group.changes[c.field_name] = {
       from: c.original_value,
-      to: c.corrected_value
+      to: c.corrected_value,
     }
   }
 
-  const correctionHistory: CorrectionHistoryEntry[] = Array.from(correctionGroups.values()).map((g: any) => ({
-    id: g.id,
-    previousCategory: g.changes.CATEGORY?.from || null,
-    newCategory: g.changes.CATEGORY?.to || null,
-    previousUrgency: g.changes.URGENCY?.from || null,
-    newUrgency: g.changes.URGENCY?.to || null,
-    previousAction: g.changes.ACTION?.from || null,
-    newAction: g.changes.ACTION?.to || null,
-    correctedAt: g.correctedAt,
-    source: g.source as 'user' | 'system'
-  }))
+  const correctionHistory: CorrectionHistoryEntry[] = Array.from(correctionGroups.values()).map(
+    (g: any) => ({
+      id: g.id,
+      previousCategory: g.changes.CATEGORY?.from || null,
+      newCategory: g.changes.CATEGORY?.to || null,
+      previousUrgency: g.changes.URGENCY?.from || null,
+      newUrgency: g.changes.URGENCY?.to || null,
+      previousAction: g.changes.ACTION?.from || null,
+      newAction: g.changes.ACTION?.to || null,
+      correctedAt: g.correctedAt,
+      source: g.source as 'user' | 'system',
+    })
+  )
 
   const email = classificationData.email as any
 
@@ -330,9 +394,9 @@ export async function getClassificationWithDetails(id: number): Promise<Classifi
       subject: email?.subject || null,
       sender: email?.sender || null,
       body: email?.body || null,
-      receivedAt: email?.received_timestamp
+      receivedAt: email?.received_timestamp,
     },
-    correctionHistory
+    correctionHistory,
   }
 }
 
@@ -370,12 +434,12 @@ export async function bulkUpdateClassifications(
 
   const result: BulkActionResult = {
     success: [],
-    failed: []
+    failed: [],
   }
 
   // Build update payload (only include provided fields)
   const updatePayload: Record<string, any> = {
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   }
 
   if (updates.category !== undefined) {
@@ -390,8 +454,7 @@ export async function bulkUpdateClassifications(
 
   try {
     // Attempt batch update via Supabase
-    const { data, error } = await (supabase
-      .from('classifications') as any)
+    const { data, error } = await (supabase.from('classifications') as any)
       .update(updatePayload)
       .in('id', ids)
       .select('id')
@@ -402,8 +465,7 @@ export async function bulkUpdateClassifications(
 
       for (const id of ids) {
         try {
-          const { error: singleError } = await (supabase
-            .from('classifications') as any)
+          const { error: singleError } = await (supabase.from('classifications') as any)
             .update(updatePayload)
             .eq('id', id)
 
@@ -415,7 +477,7 @@ export async function bulkUpdateClassifications(
         } catch (e) {
           result.failed.push({
             id,
-            error: e instanceof Error ? e.message : 'Unknown error'
+            error: e instanceof Error ? e.message : 'Unknown error',
           })
         }
       }
@@ -435,12 +497,12 @@ export async function bulkUpdateClassifications(
 
     perfEnd('bulkUpdateClassifications', {
       success: result.success.length,
-      failed: result.failed.length
+      failed: result.failed.length,
     })
 
     logInfo('Bulk update completed', {
       success: result.success.length,
-      failed: result.failed.length
+      failed: result.failed.length,
     })
 
     return result

@@ -18,27 +18,27 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: () => import('../views/HomePage.vue'),
-      meta: { title: 'Email Classifications' }
+      meta: { title: 'Email Classifications' },
     },
     {
       path: '/classification/:id',
       name: 'classification-detail',
       component: () => import('../views/ClassificationDetailPage.vue'),
-      meta: { title: 'Edit Classification' }
+      meta: { title: 'Edit Classification' },
     },
     {
       path: '/analytics',
       name: 'analytics',
       component: () => import('../views/AnalyticsPage.vue'),
-      meta: { title: 'Correction History' }
+      meta: { title: 'Correction History' },
     },
     {
       path: '/test',
       name: 'test',
       component: () => import('../views/TestConnection.vue'),
-      meta: { title: 'Connection Test' }
-    }
-  ]
+      meta: { title: 'Connection Test' },
+    },
+  ],
 })
 
 // Update document title on route change

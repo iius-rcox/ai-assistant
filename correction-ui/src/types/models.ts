@@ -41,14 +41,14 @@ export interface CorrectionPattern {
 }
 
 export interface CorrectionTimepoint {
-  date: string  // ISO date (YYYY-MM-DD)
+  date: string // ISO date (YYYY-MM-DD)
   count: number // Corrections on this date
 }
 
 export interface CorrectionStatistics {
   summary: {
     totalCorrections: number
-    correctionRate: number  // Percentage (0-100)
+    correctionRate: number // Percentage (0-100)
     mostCorrectedCategory: string
   }
   patterns: CorrectionPattern[]
@@ -63,6 +63,12 @@ export interface ClassificationFilters {
   corrected?: boolean
   dateFrom?: string
   dateTo?: string
+  // Column search filters (Feature: 008-column-search-filters)
+  subjectSearch?: string
+  senderSearch?: string
+  categorySearch?: string
+  urgencySearch?: string
+  actionSearch?: string
 }
 
 // Pagination models

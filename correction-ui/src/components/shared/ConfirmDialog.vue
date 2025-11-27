@@ -20,12 +20,12 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   confirmText: 'Confirm',
   cancelText: 'Cancel',
-  variant: 'warning'
+  variant: 'warning',
 })
 
 const emit = defineEmits<{
-  'confirm': []
-  'cancel': []
+  confirm: []
+  cancel: []
   'update:isOpen': [value: boolean]
 }>()
 
@@ -79,11 +79,7 @@ function handleKeydown(event: KeyboardEvent) {
           </div>
 
           <div class="modal-footer">
-            <button
-              @click="handleCancel"
-              class="btn btn-secondary"
-              type="button"
-            >
+            <button @click="handleCancel" class="btn btn-secondary" type="button">
               {{ cancelText }}
             </button>
             <button
@@ -109,7 +105,7 @@ function handleKeydown(event: KeyboardEvent) {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--md-sys-color-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -117,9 +113,9 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 .modal-dialog {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: var(--md-sys-shape-corner-large);
+  box-shadow: var(--md-sys-elevation-3);
   max-width: 500px;
   width: 90%;
   max-height: 90vh;
@@ -128,13 +124,14 @@ function handleKeydown(event: KeyboardEvent) {
 
 .modal-header {
   padding: 1.5rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.25rem;
-  color: #2c3e50;
+  font-size: var(--md-sys-typescale-title-large-size);
+  font-weight: var(--md-sys-typescale-title-large-weight);
+  color: var(--md-sys-color-on-surface);
 }
 
 .modal-body {
@@ -144,12 +141,13 @@ function handleKeydown(event: KeyboardEvent) {
 .modal-body p {
   margin: 0;
   line-height: 1.6;
-  color: #555;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-large-size);
 }
 
 .modal-footer {
   padding: 1rem 1.5rem;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
@@ -158,10 +156,11 @@ function handleKeydown(event: KeyboardEvent) {
 .btn {
   padding: 0.6rem 1.2rem;
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  transition: var(--md-sys-theme-transition);
 }
 
 .btn:hover {
@@ -173,39 +172,40 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 .btn-secondary {
-  background-color: #95a5a6;
-  color: white;
+  background-color: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .btn-secondary:hover {
-  background-color: #7f8c8d;
+  background-color: var(--md-sys-color-surface-container-high);
 }
 
 .btn-primary {
-  background-color: #3498db;
-  color: white;
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
 }
 
 .btn-primary:hover {
-  background-color: #2980b9;
+  opacity: 0.9;
 }
 
 .btn-warning {
-  background-color: #f39c12;
-  color: white;
+  background-color: var(--md-ext-color-warning);
+  color: var(--md-ext-color-on-warning);
 }
 
 .btn-warning:hover {
-  background-color: #e67e22;
+  opacity: 0.9;
 }
 
 .btn-danger {
-  background-color: #e74c3c;
-  color: white;
+  background-color: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
 }
 
 .btn-danger:hover {
-  background-color: #c0392b;
+  opacity: 0.9;
 }
 
 /* Transitions */

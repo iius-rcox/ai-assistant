@@ -1,9 +1,9 @@
 <!--
   Analytics Dashboard Component
-  Feature: 003-correction-ui, 005-table-enhancements
-  Tasks: T066, T070, T080-T087
+  Feature: 003-correction-ui, 005-table-enhancements, 006-material-design-themes
+  Tasks: T066, T070, T080-T087, T060
 
-  Combines summary stats, patterns table, timeline chart, and enhanced analytics
+  Combines summary stats, patterns table, timeline chart, and enhanced analytics with M3 theming
 -->
 
 <script setup lang="ts">
@@ -36,13 +36,13 @@ withDefaults(defineProps<Props>(), {
   isLoading: false,
   error: null,
   correctionTrends: null,
-  categoryDistribution: null
+  categoryDistribution: null,
 })
 
 const emit = defineEmits<{
-  'refresh': []
+  refresh: []
   'pattern-click': [pattern: any]
-  'export': [type: 'trends' | 'categories' | 'patterns']
+  export: [type: 'trends' | 'categories' | 'patterns']
   'drill-down': [type: string, value: string | number]
 }>()
 
@@ -79,10 +79,18 @@ function handleCategorySliceClick(category: string, _count: number) {
           <button @click="handleExport('trends')" class="btn-export" title="Export trends to CSV">
             Export Trends
           </button>
-          <button @click="handleExport('categories')" class="btn-export" title="Export categories to CSV">
+          <button
+            @click="handleExport('categories')"
+            class="btn-export"
+            title="Export categories to CSV"
+          >
             Export Categories
           </button>
-          <button @click="handleExport('patterns')" class="btn-export" title="Export patterns to CSV">
+          <button
+            @click="handleExport('patterns')"
+            class="btn-export"
+            title="Export patterns to CSV"
+          >
             Export Patterns
           </button>
         </div>
@@ -124,9 +132,7 @@ function handleCategorySliceClick(category: string, _count: number) {
     <!-- Error state -->
     <div v-else-if="error" class="error-state">
       <p class="error-text">{{ error.message }}</p>
-      <button @click="handleRefresh" class="btn-retry">
-        Try Again
-      </button>
+      <button @click="handleRefresh" class="btn-retry">Try Again</button>
     </div>
 
     <!-- Analytics content -->
@@ -141,15 +147,10 @@ function handleCategorySliceClick(category: string, _count: number) {
         />
 
         <!-- Correction patterns table -->
-        <PatternsTable
-          :patterns="statistics.patterns"
-          @pattern-click="handlePatternClick"
-        />
+        <PatternsTable :patterns="statistics.patterns" @pattern-click="handlePatternClick" />
 
         <!-- Timeline chart (original) -->
-        <TimelineChart
-          :timeline="statistics.timeline"
-        />
+        <TimelineChart :timeline="statistics.timeline" />
       </div>
 
       <!-- Trends Tab -->
@@ -208,8 +209,9 @@ function handleCategorySliceClick(category: string, _count: number) {
 
 .dashboard-header h2 {
   margin: 0;
-  color: var(--text-primary, #2c3e50);
-  font-size: 1.5rem;
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-headline-small-size);
+  font-weight: var(--md-sys-typescale-headline-small-weight);
 }
 
 .header-actions {
@@ -226,36 +228,37 @@ function handleCategorySliceClick(category: string, _count: number) {
 
 .btn-export {
   padding: 0.4rem 0.8rem;
-  background-color: var(--bg-secondary, #f8f9fa);
-  color: var(--text-primary, #2c3e50);
-  border: 1px solid var(--border-primary, #dee2e6);
-  border-radius: 4px;
+  background-color: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
   cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.2s;
+  font-size: var(--md-sys-typescale-label-medium-size);
+  transition: var(--md-sys-theme-transition);
 }
 
 .btn-export:hover {
-  background-color: var(--bg-hover, #e9ecef);
-  border-color: var(--color-primary, #3498db);
+  background-color: var(--md-sys-color-surface-container-high);
+  border-color: var(--md-sys-color-primary);
 }
 
 .btn-refresh {
   padding: 0.6rem 1.2rem;
-  background-color: var(--color-primary, #3498db);
-  color: white;
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--md-sys-shape-corner-small);
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: var(--md-sys-typescale-label-large-size);
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: background-color 0.2s, transform 0.2s;
+  transition: var(--md-sys-theme-transition);
 }
 
 .btn-refresh:hover:not(:disabled) {
-  background-color: var(--color-primary-hover, #2980b9);
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
   transform: translateY(-1px);
 }
 
@@ -267,7 +270,7 @@ function handleCategorySliceClick(category: string, _count: number) {
 .refresh-icon {
   font-size: 1.2rem;
   display: inline-block;
-  transition: transform 0.3s;
+  transition: transform var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-standard);
 }
 
 .btn-refresh:hover .refresh-icon {
@@ -279,31 +282,31 @@ function handleCategorySliceClick(category: string, _count: number) {
   display: flex;
   gap: 0.25rem;
   margin-bottom: 1.5rem;
-  border-bottom: 2px solid var(--border-primary, #dee2e6);
+  border-bottom: 2px solid var(--md-sys-color-outline-variant);
   padding-bottom: 0;
 }
 
 .tab-btn {
   padding: 0.75rem 1.5rem;
   background-color: transparent;
-  color: var(--text-secondary, #6c757d);
+  color: var(--md-sys-color-on-surface-variant);
   border: none;
   border-bottom: 3px solid transparent;
   cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: all 0.2s;
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  transition: var(--md-sys-theme-transition);
   margin-bottom: -2px;
 }
 
 .tab-btn:hover {
-  color: var(--text-primary, #2c3e50);
-  background-color: var(--bg-hover, #f8f9fa);
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-container-high);
 }
 
 .tab-btn.active {
-  color: var(--color-primary, #3498db);
-  border-bottom-color: var(--color-primary, #3498db);
+  color: var(--md-sys-color-primary);
+  border-bottom-color: var(--md-sys-color-primary);
 }
 
 .tab-content {
@@ -311,8 +314,12 @@ function handleCategorySliceClick(category: string, _count: number) {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .charts-grid {
@@ -330,15 +337,15 @@ function handleCategorySliceClick(category: string, _count: number) {
 .no-data-message {
   text-align: center;
   padding: 3rem;
-  background-color: var(--bg-primary, white);
-  border-radius: 8px;
-  border: 1px solid var(--border-primary, #e0e0e0);
-  color: var(--text-muted, #95a5a6);
+  background-color: var(--md-sys-color-surface);
+  border-radius: var(--md-sys-shape-corner-medium);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .no-data-message p {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
 }
 
 .loading-state,
@@ -346,14 +353,15 @@ function handleCategorySliceClick(category: string, _count: number) {
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  background-color: var(--bg-primary, white);
-  border-radius: 8px;
-  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.05));
+  background-color: var(--md-sys-color-surface);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-1);
+  transition: var(--md-sys-theme-transition);
 }
 
 .spinner {
-  border: 4px solid var(--bg-tertiary, #f3f3f3);
-  border-top: 4px solid var(--color-primary, #3498db);
+  border: 4px solid var(--md-sys-color-surface-container-high);
+  border-top: 4px solid var(--md-sys-color-primary);
   border-radius: 50%;
   width: 50px;
   height: 50px;
@@ -362,44 +370,50 @@ function handleCategorySliceClick(category: string, _count: number) {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-state p {
-  color: var(--text-muted, #7f8c8d);
-  font-size: 1rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-medium-size);
 }
 
 .error-state {
-  color: var(--color-danger, #e74c3c);
+  color: var(--md-sys-color-error);
 }
 
 .error-text {
   margin-bottom: 1.5rem;
-  font-size: 1.1rem;
+  font-size: var(--md-sys-typescale-body-large-size);
 }
 
 .btn-retry {
   padding: 0.6rem 1.5rem;
-  background-color: var(--color-danger, #e74c3c);
-  color: white;
+  background-color: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--md-sys-shape-corner-small);
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--md-sys-typescale-label-large-size);
+  transition: var(--md-sys-theme-transition);
 }
 
 .btn-retry:hover {
-  background-color: #c0392b;
+  background-color: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
 }
 
 .empty-state {
-  color: var(--text-muted, #95a5a6);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .empty-state p {
-  font-size: 1.1rem;
+  font-size: var(--md-sys-typescale-body-large-size);
   margin: 0;
 }
 
@@ -426,7 +440,7 @@ function handleCategorySliceClick(category: string, _count: number) {
 
   .tab-btn {
     padding: 0.6rem 1rem;
-    font-size: 0.9rem;
+    font-size: var(--md-sys-typescale-label-medium-size);
     white-space: nowrap;
   }
 }

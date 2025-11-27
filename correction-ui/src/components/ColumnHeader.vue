@@ -30,15 +30,15 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   sortable: undefined,
-  resizable: undefined
+  resizable: undefined,
 })
 
 // Emits
 const emit = defineEmits<{
   /** Emitted when column is clicked for sorting */
-  'sort': [columnId: string]
+  sort: [columnId: string]
   /** Emitted during resize drag */
-  'resize': [columnId: string, width: number]
+  resize: [columnId: string, width: number]
   /** Emitted when resize completes */
   'resize-end': [columnId: string, width: number]
 }>()
@@ -52,9 +52,7 @@ const isResizable = computed(() =>
   props.resizable !== undefined ? props.resizable : props.column.resizable
 )
 
-const isSorted = computed(() =>
-  props.sortState?.column === props.column.id
-)
+const isSorted = computed(() => props.sortState?.column === props.column.id)
 
 const sortDirection = computed((): SortDirection | null => {
   if (!isSorted.value || !props.sortState) return null
@@ -106,10 +104,7 @@ function handleResize(event: MouseEvent) {
   if (!isResizing.value) return
 
   const diff = event.clientX - startX.value
-  const newWidth = Math.max(
-    props.column.minWidth,
-    Math.min(800, startWidth.value + diff)
-  )
+  const newWidth = Math.max(props.column.minWidth, Math.min(800, startWidth.value + diff))
 
   emit('resize', props.column.id, newWidth)
 }
@@ -133,11 +128,11 @@ function stopResize() {
     :class="[
       'column-header',
       {
-        'sortable': isSortable,
-        'sorted': isSorted,
-        'resizable': isResizable,
-        'resizing': isResizing
-      }
+        sortable: isSortable,
+        sorted: isSorted,
+        resizable: isResizable,
+        resizing: isResizing,
+      },
     ]"
     :style="width ? { width: `${width}px` } : undefined"
     :aria-sort="isSortable ? sortAriaSort : undefined"
@@ -202,12 +197,7 @@ function stopResize() {
     </div>
 
     <!-- Resize Handle -->
-    <div
-      v-if="isResizable"
-      class="resize-handle"
-      @mousedown="startResize"
-      @click.stop
-    />
+    <div v-if="isResizable" class="resize-handle" @mousedown="startResize" @click.stop />
   </th>
 </template>
 
@@ -216,32 +206,32 @@ function stopResize() {
   position: relative;
   padding: 0.75rem 1rem;
   text-align: left;
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: var(--color-text, #2c3e50);
-  background-color: var(--color-bg-secondary, #f8f9fa);
-  border-bottom: 2px solid var(--color-border, #dee2e6);
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  font-size: var(--md-sys-typescale-label-large-size);
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-container);
+  border-bottom: 2px solid var(--md-sys-color-outline-variant);
   white-space: nowrap;
   user-select: none;
+  transition: var(--md-sys-theme-transition);
 }
 
 /* Sortable styling (T020) */
 .column-header.sortable {
   cursor: pointer;
-  transition: background-color 0.15s;
 }
 
 .column-header.sortable:hover {
-  background-color: var(--color-bg-hover, #e9ecef);
+  background-color: var(--md-sys-color-surface-container-high);
 }
 
 .column-header.sortable:focus {
-  outline: 2px solid var(--color-primary, #3b82f6);
+  outline: 2px solid var(--md-sys-color-primary);
   outline-offset: -2px;
 }
 
 .column-header.sorted {
-  background-color: var(--color-bg-active, #e8f4fc);
+  background-color: var(--md-sys-color-primary-container);
 }
 
 /* Header content layout */
@@ -259,7 +249,7 @@ function stopResize() {
 .sort-indicator {
   display: flex;
   align-items: center;
-  color: var(--color-text-muted, #6c757d);
+  color: var(--md-sys-color-on-surface-variant);
   opacity: 0;
   transition: opacity 0.15s;
 }
@@ -278,7 +268,7 @@ function stopResize() {
 }
 
 .sort-indicator.is-active .sort-icon {
-  color: var(--color-primary, #3b82f6);
+  color: var(--md-sys-color-primary);
 }
 
 /* Resize handle */
@@ -299,28 +289,11 @@ function stopResize() {
 
 .resize-handle:hover,
 .column-header.resizing .resize-handle {
-  background-color: var(--color-primary, #3b82f6);
+  background-color: var(--md-sys-color-primary);
 }
 
 /* Resizing state */
 .column-header.resizing {
-  background-color: var(--color-bg-active, #e8f4fc);
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .column-header {
-    color: var(--color-text, #f3f4f6);
-    background-color: var(--color-bg-secondary, #1f2937);
-    border-color: var(--color-border, #374151);
-  }
-
-  .column-header.sortable:hover {
-    background-color: var(--color-bg-hover, #374151);
-  }
-
-  .column-header.sorted {
-    background-color: var(--color-bg-active, #1e3a5f);
-  }
+  background-color: var(--md-sys-color-primary-container);
 }
 </style>

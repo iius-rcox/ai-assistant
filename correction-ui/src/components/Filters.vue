@@ -23,7 +23,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:filters': [filters: ClassificationFilters]
-  'clear': []
+  clear: []
 }>()
 
 // Local filter state
@@ -34,11 +34,11 @@ const showOnlyUncorrected = ref(props.filters.corrected === false)
 
 // Confidence range mapping
 const confidenceRanges: Record<string, { min?: number; max?: number }> = {
-  'all': {},
+  all: {},
   '0-50': { min: 0, max: 0.5 },
   '51-70': { min: 0.51, max: 0.7 },
   '71-90': { min: 0.71, max: 0.9 },
-  '91-100': { min: 0.91, max: 1 }
+  '91-100': { min: 0.91, max: 1 },
 }
 
 // Calculate date range based on preset
@@ -50,10 +50,18 @@ function getDateRange(preset: string): { dateFrom?: string; dateTo?: string } {
 
   let daysAgo = 0
   switch (preset) {
-    case 'last-week': daysAgo = 7; break
-    case 'last-15': daysAgo = 15; break
-    case 'last-30': daysAgo = 30; break
-    case 'last-45': daysAgo = 45; break
+    case 'last-week':
+      daysAgo = 7
+      break
+    case 'last-15':
+      daysAgo = 15
+      break
+    case 'last-30':
+      daysAgo = 30
+      break
+    case 'last-45':
+      daysAgo = 45
+      break
   }
 
   const dateFrom = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString()
@@ -112,12 +120,11 @@ function clearAllFilters() {
 // Check if any filters are active
 const hasActiveFilters = ref(false)
 watch([confidenceRange, dateRange, selectedCategory, showOnlyUncorrected], () => {
-  hasActiveFilters.value = (
+  hasActiveFilters.value =
     confidenceRange.value !== 'all' ||
     dateRange.value !== 'all' ||
     selectedCategory.value !== 'all' ||
     showOnlyUncorrected.value
-  )
 })
 </script>
 
@@ -125,42 +132,30 @@ watch([confidenceRange, dateRange, selectedCategory, showOnlyUncorrected], () =>
   <div class="filters">
     <div class="filters-header">
       <h3>Filters</h3>
-      <span v-if="hasActiveFilters" class="active-indicator">
-        Active
-      </span>
+      <span v-if="hasActiveFilters" class="active-indicator"> Active </span>
     </div>
 
     <div class="filters-grid">
       <!-- Confidence filter (new dropdown) -->
       <div class="filter-section">
-        <ConfidenceDropdown
-          v-model="confidenceRange"
-        />
+        <ConfidenceDropdown v-model="confidenceRange" />
       </div>
 
       <!-- Category filter (new dynamic dropdown) -->
       <div class="filter-section">
-        <CategoryDropdown
-          v-model="selectedCategory"
-        />
+        <CategoryDropdown v-model="selectedCategory" />
       </div>
 
       <!-- Date range filter -->
       <div class="filter-section">
-        <DateRangeDropdown
-          v-model="dateRange"
-        />
+        <DateRangeDropdown v-model="dateRange" />
       </div>
 
       <!-- Correction status filter -->
       <div class="filter-section">
         <div class="checkbox-wrapper">
           <label class="checkbox-filter">
-            <input
-              type="checkbox"
-              v-model="showOnlyUncorrected"
-              class="checkbox-input"
-            />
+            <input type="checkbox" v-model="showOnlyUncorrected" class="checkbox-input" />
             <span class="checkbox-label">Show only uncorrected</span>
           </label>
         </div>
@@ -179,18 +174,16 @@ watch([confidenceRange, dateRange, selectedCategory, showOnlyUncorrected], () =>
       </button>
     </div>
 
-    <p class="auto-apply-hint">
-      Filters apply automatically when changed
-    </p>
+    <p class="auto-apply-hint">Filters apply automatically when changed</p>
   </div>
 </template>
 
 <style scoped>
 .filters {
-  background-color: white;
+  background-color: var(--md-sys-color-surface-container-low);
   padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-1);
   margin-bottom: 1.5rem;
   width: 100%;
 }
@@ -204,17 +197,18 @@ watch([confidenceRange, dateRange, selectedCategory, showOnlyUncorrected], () =>
 
 .filters-header h3 {
   margin: 0;
-  color: #2c3e50;
-  font-size: 1.1rem;
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-title-medium-size);
+  font-weight: var(--md-sys-typescale-title-medium-weight);
 }
 
 .active-indicator {
-  font-size: 0.85rem;
-  color: white;
-  font-weight: 500;
+  font-size: var(--md-sys-typescale-label-small-size);
+  color: var(--md-ext-color-on-success);
+  font-weight: var(--md-sys-typescale-label-small-weight);
   padding: 0.25rem 0.75rem;
-  background-color: #27ae60;
-  border-radius: 12px;
+  background-color: var(--md-ext-color-success);
+  border-radius: var(--md-sys-shape-corner-full);
 }
 
 .filters-grid {
@@ -248,16 +242,16 @@ watch([confidenceRange, dateRange, selectedCategory, showOnlyUncorrected], () =>
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  border: 1px solid #e0e0e0;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-small);
+  border: 1px solid var(--md-sys-color-outline-variant);
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.2s;
+  transition: var(--md-sys-theme-transition);
 }
 
 .checkbox-filter:hover {
-  background-color: rgba(52, 152, 219, 0.05);
+  background-color: var(--md-sys-color-surface-container-high);
 }
 
 .checkbox-input {
@@ -266,11 +260,12 @@ watch([confidenceRange, dateRange, selectedCategory, showOnlyUncorrected], () =>
   cursor: pointer;
   margin: 0;
   flex-shrink: 0;
+  accent-color: var(--md-sys-color-primary);
 }
 
 .checkbox-label {
-  font-size: 0.95rem;
-  color: #2c3e50;
+  font-size: var(--md-sys-typescale-body-medium-size);
+  color: var(--md-sys-color-on-surface);
   font-weight: 500;
   line-height: 1.4;
 }
@@ -284,11 +279,11 @@ watch([confidenceRange, dateRange, selectedCategory, showOnlyUncorrected], () =>
 .btn {
   padding: 0.6rem 1.5rem;
   border: none;
-  border-radius: 4px;
-  font-size: 0.95rem;
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-  font-weight: 500;
+  transition: var(--md-sys-theme-transition);
 }
 
 .btn:hover:not(:disabled) {
@@ -306,20 +301,20 @@ watch([confidenceRange, dateRange, selectedCategory, showOnlyUncorrected], () =>
 }
 
 .btn-secondary {
-  background-color: #95a5a6;
-  color: white;
+  background-color: var(--md-sys-color-secondary);
+  color: var(--md-sys-color-on-secondary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: #7f8c8d;
+  opacity: 0.9;
 }
 
 .auto-apply-hint {
   margin-top: 1rem;
   margin-bottom: 0;
   text-align: center;
-  font-size: 0.85rem;
-  color: #95a5a6;
+  font-size: var(--md-sys-typescale-body-small-size);
+  color: var(--md-sys-color-on-surface-variant);
   font-style: italic;
 }
 

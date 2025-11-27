@@ -25,7 +25,7 @@ const shortcutsByCategory = computed(() => {
   const grouped: Record<string, KeyboardShortcut[]> = {
     navigation: [],
     actions: [],
-    general: []
+    general: [],
   }
 
   KEYBOARD_SHORTCUTS.forEach(shortcut => {
@@ -41,7 +41,7 @@ const shortcutsByCategory = computed(() => {
 const categoryLabels: Record<string, string> = {
   navigation: 'Navigation',
   actions: 'Actions',
-  general: 'General'
+  general: 'General',
 }
 
 function handleClose() {
@@ -69,15 +69,8 @@ function handleBackdropClick(event: MouseEvent) {
       >
         <div class="modal-content" role="document">
           <div class="modal-header">
-            <h2 id="shortcuts-modal-title" class="modal-title">
-              Keyboard Shortcuts
-            </h2>
-            <button
-              @click="handleClose"
-              class="close-btn"
-              aria-label="Close"
-              type="button"
-            >
+            <h2 id="shortcuts-modal-title" class="modal-title">Keyboard Shortcuts</h2>
+            <button @click="handleClose" class="close-btn" aria-label="Close" type="button">
               &times;
             </button>
           </div>
@@ -90,11 +83,7 @@ function handleBackdropClick(event: MouseEvent) {
             >
               <h3 class="category-title">{{ categoryLabels[category] }}</h3>
               <ul class="shortcut-list">
-                <li
-                  v-for="shortcut in shortcuts"
-                  :key="shortcut.key"
-                  class="shortcut-item"
-                >
+                <li v-for="shortcut in shortcuts" :key="shortcut.key" class="shortcut-item">
                   <kbd class="shortcut-key">
                     <span v-if="shortcut.modifier" class="modifier">
                       {{ shortcut.modifier === 'ctrl' ? 'Ctrl' : shortcut.modifier }}+
@@ -123,7 +112,7 @@ function handleBackdropClick(event: MouseEvent) {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--md-sys-color-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -132,9 +121,9 @@ function handleBackdropClick(event: MouseEvent) {
 }
 
 .modal-content {
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: var(--md-sys-shape-corner-large);
+  box-shadow: var(--md-sys-elevation-3);
   max-width: 500px;
   width: 100%;
   max-height: 80vh;
@@ -148,15 +137,15 @@ function handleBackdropClick(event: MouseEvent) {
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e0e0e0;
-  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-sys-color-surface-container);
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #2c3e50;
+  font-size: var(--md-sys-typescale-title-large-size);
+  font-weight: var(--md-sys-typescale-title-large-weight);
+  color: var(--md-sys-color-on-surface);
 }
 
 .close-btn {
@@ -164,26 +153,27 @@ function handleBackdropClick(event: MouseEvent) {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #6c757d;
+  color: var(--md-sys-color-on-surface-variant);
   padding: 0;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: all 0.15s;
+  border-radius: var(--md-sys-shape-corner-extra-small);
+  transition: var(--md-sys-theme-transition);
 }
 
 .close-btn:hover {
-  background-color: #e9ecef;
-  color: #2c3e50;
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
 }
 
 .modal-body {
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+  background-color: var(--md-sys-color-surface-container-high);
 }
 
 .shortcut-category {
@@ -195,14 +185,14 @@ function handleBackdropClick(event: MouseEvent) {
 }
 
 .category-title {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #6c757d;
+  color: var(--md-sys-color-on-surface-variant);
   margin: 0 0 0.75rem 0;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .shortcut-list {
@@ -223,45 +213,46 @@ function handleBackdropClick(event: MouseEvent) {
   align-items: center;
   min-width: 100px;
   padding: 0.35rem 0.6rem;
-  background-color: #f1f3f5;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-small);
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  font-size: 0.8rem;
-  color: #495057;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-size: var(--md-sys-typescale-label-medium-size);
+  color: var(--md-sys-color-on-surface);
+  box-shadow: var(--md-sys-elevation-1);
 }
 
 .modifier {
-  color: #6c757d;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .shortcut-description {
-  font-size: 0.9rem;
-  color: #495057;
+  font-size: var(--md-sys-typescale-body-medium-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .modal-footer {
   padding: 1rem 1.5rem;
-  border-top: 1px solid #e0e0e0;
-  background-color: #f8f9fa;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-sys-color-surface-container);
   text-align: center;
 }
 
 .hint {
   margin: 0;
-  font-size: 0.85rem;
-  color: #6c757d;
+  font-size: var(--md-sys-typescale-body-small-size);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .hint kbd {
   display: inline-block;
   padding: 0.15rem 0.4rem;
-  background-color: #e9ecef;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
+  background-color: var(--md-sys-color-surface-container-highest);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-extra-small);
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: var(--md-sys-typescale-label-small-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 /* Modal transitions */

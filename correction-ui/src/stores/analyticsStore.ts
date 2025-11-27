@@ -60,7 +60,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
       logAction('Analytics statistics fetched successfully', {
         totalCorrections: data.summary.totalCorrections,
         patternsCount: data.patterns.length,
-        timelinePoints: data.timeline.length
+        timelinePoints: data.timeline.length,
       })
     } catch (e) {
       error.value = e as Error
@@ -129,7 +129,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
         fetchStatistics(),
         fetchCorrectionTrends(),
         fetchCategoryDistribution(),
-        fetchAccuracyTrends()
+        fetchAccuracyTrends(),
       ])
     } catch (e) {
       error.value = e as Error
@@ -153,35 +153,44 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   function exportAnalytics(type: 'trends' | 'categories' | 'patterns') {
     if (type === 'trends' && correctionTrends.value) {
       const trends = correctionTrends.value
-      analyticsService.exportAnalyticsCSV({
-        headers: ['Date', 'Corrections', 'Classifications', 'Rate %'],
-        rows: trends.dates.map((date, i) => [
-          date,
-          trends.corrections[i] ?? 0,
-          trends.classifications[i] ?? 0,
-          (trends.rates[i] ?? 0).toFixed(2)
-        ])
-      }, 'correction-trends.csv')
+      analyticsService.exportAnalyticsCSV(
+        {
+          headers: ['Date', 'Corrections', 'Classifications', 'Rate %'],
+          rows: trends.dates.map((date, i) => [
+            date,
+            trends.corrections[i] ?? 0,
+            trends.classifications[i] ?? 0,
+            (trends.rates[i] ?? 0).toFixed(2),
+          ]),
+        },
+        'correction-trends.csv'
+      )
     } else if (type === 'categories' && categoryDistribution.value) {
       const dist = categoryDistribution.value
-      analyticsService.exportAnalyticsCSV({
-        headers: ['Category', 'Count', 'Percentage'],
-        rows: dist.categories.map((cat, i) => [
-          cat,
-          dist.counts[i] ?? 0,
-          (dist.percentages[i] ?? 0).toFixed(2)
-        ])
-      }, 'category-distribution.csv')
+      analyticsService.exportAnalyticsCSV(
+        {
+          headers: ['Category', 'Count', 'Percentage'],
+          rows: dist.categories.map((cat, i) => [
+            cat,
+            dist.counts[i] ?? 0,
+            (dist.percentages[i] ?? 0).toFixed(2),
+          ]),
+        },
+        'category-distribution.csv'
+      )
     } else if (type === 'patterns' && statistics.value) {
-      analyticsService.exportAnalyticsCSV({
-        headers: ['Field', 'Original', 'Corrected', 'Occurrences'],
-        rows: statistics.value.patterns.map(p => [
-          p.field_name,
-          p.original_value,
-          p.corrected_value,
-          p.occurrence_count
-        ])
-      }, 'correction-patterns.csv')
+      analyticsService.exportAnalyticsCSV(
+        {
+          headers: ['Field', 'Original', 'Corrected', 'Occurrences'],
+          rows: statistics.value.patterns.map(p => [
+            p.field_name,
+            p.original_value,
+            p.corrected_value,
+            p.occurrence_count,
+          ]),
+        },
+        'correction-patterns.csv'
+      )
     }
   }
 
@@ -200,6 +209,6 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     fetchAccuracyTrends,
     fetchAllAnalytics,
     refreshStatistics,
-    exportAnalytics
+    exportAnalytics,
   }
 })

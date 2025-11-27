@@ -14,7 +14,7 @@ try {
   if (cleanupResult.keysRemoved > 0) {
     logAction('Storage cleanup completed', {
       keysRemoved: cleanupResult.keysRemoved,
-      bytesFreed: cleanupResult.bytesFreed
+      bytesFreed: cleanupResult.bytesFreed,
     })
   }
 } catch (error) {

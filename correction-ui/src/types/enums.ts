@@ -6,34 +6,16 @@
  * Classification enum values matching database constraints
  */
 
-export const CATEGORIES = [
-  'KIDS',
-  'ROBYN',
-  'WORK',
-  'FINANCIAL',
-  'SHOPPING',
-  'OTHER'
-] as const
+export const CATEGORIES = ['KIDS', 'ROBYN', 'WORK', 'FINANCIAL', 'SHOPPING', 'CHURCH', 'OTHER'] as const
 
-export const URGENCY_LEVELS = [
-  'HIGH',
-  'MEDIUM',
-  'LOW'
-] as const
+export const URGENCY_LEVELS = ['HIGH', 'MEDIUM', 'LOW'] as const
 
-export const ACTION_TYPES = [
-  'FYI',
-  'RESPOND',
-  'TASK',
-  'PAYMENT',
-  'CALENDAR',
-  'NONE'
-] as const
+export const ACTION_TYPES = ['FYI', 'RESPOND', 'TASK', 'PAYMENT', 'CALENDAR', 'NONE'] as const
 
 // Type exports
-export type Category = typeof CATEGORIES[number]
-export type UrgencyLevel = typeof URGENCY_LEVELS[number]
-export type ActionType = typeof ACTION_TYPES[number]
+export type Category = (typeof CATEGORIES)[number]
+export type UrgencyLevel = (typeof URGENCY_LEVELS)[number]
+export type ActionType = (typeof ACTION_TYPES)[number]
 
 // Display labels for UI dropdowns
 export const CATEGORY_LABELS: Record<Category, string> = {
@@ -42,13 +24,14 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   WORK: 'Work & Professional',
   FINANCIAL: 'Financial & Bills',
   SHOPPING: 'Shopping & Orders',
-  OTHER: 'Other'
+  CHURCH: 'Church & Faith',
+  OTHER: 'Other',
 }
 
 export const URGENCY_LABELS: Record<UrgencyLevel, string> = {
   HIGH: 'High (Immediate)',
   MEDIUM: 'Medium (This Week)',
-  LOW: 'Low (Informational)'
+  LOW: 'Low (Informational)',
 }
 
 export const ACTION_LABELS: Record<ActionType, string> = {
@@ -57,5 +40,5 @@ export const ACTION_LABELS: Record<ActionType, string> = {
   TASK: 'Task (Action Item)',
   PAYMENT: 'Payment (Bill Due)',
   CALENDAR: 'Calendar (Event/Meeting)',
-  NONE: 'None'
+  NONE: 'None',
 }

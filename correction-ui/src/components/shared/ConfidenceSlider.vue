@@ -21,7 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
   min: 0,
   max: 1,
   step: 0.1,
-  label: 'Confidence Score'
+  label: 'Confidence Score',
 })
 
 const emit = defineEmits<{
@@ -112,9 +112,9 @@ const maxPercent = computed(() => Math.round(props.max * 100))
 }
 
 .slider-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #2c3e50;
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  font-size: var(--md-sys-typescale-label-large-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .slider-container {
@@ -122,9 +122,10 @@ const maxPercent = computed(() => Math.round(props.max * 100))
   flex-direction: column;
   gap: 0.75rem;
   padding: 0.75rem;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  border: 1px solid #e0e0e0;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--md-sys-shape-corner-small);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: var(--md-sys-theme-transition);
 }
 
 .slider-values {
@@ -134,9 +135,9 @@ const maxPercent = computed(() => Math.round(props.max * 100))
 }
 
 .value-label {
-  font-size: 0.85rem;
-  color: #555;
-  font-weight: 500;
+  font-size: var(--md-sys-typescale-label-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: var(--md-sys-typescale-label-medium-weight);
 }
 
 .slider-inputs {
@@ -153,48 +154,52 @@ const maxPercent = computed(() => Math.round(props.max * 100))
 }
 
 .input-label {
-  font-size: 0.85rem;
-  color: #555;
+  font-size: var(--md-sys-typescale-label-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .slider-input {
   width: 100%;
   cursor: pointer;
+  accent-color: var(--md-sys-color-primary);
 }
 
 .slider-input::-webkit-slider-thumb {
   appearance: none;
   width: 16px;
   height: 16px;
-  border-radius: 50%;
-  background: #3498db;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-primary);
   cursor: pointer;
-  border: 2px solid white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--md-sys-color-surface);
+  box-shadow: var(--md-sys-elevation-1);
 }
 
 .slider-input::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  border-radius: 50%;
-  background: #3498db;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-primary);
   cursor: pointer;
-  border: 2px solid white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--md-sys-color-surface);
+  box-shadow: var(--md-sys-elevation-1);
 }
 
 .number-input {
   width: 100%;
   padding: 0.4rem 0.6rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-extra-small);
+  font-size: var(--md-sys-typescale-body-small-size);
   text-align: center;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  transition: var(--md-sys-theme-transition);
 }
 
 .number-input:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
 }
 </style>

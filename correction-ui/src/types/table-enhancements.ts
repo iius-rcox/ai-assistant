@@ -266,3 +266,29 @@ export interface ClassificationWithDetails {
   }
   correctionHistory?: CorrectionHistoryEntry[]
 }
+
+// =============================================================================
+// Column Filter Types
+// Feature: 008-column-search-filters
+// =============================================================================
+
+/**
+ * Column filter state - one entry per filterable column
+ */
+export interface ColumnFilterState {
+  /** Filter text for Subject column */
+  subject: string
+  /** Filter text for Sender column */
+  sender: string
+  /** Filter text for Category column */
+  category: string
+  /** Filter text for Urgency column */
+  urgency: string
+  /** Filter text for Action column */
+  action: string
+}
+
+/**
+ * Valid column keys for filtering
+ */
+export type FilterableColumn = keyof ColumnFilterState

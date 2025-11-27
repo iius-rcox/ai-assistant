@@ -16,7 +16,7 @@ import {
   hybridSearch,
   searchClientSide,
   clearSearchCache,
-  highlightSearchTerms
+  highlightSearchTerms,
 } from '@/services/searchService'
 import { logAction, logError } from '@/utils/logger'
 import { SEARCH_CONFIG } from '@/constants/table'
@@ -45,19 +45,17 @@ export function useSearch(options: UseSearchOptions = {}) {
   // Computed
   const hasQuery = computed(() => query.value.length >= SEARCH_CONFIG.MIN_QUERY_LENGTH)
   const resultCount = computed(() => resultIds.value?.length ?? null)
-  const isQueryTooShort = computed(() =>
-    query.value.length > 0 && query.value.length < SEARCH_CONFIG.MIN_QUERY_LENGTH
+  const isQueryTooShort = computed(
+    () => query.value.length > 0 && query.value.length < SEARCH_CONFIG.MIN_QUERY_LENGTH
   )
-  const isQueryTooLong = computed(() =>
-    query.value.length > SEARCH_CONFIG.MAX_QUERY_LENGTH
-  )
+  const isQueryTooLong = computed(() => query.value.length > SEARCH_CONFIG.MAX_QUERY_LENGTH)
 
   // Search state object (for external consumers)
   const searchState = computed<SearchState>(() => ({
     query: query.value,
     isLoading: isLoading.value,
     resultCount: resultCount.value,
-    lastSearchTime: lastSearchTime.value
+    lastSearchTime: lastSearchTime.value,
   }))
 
   /**
@@ -90,16 +88,11 @@ export function useSearch(options: UseSearchOptions = {}) {
     try {
       logAction('Executing search', { query: searchQuery })
 
-      const results = await hybridSearch(
-        searchQuery,
-        store.classifications,
-        store.totalCount,
-        {
-          threshold: options.threshold ?? SEARCH_CONFIG.SERVER_SEARCH_THRESHOLD,
-          useServerSearch: options.useServerSearch,
-          debounceMs: options.debounceMs
-        }
-      )
+      const results = await hybridSearch(searchQuery, store.classifications, store.totalCount, {
+        threshold: options.threshold ?? SEARCH_CONFIG.SERVER_SEARCH_THRESHOLD,
+        useServerSearch: options.useServerSearch,
+        debounceMs: options.debounceMs,
+      })
 
       resultIds.value = results
       store.searchResults = results
@@ -108,7 +101,7 @@ export function useSearch(options: UseSearchOptions = {}) {
       logAction('Search completed', {
         query: searchQuery,
         resultCount: results.length,
-        durationMs: lastSearchTime.value
+        durationMs: lastSearchTime.value,
       })
 
       options.onSearchComplete?.(results)
@@ -208,7 +201,7 @@ export function useSearch(options: UseSearchOptions = {}) {
   }
 
   // Watch for query changes
-  watch(query, (newQuery) => {
+  watch(query, newQuery => {
     if (newQuery.length === 0) {
       clearSearch()
     }
@@ -244,7 +237,7 @@ export function useSearch(options: UseSearchOptions = {}) {
     highlight,
     isMatch,
     quickFilter,
-    clearCache: clearSearchCache
+    clearCache: clearSearchCache,
   }
 }
 

@@ -1,7 +1,7 @@
 <!--
   Home Page (Classification List View)
-  Feature: 003-correction-ui
-  Tasks: T039, T052, T053
+  Feature: 006-material-design-themes
+  Task: T009
 
   Main landing page with filters and classification list
 -->
@@ -15,7 +15,7 @@ import ClassificationList from '@/components/ClassificationList.vue'
 const store = useClassificationStore()
 const showFilters = ref(true)
 
-// Handle filter updates (T053 - FR-007: dynamic without page reload)
+// Handle filter updates (dynamic without page reload)
 function handleFilterUpdate(newFilters: any) {
   store.setFilters(newFilters)
 }
@@ -43,7 +43,7 @@ function toggleFilters() {
       </button>
     </div>
 
-    <!-- Filters panel (T052) -->
+    <!-- Filters panel -->
     <Filters
       v-if="showFilters"
       :filters="store.filters"
@@ -68,28 +68,35 @@ function toggleFilters() {
 
 .btn-toggle {
   padding: 0.6rem 1.2rem;
-  background-color: #3498db;
-  color: white;
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--md-sys-shape-corner-small);
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: background-color 0.2s;
+  transition: var(--md-sys-theme-transition);
 }
 
 .btn-toggle:hover {
-  background-color: #2980b9;
+  background-color: var(--md-sys-color-primary);
+  opacity: 0.9;
+}
+
+.btn-toggle:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
 }
 
 .filter-badge {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--md-sys-color-on-primary);
+  color: var(--md-sys-color-primary);
   padding: 0.15rem 0.5rem;
-  border-radius: 10px;
-  font-size: 0.85rem;
+  border-radius: var(--md-sys-shape-corner-full);
+  font-size: var(--md-sys-typescale-label-small-size);
   font-weight: 600;
 }
 </style>
-

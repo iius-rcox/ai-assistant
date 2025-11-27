@@ -5,16 +5,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Build-time arguments for Vite environment variables
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_SERVICE_KEY: ${VITE_SUPABASE_SERVICE_KEY}
     image: correction-ui:latest
     container_name: correction-ui
     ports:
       - "3000:80"
-    environment:
-      # Supabase Configuration
-      # These values are passed to the build process and embedded in the static bundle
-      # For runtime environment variables in nginx, you would need a different approach
-      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-      - VITE_SUPABASE_SERVICE_KEY=${VITE_SUPABASE_SERVICE_KEY}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]

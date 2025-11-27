@@ -24,7 +24,7 @@ export function useUnsavedChangesGuard(options: UseUnsavedChangesGuardOptions) {
   const {
     hasChanges,
     message = 'You have unsaved changes. Are you sure you want to leave?',
-    onConfirmLeave
+    onConfirmLeave,
   } = options
 
   const router = useRouter()
@@ -102,6 +102,6 @@ export function useUnsavedChangesGuard(options: UseUnsavedChangesGuardOptions) {
     isGuardActive,
     disableGuard,
     enableGuard,
-    confirmNavigation
+    confirmNavigation,
   }
 }

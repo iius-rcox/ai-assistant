@@ -40,7 +40,7 @@ export function useInfiniteScroll(options: UseInfiniteScrollOptions) {
     hasMore,
     preloadThreshold = DEFAULT_PRELOAD_THRESHOLD,
     defaultStyle = 'traditional',
-    onStyleChange
+    onStyleChange,
   } = options
 
   // State
@@ -80,7 +80,8 @@ export function useInfiniteScroll(options: UseInfiniteScrollOptions) {
    * Toggle between infinite scroll and traditional pagination
    */
   function toggleStyle() {
-    const newStyle: PaginationStyle = paginationStyle.value === 'infinite' ? 'traditional' : 'infinite'
+    const newStyle: PaginationStyle =
+      paginationStyle.value === 'infinite' ? 'traditional' : 'infinite'
     setPaginationStyle(newStyle)
   }
 
@@ -141,14 +142,14 @@ export function useInfiniteScroll(options: UseInfiniteScrollOptions) {
     if (containerElement.value) {
       containerElement.value.scrollTo({
         top: 0,
-        behavior: 'smooth'
+        behavior: 'smooth',
       })
       logAction('Scrolled to top')
     } else {
       // Fallback to window scroll
       window.scrollTo({
         top: 0,
-        behavior: 'smooth'
+        behavior: 'smooth',
       })
     }
   }
@@ -209,7 +210,7 @@ export function useInfiniteScroll(options: UseInfiniteScrollOptions) {
     scrollToTop,
     setContainer,
     resetScroll,
-    handleScroll
+    handleScroll,
   }
 }
 

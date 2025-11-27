@@ -211,7 +211,7 @@ export function useSort(options: UseSortOptions = {}) {
     isColumnSorted,
     getSortIndicator,
     sortClassifications,
-    compareValues
+    compareValues,
   }
 }
 

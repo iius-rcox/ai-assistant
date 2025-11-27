@@ -30,14 +30,16 @@ async function testConnection() {
     // Test 2: Fetch actual data
     const { data, error } = await supabase
       .from('classifications')
-      .select(`
+      .select(
+        `
         *,
         email:emails (
           id,
           subject,
           sender
         )
-      `)
+      `
+      )
       .limit(3)
 
     if (error) {

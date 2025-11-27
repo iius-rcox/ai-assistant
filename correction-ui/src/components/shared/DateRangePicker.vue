@@ -17,7 +17,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   dateFrom: '',
   dateTo: '',
-  label: 'Date Range'
+  label: 'Date Range',
 })
 
 const emit = defineEmits<{
@@ -43,22 +43,12 @@ function handleToChange(event: Event) {
     <div class="date-inputs">
       <div class="date-field">
         <label class="field-label">From:</label>
-        <input
-          type="date"
-          :value="dateFrom"
-          @input="handleFromChange"
-          class="date-input"
-        />
+        <input type="date" :value="dateFrom" @input="handleFromChange" class="date-input" />
       </div>
 
       <div class="date-field">
         <label class="field-label">To:</label>
-        <input
-          type="date"
-          :value="dateTo"
-          @input="handleToChange"
-          class="date-input"
-        />
+        <input type="date" :value="dateTo" @input="handleToChange" class="date-input" />
       </div>
     </div>
   </div>
@@ -72,9 +62,9 @@ function handleToChange(event: Event) {
 }
 
 .picker-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #2c3e50;
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  font-size: var(--md-sys-typescale-label-large-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .date-inputs {
@@ -90,22 +80,25 @@ function handleToChange(event: Event) {
 }
 
 .field-label {
-  font-size: 0.85rem;
-  color: #555;
+  font-size: var(--md-sys-typescale-label-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .date-input {
   padding: 0.6rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: var(--md-sys-typescale-body-medium-size);
   font-family: inherit;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  transition: var(--md-sys-theme-transition);
 }
 
 .date-input:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 3px var(--md-sys-color-primary-container);
 }
 
 @media (max-width: 768px) {

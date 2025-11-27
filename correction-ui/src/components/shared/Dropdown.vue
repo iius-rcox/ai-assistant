@@ -24,7 +24,7 @@ const props = withDefaults(defineProps<Props>(), {
   label: '',
   placeholder: 'Select...',
   disabled: false,
-  error: ''
+  error: '',
 })
 
 const emit = defineEmits<{
@@ -71,47 +71,48 @@ function handleChange(event: Event) {
 }
 
 .dropdown-label {
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: #2c3e50;
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  font-size: var(--md-sys-typescale-label-large-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .dropdown-select {
   padding: 0.6rem 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  background-color: white;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: var(--md-sys-typescale-body-large-size);
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: var(--md-sys-theme-transition);
 }
 
 .dropdown-select:hover:not(:disabled) {
-  border-color: #3498db;
+  border-color: var(--md-sys-color-primary);
 }
 
 .dropdown-select:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 3px var(--md-sys-color-primary-container);
 }
 
 .dropdown-select:disabled {
-  background-color: #f5f5f5;
+  background-color: var(--md-sys-color-surface-container);
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .dropdown-error {
-  border-color: #e74c3c;
+  border-color: var(--md-sys-color-error);
 }
 
 .dropdown-error:focus {
-  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+  box-shadow: 0 0 0 3px var(--md-sys-color-error-container);
 }
 
 .error-message {
-  color: #e74c3c;
-  font-size: 0.85rem;
+  color: var(--md-sys-color-error);
+  font-size: var(--md-sys-typescale-body-small-size);
 }
 </style>

@@ -46,7 +46,7 @@ export function useAutoSave(options: UseAutoSaveOptions = {}) {
       rowId,
       data: { ...data },
       timestamp: Date.now(),
-      version
+      version,
     }
     savedState.value = state
     logInfo('Auto-saved edit state to localStorage', { rowId })
@@ -128,6 +128,6 @@ export function useAutoSave(options: UseAutoSaveOptions = {}) {
     hasSavedState,
     getSavedState,
     recoverSavedState,
-    watchAndSave
+    watchAndSave,
   }
 }

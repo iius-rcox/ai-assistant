@@ -19,7 +19,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   showLabel: false,
-  compact: false
+  compact: false,
 })
 
 const { isDark, themePreference, toggleTheme, cycleTheme, isSystemTheme } = useTheme()
@@ -126,33 +126,33 @@ import { computed } from 'vue'
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background-color: var(--bg-secondary, #f8f9fa);
-  border: 1px solid var(--border-primary, #dee2e6);
-  border-radius: 8px;
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-small);
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-primary, #2c3e50);
+  transition: var(--md-sys-theme-transition);
+  color: var(--md-sys-color-on-surface);
 }
 
 .theme-toggle:hover {
-  background-color: var(--bg-hover, #e9ecef);
-  border-color: var(--border-focus, #3498db);
+  background-color: var(--md-sys-color-surface-container-high);
+  border-color: var(--md-sys-color-primary);
 }
 
 .theme-toggle:focus-visible {
-  outline: 2px solid var(--color-primary, #3498db);
+  outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
 
 .theme-toggle.compact {
   padding: 0.4rem;
-  border-radius: 50%;
+  border-radius: var(--md-sys-shape-corner-full);
 }
 
 .theme-icon {
   width: 20px;
   height: 20px;
-  transition: transform 0.3s ease;
+  transition: transform var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-standard);
 }
 
 .theme-toggle:hover .theme-icon {
@@ -168,18 +168,7 @@ import { computed } from 'vue'
 }
 
 .theme-label {
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-/* Dark mode specific */
-:root.theme-dark .theme-toggle {
-  background-color: var(--bg-secondary);
-  border-color: var(--border-primary);
-  color: var(--text-primary);
-}
-
-:root.theme-dark .theme-toggle:hover {
-  background-color: var(--bg-hover);
+  font-size: var(--md-sys-typescale-label-medium-size);
+  font-weight: var(--md-sys-typescale-label-medium-weight);
 }
 </style>

@@ -30,11 +30,7 @@ export interface UseColumnResizeOptions {
 }
 
 export function useColumnResize(options: UseColumnResizeOptions = {}) {
-  const {
-    defaultWidths = {},
-    minWidth = MIN_COLUMN_WIDTH,
-    onWidthChange
-  } = options
+  const { defaultWidths = {}, minWidth = MIN_COLUMN_WIDTH, onWidthChange } = options
 
   // State
   const columnWidths = ref<ColumnWidths>({ ...defaultWidths })
@@ -139,7 +135,7 @@ export function useColumnResize(options: UseColumnResizeOptions = {}) {
       saveWidths()
       logAction('Column resize ended', {
         column: resizingColumn.value,
-        width: columnWidths.value[resizingColumn.value]
+        width: columnWidths.value[resizingColumn.value],
       })
       onWidthChange?.(columnWidths.value)
     }
@@ -165,7 +161,7 @@ export function useColumnResize(options: UseColumnResizeOptions = {}) {
     const width = columnWidths.value[columnKey]
     return {
       width: width ? `${width}px` : undefined,
-      minWidth: `${minWidth}px`
+      minWidth: `${minWidth}px`,
     }
   }
 
@@ -192,7 +188,7 @@ export function useColumnResize(options: UseColumnResizeOptions = {}) {
     startResize,
     resetWidths,
     getColumnStyle,
-    loadSavedWidths
+    loadSavedWidths,
   }
 }
 

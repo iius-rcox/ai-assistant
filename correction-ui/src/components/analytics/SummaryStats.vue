@@ -1,9 +1,9 @@
 <!--
   Summary Stats Component
-  Feature: 003-correction-ui
-  Task: T063
+  Feature: 003-correction-ui / 006-material-design-themes
+  Task: T063, T059
 
-  Displays correction summary statistics (total, rate %, most corrected category)
+  Displays correction summary statistics (total, rate %, most corrected category) with M3 theming
 -->
 
 <script setup lang="ts">
@@ -41,17 +41,20 @@ const props = defineProps<Props>()
 
 <style scoped>
 .summary-stats {
-  background-color: white;
+  background-color: var(--md-sys-color-surface);
   padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-1);
   margin-bottom: 1.5rem;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: var(--md-sys-theme-transition);
 }
 
 .section-title {
   margin: 0 0 1.5rem 0;
-  color: #2c3e50;
-  font-size: 1.1rem;
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-title-medium-size);
+  font-weight: var(--md-sys-typescale-title-medium-weight);
 }
 
 .stats-grid {
@@ -61,30 +64,30 @@ const props = defineProps<Props>()
 }
 
 .stat-card {
-  background-color: #f8f9fa;
+  background-color: var(--md-sys-color-surface-container-low);
   padding: 1.5rem;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
+  border-radius: var(--md-sys-shape-corner-small);
+  border: 1px solid var(--md-sys-color-outline-variant);
   text-align: center;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: var(--md-sys-theme-transition);
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--md-sys-elevation-2);
 }
 
 .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #3498db;
+  color: var(--md-sys-color-primary);
   margin-bottom: 0.5rem;
 }
 
 .stat-label {
-  font-size: 0.9rem;
-  color: #7f8c8d;
-  font-weight: 500;
+  font-size: var(--md-sys-typescale-label-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: var(--md-sys-typescale-label-medium-weight);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }

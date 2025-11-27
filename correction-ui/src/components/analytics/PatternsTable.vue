@@ -1,13 +1,14 @@
 <!--
   Patterns Table Component
-  Feature: 003-correction-ui
-  Tasks: T064, T067
+  Feature: 003-correction-ui / 006-material-design-themes
+  Tasks: T064, T067, T058
   Requirement: FR-009
 
-  Displays correction patterns (original→corrected frequencies)
+  Displays correction patterns (original→corrected frequencies) with M3 theming
 -->
 
 <script setup lang="ts">
+import { useChartTheme } from '@/composables/useChartTheme'
 import type { CorrectionPattern } from '@/types/models'
 
 interface Props {
@@ -20,16 +21,22 @@ const emit = defineEmits<{
   'pattern-click': [pattern: CorrectionPattern]
 }>()
 
+const { chartColors } = useChartTheme()
+
 function handlePatternClick(pattern: CorrectionPattern) {
   emit('pattern-click', pattern)
 }
 
 function getBadgeColor(fieldName: string): string {
   switch (fieldName) {
-    case 'CATEGORY': return '#3498db'
-    case 'URGENCY': return '#f39c12'
-    case 'ACTION': return '#9b59b6'
-    default: return '#95a5a6'
+    case 'CATEGORY':
+      return chartColors.value.primary
+    case 'URGENCY':
+      return chartColors.value.warning
+    case 'ACTION':
+      return chartColors.value.tertiary
+    default:
+      return chartColors.value.onSurfaceVariant
   }
 }
 </script>
@@ -61,7 +68,10 @@ function getBadgeColor(fieldName: string): string {
             class="pattern-row clickable"
           >
             <td>
-              <span class="field-badge" :style="{ backgroundColor: getBadgeColor(pattern.field_name) }">
+              <span
+                class="field-badge"
+                :style="{ backgroundColor: getBadgeColor(pattern.field_name) }"
+              >
                 {{ pattern.field_name }}
               </span>
             </td>
@@ -80,34 +90,37 @@ function getBadgeColor(fieldName: string): string {
 
 <style scoped>
 .patterns-table {
-  background-color: white;
+  background-color: var(--md-sys-color-surface);
   padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-1);
   margin-bottom: 1.5rem;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: var(--md-sys-theme-transition);
 }
 
 .section-title {
   margin: 0 0 1.5rem 0;
-  color: #2c3e50;
-  font-size: 1.1rem;
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-title-medium-size);
+  font-weight: var(--md-sys-typescale-title-medium-weight);
 }
 
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #95a5a6;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .empty-state p {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
 }
 
 .table-container {
   overflow-x: auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-small);
 }
 
 .table {
@@ -116,55 +129,56 @@ function getBadgeColor(fieldName: string): string {
 }
 
 .table thead {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
+  background-color: var(--md-sys-color-surface-container);
+  border-bottom: 2px solid var(--md-sys-color-outline-variant);
 }
 
 .table th {
   padding: 0.75rem 1rem;
   text-align: left;
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 0.9rem;
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-label-medium-size);
 }
 
 .table td {
   padding: 0.75rem 1rem;
-  border-top: 1px solid #e0e0e0;
-  font-size: 0.9rem;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  font-size: var(--md-sys-typescale-body-medium-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .pattern-row.clickable {
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: var(--md-sys-theme-transition);
 }
 
 .pattern-row.clickable:hover {
-  background-color: #f8f9fa;
+  background-color: var(--md-sys-color-surface-container-high);
 }
 
 .field-badge {
   display: inline-block;
   padding: 0.25rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
+  border-radius: var(--md-sys-shape-corner-full);
+  font-size: var(--md-sys-typescale-label-small-size);
   font-weight: 600;
   color: white;
   text-transform: uppercase;
 }
 
 .value-cell {
-  font-weight: 500;
-  color: #555;
+  font-weight: var(--md-sys-typescale-body-medium-weight);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .value-cell.corrected {
-  color: #27ae60;
+  color: var(--md-ext-color-success);
   font-weight: 600;
 }
 
 .arrow-cell {
-  color: #95a5a6;
+  color: var(--md-sys-color-outline);
   font-weight: bold;
   text-align: center;
   width: 40px;
@@ -177,10 +191,10 @@ function getBadgeColor(fieldName: string): string {
 .count-badge {
   display: inline-block;
   padding: 0.3rem 0.8rem;
-  background-color: #3498db;
-  color: white;
-  border-radius: 12px;
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border-radius: var(--md-sys-shape-corner-full);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: var(--md-sys-typescale-label-medium-size);
 }
 </style>

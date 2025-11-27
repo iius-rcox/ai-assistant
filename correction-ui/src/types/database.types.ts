@@ -8,13 +8,7 @@
  *   npx supabase gen types typescript --project-id xmziovusqlmgygcrgyqt > src/types/database.types.ts
  */
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
   public: {
@@ -70,10 +64,11 @@ export interface Database {
         Row: {
           id: number
           email_id: number
-          category: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'OTHER'
+          category: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'CHURCH' | 'OTHER'
           urgency: 'HIGH' | 'MEDIUM' | 'LOW'
           action: 'FYI' | 'RESPOND' | 'TASK' | 'PAYMENT' | 'CALENDAR' | 'NONE'
           confidence_score: number
+          summary: string | null
           extracted_names: string[] | null
           extracted_dates: string[] | null
           extracted_amounts: string[] | null
@@ -92,10 +87,11 @@ export interface Database {
         Insert: {
           id?: number
           email_id: number
-          category: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'OTHER'
+          category: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'CHURCH' | 'OTHER'
           urgency: 'HIGH' | 'MEDIUM' | 'LOW'
           action: 'FYI' | 'RESPOND' | 'TASK' | 'PAYMENT' | 'CALENDAR' | 'NONE'
           confidence_score: number
+          summary?: string | null
           extracted_names?: string[] | null
           extracted_dates?: string[] | null
           extracted_amounts?: string[] | null
@@ -112,10 +108,11 @@ export interface Database {
         Update: {
           id?: number
           email_id?: number
-          category?: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'OTHER'
+          category?: 'KIDS' | 'ROBYN' | 'WORK' | 'FINANCIAL' | 'SHOPPING' | 'CHURCH' | 'OTHER'
           urgency?: 'HIGH' | 'MEDIUM' | 'LOW'
           action?: 'FYI' | 'RESPOND' | 'TASK' | 'PAYMENT' | 'CALENDAR' | 'NONE'
           confidence_score?: number
+          summary?: string | null
           extracted_names?: string[] | null
           extracted_dates?: string[] | null
           extracted_amounts?: string[] | null
@@ -186,7 +183,12 @@ export interface Database {
         Update: {
           id?: number
           email_id?: number
-          action_type?: 'LABEL_APPLIED' | 'MARKED_READ' | 'ARCHIVED' | 'MARKED_UNREAD' | 'UNARCHIVED'
+          action_type?:
+            | 'LABEL_APPLIED'
+            | 'MARKED_READ'
+            | 'ARCHIVED'
+            | 'MARKED_UNREAD'
+            | 'UNARCHIVED'
           action_details?: Json | null
           action_timestamp?: string
           success_status?: boolean

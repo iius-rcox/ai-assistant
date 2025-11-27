@@ -1,11 +1,16 @@
 <!--
   Inline Edit Cell Component
-  Feature: 004-inline-edit
-  Task: T015
+  Feature: 004-inline-edit, 007-instant-edit-undo
+  Tasks: T015 (004), T012-T014 (007)
   Requirements: FR-002, FR-003, FR-014, FR-025 through FR-030
 
   Renders an editable dropdown cell for inline table editing.
   Supports category, urgency, and action field types with proper enum values.
+
+  007-instant-edit-undo:
+  - T012: Emits 'instant-save' event on dropdown change
+  - T013: Tracks previousValue for undo support
+  - T014: Removes dependency on parent save button
 
   Reference: research.md Section 5 - Responsive Table Editing
 -->
@@ -18,7 +23,7 @@ import {
   ACTION_TYPES,
   CATEGORY_LABELS,
   URGENCY_LABELS,
-  ACTION_LABELS
+  ACTION_LABELS,
 } from '@/types/enums'
 import type { Category, UrgencyLevel, ActionType } from '@/types/enums'
 
@@ -30,6 +35,8 @@ interface Props {
   modelValue: string
   /** Type of field being edited (determines available options) */
   fieldType: 'category' | 'urgency' | 'action'
+  /** Classification record ID for instant save (T012) */
+  recordId?: number
   /** Optional label for the field */
   label?: string
   /** Whether the dropdown is disabled */
@@ -42,32 +49,56 @@ interface Props {
   error?: string
   /** Compact mode for table cells */
   compact?: boolean
+  /** Enable instant save mode (007-instant-edit-undo) */
+  instantSaveEnabled?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  recordId: undefined,
   label: '',
   disabled: false,
   autoFocus: false,
   isSaving: false,
   error: '',
-  compact: true
+  compact: true,
+  instantSaveEnabled: false,
 })
 
 const emit = defineEmits<{
   /** Emitted when value changes */
   'update:modelValue': [value: string]
   /** Emitted when field gains focus */
-  'focus': []
+  focus: []
   /** Emitted when field loses focus */
-  'blur': []
+  blur: []
   /** Emitted when Enter key is pressed */
-  'save': []
+  save: []
   /** Emitted when Escape key is pressed */
-  'cancel': []
+  cancel: []
+  /** T012: Emitted for instant save - includes field, new value, and previous value */
+  'instant-save': [
+    field: 'category' | 'urgency' | 'action',
+    newValue: string,
+    previousValue: string,
+  ]
 }>()
 
 // Template ref for the select element
 const selectRef = ref<HTMLSelectElement | null>(null)
+
+// T013: Track previous value for undo support
+const previousValue = ref(props.modelValue)
+
+// Update previousValue when modelValue prop changes (for external updates)
+watch(
+  () => props.modelValue,
+  newVal => {
+    // Only update if not currently saving (to preserve undo value during save)
+    if (!props.isSaving) {
+      previousValue.value = newVal
+    }
+  }
+)
 
 /**
  * Get options based on field type
@@ -118,10 +149,20 @@ const isDisabled = computed(() => {
 
 /**
  * Handle change event from select
+ * T012: Modified to emit instant-save when enabled
  */
 function handleChange(event: Event): void {
   const target = event.target as HTMLSelectElement
-  emit('update:modelValue', target.value)
+  const newValue = target.value
+
+  // Always emit update:modelValue for v-model binding
+  emit('update:modelValue', newValue)
+
+  // T012: If instant save is enabled, emit instant-save event
+  if (props.instantSaveEnabled && newValue !== previousValue.value) {
+    emit('instant-save', props.fieldType, newValue, previousValue.value)
+    // Note: previousValue will be updated after successful save via the watch above
+  }
 }
 
 /**
@@ -178,6 +219,14 @@ function blur(): void {
   selectRef.value?.blur()
 }
 
+/**
+ * T013: Revert to a specific value (for undo support)
+ * Updates the previousValue tracker to the reverted value
+ */
+function revert(value: string): void {
+  previousValue.value = value
+}
+
 // Auto-focus when mounted if requested
 onMounted(() => {
   if (props.autoFocus) {
@@ -185,11 +234,12 @@ onMounted(() => {
   }
 })
 
-// Expose focus/blur methods to parent
+// Expose focus/blur/revert methods to parent
 defineExpose({
   focus,
   blur,
-  selectRef
+  revert, // T013: Expose revert for undo support
+  selectRef,
 })
 </script>
 
@@ -200,7 +250,7 @@ defineExpose({
       'inline-edit-cell--compact': compact,
       'inline-edit-cell--error': error,
       'inline-edit-cell--disabled': isDisabled,
-      'inline-edit-cell--saving': isSaving
+      'inline-edit-cell--saving': isSaving,
     }"
   >
     <!-- Optional label (hidden in compact mode) -->
@@ -226,17 +276,13 @@ defineExpose({
         class="inline-edit-cell__select"
         :class="{
           'inline-edit-cell__select--error': error,
-          'inline-edit-cell__select--saving': isSaving
+          'inline-edit-cell__select--saving': isSaving,
         }"
         :aria-label="label || `Edit ${fieldType}`"
         :aria-invalid="!!error"
         :aria-describedby="error ? `${fieldType}-error` : undefined"
       >
-        <option
-          v-for="option in options"
-          :key="option"
-          :value="option"
-        >
+        <option v-for="option in options" :key="option" :value="option">
           {{ labels[option] || option }}
         </option>
       </select>
@@ -248,12 +294,7 @@ defineExpose({
     </div>
 
     <!-- Error message -->
-    <span
-      v-if="error"
-      :id="`${fieldType}-error`"
-      class="inline-edit-cell__error"
-      role="alert"
-    >
+    <span v-if="error" :id="`${fieldType}-error`" class="inline-edit-cell__error" role="alert">
       {{ error }}
     </span>
   </div>
@@ -272,9 +313,9 @@ defineExpose({
 }
 
 .inline-edit-cell__label {
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: #374151;
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  font-size: var(--md-sys-typescale-label-large-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .inline-edit-cell__select-wrapper {
@@ -286,45 +327,47 @@ defineExpose({
   width: 100%;
   min-width: 120px;
   padding: 0.375rem 1.75rem 0.375rem 0.5rem;
-  font-size: 0.875rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
   line-height: 1.25rem;
-  color: #1f2937;
-  background-color: #ffffff;
-  border: 1px solid #3b82f6;
-  border-radius: 0.375rem;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-primary);
+  border-radius: var(--md-sys-shape-corner-small);
   cursor: pointer;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: var(--md-sys-theme-transition);
 
   /* Custom dropdown arrow */
   appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2379747e' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.5rem center;
   background-repeat: no-repeat;
   background-size: 1.25em 1.25em;
 }
 
 .inline-edit-cell__select:hover:not(:disabled) {
-  border-color: #2563eb;
+  border-color: var(--md-sys-color-primary);
+  background-color: var(--md-sys-color-surface-container-low);
 }
 
 .inline-edit-cell__select:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 3px var(--md-sys-color-primary-container);
 }
 
 .inline-edit-cell__select:disabled {
-  background-color: #f3f4f6;
+  background-color: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface-variant);
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: var(--md-sys-state-disabled-opacity);
 }
 
 .inline-edit-cell__select--error {
-  border-color: #dc2626;
+  border-color: var(--md-sys-color-error);
 }
 
 .inline-edit-cell__select--error:focus {
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25);
+  box-shadow: 0 0 0 3px var(--md-sys-color-error-container);
 }
 
 .inline-edit-cell__select--saving {
@@ -338,17 +381,18 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 0.375rem;
+  background-color: var(--md-sys-color-surface);
+  opacity: 0.7;
+  border-radius: var(--md-sys-shape-corner-small);
   pointer-events: none;
 }
 
 .inline-edit-cell__spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid #e5e7eb;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
+  border: 2px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: var(--md-sys-shape-corner-full);
   animation: spin 0.75s linear infinite;
 }
 
@@ -360,15 +404,15 @@ defineExpose({
 
 /* Error message */
 .inline-edit-cell__error {
-  font-size: 0.75rem;
-  color: #dc2626;
+  font-size: var(--md-sys-typescale-label-small-size);
+  color: var(--md-sys-color-error);
   margin-top: 0.125rem;
 }
 
 /* Compact mode adjustments */
 .inline-edit-cell--compact .inline-edit-cell__select {
   padding: 0.25rem 1.5rem 0.25rem 0.375rem;
-  font-size: 0.8125rem;
+  font-size: var(--md-sys-typescale-body-small-size);
   min-width: 100px;
 }
 
@@ -376,35 +420,14 @@ defineExpose({
 @media (hover: none) and (pointer: coarse) {
   .inline-edit-cell__select {
     min-height: 44px;
-    font-size: 1rem;
+    font-size: var(--md-sys-typescale-body-large-size);
     padding: 0.5rem 2rem 0.5rem 0.75rem;
   }
 }
 
 /* Focus visible for keyboard navigation */
 .inline-edit-cell__select:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
-}
-
-/* Dark mode support (optional, follows system preference) */
-@media (prefers-color-scheme: dark) {
-  .inline-edit-cell__label {
-    color: #e5e7eb;
-  }
-
-  .inline-edit-cell__select {
-    background-color: #1f2937;
-    color: #f9fafb;
-    border-color: #4b5563;
-  }
-
-  .inline-edit-cell__select:hover:not(:disabled) {
-    border-color: #6b7280;
-  }
-
-  .inline-edit-cell__select:disabled {
-    background-color: #374151;
-  }
 }
 </style>

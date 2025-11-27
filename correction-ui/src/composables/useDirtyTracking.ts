@@ -95,7 +95,7 @@ export function useDirtyTracking<T extends Record<string, unknown>>(
   return {
     isDirty,
     dirtyFields,
-    reset
+    reset,
   }
 }
 
@@ -128,10 +128,10 @@ export function useDirtyTrackingExtended<T extends Record<string, unknown>>(
       return []
     }
 
-    return dirtyFields.value.map((field) => ({
+    return dirtyFields.value.map(field => ({
       field,
       from: original.value![field as keyof T],
-      to: current.value![field as keyof T]
+      to: current.value![field as keyof T],
     }))
   })
 
@@ -155,7 +155,7 @@ export function useDirtyTrackingExtended<T extends Record<string, unknown>>(
     dirtyFields,
     fieldChanges,
     reset,
-    resetField
+    resetField,
   }
 }
 

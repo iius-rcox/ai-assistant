@@ -15,6 +15,7 @@ import { storeToRefs } from 'pinia'
 import { useClassificationStore } from '@/stores/classificationStore'
 import { supabase } from '@/services/supabase'
 import type { InlineEditData, SaveResult, ConflictData, SaveStatus } from '@/types/inline-edit'
+import type { UndoChange } from '@/types/undo'
 import type { Classification } from '@/types/models'
 import type { Category, UrgencyLevel, ActionType } from '@/types/enums'
 import { logAction, logError, logInfo } from '@/utils/logger'
@@ -80,7 +81,7 @@ export function useInlineEdit() {
     hasUnsavedChanges,
     hasConflict,
     isEditing,
-    classifications
+    classifications,
   } = storeToRefs(store)
 
   /**
@@ -89,11 +90,7 @@ export function useInlineEdit() {
    */
   const isValid = computed(() => {
     if (!currentData.value) return false
-    return !!(
-      currentData.value.category &&
-      currentData.value.urgency &&
-      currentData.value.action
-    )
+    return !!(currentData.value.category && currentData.value.urgency && currentData.value.action)
   })
 
   /**
@@ -115,7 +112,7 @@ export function useInlineEdit() {
       logInfo('Switching edit rows', {
         from: editingRowId.value,
         to: id,
-        hasUnsavedChanges: hasUnsavedChanges.value
+        hasUnsavedChanges: hasUnsavedChanges.value,
       })
     }
 
@@ -129,10 +126,7 @@ export function useInlineEdit() {
    * @param field - The field to update (category, urgency, or action)
    * @param value - The new value for the field
    */
-  function updateField<K extends keyof InlineEditData>(
-    field: K,
-    value: InlineEditData[K]
-  ): void {
+  function updateField<K extends keyof InlineEditData>(field: K, value: InlineEditData[K]): void {
     store.updateEditField(field, value)
     logAction('Field updated', { field, value })
   }
@@ -148,6 +142,140 @@ export function useInlineEdit() {
   }
 
   /**
+   * Instant save a single field change (T009-T011)
+   * Feature: 007-instant-edit-undo
+   *
+   * Saves immediately when dropdown value is selected.
+   * Uses optimistic UI update - reverts on failure.
+   *
+   * @param recordId - The classification ID to update
+   * @param field - The field to update (category, urgency, action)
+   * @param newValue - The new value for the field
+   * @param previousValue - The previous value (for undo support)
+   * @returns SaveResult with undo change data on success
+   */
+  async function instantSave(
+    recordId: number,
+    field: keyof InlineEditData,
+    newValue: string,
+    previousValue: string
+  ): Promise<SaveResult & { undoChange?: UndoChange }> {
+    logAction('Instant save started', { recordId, field, newValue, previousValue })
+
+    // Find the classification
+    const classificationIndex = classifications.value.findIndex(c => c.id === recordId)
+    if (classificationIndex === -1) {
+      logError('Classification not found for instant save', null, { recordId })
+      return { success: false, error: 'Classification not found' }
+    }
+
+    const classification = classifications.value[classificationIndex]
+    if (!classification) {
+      logError('Classification not found for instant save', null, { recordId })
+      return { success: false, error: 'Classification not found' }
+    }
+
+    // T010: Optimistic UI update - update local state immediately
+    const oldValue = (classification as any)[field]
+    ;(classifications.value[classificationIndex] as any)[field] = newValue
+
+    store.setSaveStatus('saving')
+
+    try {
+      // Prepare update payload
+      const updatePayload: Record<string, unknown> = {
+        [field]: newValue,
+        corrected_timestamp: new Date().toISOString(),
+        corrected_by: 'instant-edit',
+      }
+
+      // Attempt update with version check for optimistic locking
+      const currentVersion = classification.version
+      const { data, error } = await (supabase.from('classifications') as any)
+        .update(updatePayload)
+        .eq('id', recordId)
+        .eq('version', currentVersion)
+        .select()
+        .single()
+
+      if (error) {
+        // PGRST116 = no rows returned (version mismatch or not found)
+        if (error.code === 'PGRST116') {
+          // T011: Revert on failure
+          ;(classifications.value[classificationIndex] as any)[field] = oldValue
+          store.setSaveStatus('conflict')
+
+          logError('Version conflict during instant save', error, { recordId, field })
+          return {
+            success: false,
+            error: 'This record was modified by someone else. Please refresh and try again.',
+          }
+        }
+
+        // T011: Revert UI on other errors
+        ;(classifications.value[classificationIndex] as any)[field] = oldValue
+        store.setSaveStatus('error')
+
+        logError('Instant save database error', error, { recordId, field })
+        return { success: false, error: error.message }
+      }
+
+      if (!data) {
+        // T011: Revert UI on failure
+        ;(classifications.value[classificationIndex] as any)[field] = oldValue
+        store.setSaveStatus('error')
+
+        return { success: false, error: 'No data returned from update' }
+      }
+
+      // Success - update local data with server response (including new version)
+      const current = classifications.value[classificationIndex]
+      if (current) {
+        classifications.value[classificationIndex] = {
+          ...current,
+          ...data,
+          email: current.email, // Preserve email relationship
+        } as any
+      }
+
+      store.setSaveStatus('success')
+
+      // Return success with undo change data
+      const undoChange: UndoChange = {
+        recordId,
+        field: field as 'category' | 'urgency' | 'action',
+        previousValue,
+        newValue,
+      }
+
+      logAction('Instant save successful', {
+        recordId,
+        field,
+        newValue,
+        newVersion: (data as any).version,
+      })
+
+      // Brief success indicator, then reset status
+      setTimeout(() => {
+        if (saveStatus.value === 'success') {
+          store.setSaveStatus('idle')
+        }
+      }, 1500)
+
+      return { success: true, data: data as unknown as Classification, undoChange }
+    } catch (err) {
+      // T011: Revert UI on exception
+      ;(classifications.value[classificationIndex] as any)[field] = oldValue
+      store.setSaveStatus('error')
+
+      const message = err instanceof Error ? err.message : 'Instant save failed'
+      logError('Instant save exception', err, { recordId, field })
+
+      return { success: false, error: message }
+    }
+  }
+
+  /**
    * Save the current edit with optimistic locking
    * Uses version check to detect concurrent modifications
    *
@@ -158,11 +286,11 @@ export function useInlineEdit() {
       logError('Cannot save: missing edit state', null, {
         editingRowId: editingRowId.value,
         hasCurrentData: !!currentData.value,
-        hasVersion: !!originalVersion.value
+        hasVersion: !!originalVersion.value,
       })
       return {
         success: false,
-        error: 'No row is currently being edited'
+        error: 'No row is currently being edited',
       }
     }
 
@@ -177,7 +305,7 @@ export function useInlineEdit() {
       store.setSaveStatus('error')
       return {
         success: false,
-        error: 'All fields must have valid values'
+        error: 'All fields must have valid values',
       }
     }
 
@@ -204,7 +332,7 @@ export function useInlineEdit() {
         logError('Save failed', new Error(result.error || 'Unknown error'), { id })
         return {
           success: false,
-          error: result.error || 'Failed to save changes'
+          error: result.error || 'Failed to save changes',
         }
       }
     } catch (err) {
@@ -213,7 +341,7 @@ export function useInlineEdit() {
       logError('Save exception', err, { id })
       return {
         success: false,
-        error: message
+        error: message,
       }
     }
   }
@@ -239,11 +367,10 @@ export function useInlineEdit() {
         urgency: updates.urgency as UrgencyLevel,
         action: updates.action as ActionType,
         corrected_timestamp: new Date().toISOString(),
-        corrected_by: 'inline-edit'
+        corrected_by: 'inline-edit',
       }
 
-      const { data, error } = await (supabase
-        .from('classifications') as any)
+      const { data, error } = await (supabase.from('classifications') as any)
         .update(updatePayload)
         .eq('id', id)
         .eq('version', expectedVersion)
@@ -259,26 +386,26 @@ export function useInlineEdit() {
 
         return {
           success: false,
-          error: `Database error: ${error.message}`
+          error: `Database error: ${error.message}`,
         }
       }
 
       if (!data) {
         return {
           success: false,
-          error: 'No data returned from update'
+          error: 'No data returned from update',
         }
       }
 
       return {
         success: true,
         data: data as unknown as Classification,
-        newVersion: (data as any).version
+        newVersion: (data as any).version,
       }
     } catch (err) {
       return {
         success: false,
-        error: err instanceof Error ? err.message : 'Unknown error occurred'
+        error: err instanceof Error ? err.message : 'Unknown error occurred',
       }
     }
   }
@@ -305,7 +432,7 @@ export function useInlineEdit() {
     if (error || !serverData) {
       return {
         success: false,
-        error: 'Classification not found'
+        error: 'Classification not found',
       }
     }
 
@@ -313,14 +440,14 @@ export function useInlineEdit() {
     logInfo('Version conflict detected', {
       id,
       clientChanges,
-      serverVersion: (serverData as any).version
+      serverVersion: (serverData as any).version,
     })
 
     return {
       success: false,
       conflict: {
-        serverVersion: serverData as unknown as Classification
-      }
+        serverVersion: serverData as unknown as Classification,
+      },
     }
   }
 
@@ -343,7 +470,7 @@ export function useInlineEdit() {
         classifications.value[index] = {
           ...current,
           ...savedData,
-          email: current.email // Preserve email relationship
+          email: current.email, // Preserve email relationship
         } as any
       }
     }
@@ -380,7 +507,7 @@ export function useInlineEdit() {
       serverVersion: serverData,
       baseVersion: originalData.value!,
       expectedVersion,
-      currentVersion: serverData.version
+      currentVersion: serverData.version,
     }
 
     store.setConflictData(conflict)
@@ -390,7 +517,7 @@ export function useInlineEdit() {
 
     return {
       success: false,
-      conflict
+      conflict,
     }
   }
 
@@ -418,11 +545,10 @@ export function useInlineEdit() {
         urgency: updates.urgency as UrgencyLevel,
         action: updates.action as ActionType,
         corrected_timestamp: new Date().toISOString(),
-        corrected_by: 'inline-edit-force'
+        corrected_by: 'inline-edit-force',
       }
 
-      const { data, error } = await (supabase
-        .from('classifications') as any)
+      const { data, error } = await (supabase.from('classifications') as any)
         .update(updatePayload)
         .eq('id', id)
         .select()
@@ -469,7 +595,7 @@ export function useInlineEdit() {
         classifications.value[index] = {
           ...current,
           ...serverData,
-          email: current.email
+          email: current.email,
         } as any
       }
     }
@@ -512,7 +638,7 @@ export function useInlineEdit() {
     logAction('Merge resolution started', {
       id: editingRowId.value,
       mergedData,
-      serverVersion
+      serverVersion,
     })
 
     // Attempt to save with the current server version
@@ -589,7 +715,7 @@ export function useInlineEdit() {
     // If we have unsaved changes, log a warning
     if (hasUnsavedChanges.value) {
       logInfo('Component unmounted with unsaved changes', {
-        rowId: editingRowId.value
+        rowId: editingRowId.value,
       })
     }
   })
@@ -617,12 +743,13 @@ export function useInlineEdit() {
     updateField,
     cancelEdit,
     saveEdit,
+    instantSave, // T009: New instant save method
     forceOverwrite,
     acceptServerVersion,
     resolveMerge,
     canSwitchRow,
     refreshCurrentRow,
-    retrySave
+    retrySave,
   }
 }
 

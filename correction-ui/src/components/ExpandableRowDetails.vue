@@ -24,7 +24,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   colspan: 9,
-  previewLength: 500
+  previewLength: 500,
 })
 
 // T038 - Email body preview (truncated to previewLength)
@@ -58,7 +58,10 @@ function getChangeClass(changeType: string): string {
 /**
  * Format a correction history entry for display
  */
-function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string[], source: string } {
+function formatCorrectionEntry(entry: CorrectionHistoryEntry): {
+  changes: string[]
+  source: string
+} {
   const changes: string[] = []
 
   if (entry.previousCategory !== entry.newCategory) {
@@ -73,7 +76,7 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
 
   return {
     changes: changes.length > 0 ? changes : ['No changes recorded'],
-    source: entry.source === 'system' ? 'System' : 'User'
+    source: entry.source === 'system' ? 'System' : 'User',
   }
 }
 </script>
@@ -138,7 +141,9 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
               <div class="timeline-content">
                 <div class="entry-header">
                   <span class="entry-date">{{ formatTimestamp(entry.correctedAt) }}</span>
-                  <span class="entry-source" :class="entry.source">{{ formatCorrectionEntry(entry).source }}</span>
+                  <span class="entry-source" :class="entry.source">{{
+                    formatCorrectionEntry(entry).source
+                  }}</span>
                 </div>
                 <ul class="entry-changes">
                   <li
@@ -193,12 +198,12 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
 
 <style scoped>
 .expanded-row {
-  background-color: #f8f9fa;
+  background-color: var(--md-sys-color-surface-container-low);
 }
 
 .expanded-cell {
   padding: 0 !important;
-  border-top: 2px solid #3498db;
+  border-top: 2px solid var(--md-sys-color-primary);
 }
 
 .loading-state,
@@ -209,24 +214,26 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
   justify-content: center;
   gap: 0.75rem;
   padding: 2rem;
-  color: #6c757d;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .error-state {
-  color: #dc3545;
+  color: var(--md-sys-color-error);
 }
 
 .spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid #e0e0e0;
-  border-top-color: #3498db;
-  border-radius: 50%;
+  border: 2px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: var(--md-sys-shape-corner-full);
   animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .details-content {
@@ -237,10 +244,11 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
 }
 
 .section {
-  background-color: white;
-  border-radius: 8px;
+  background-color: var(--md-sys-color-surface);
+  border-radius: var(--md-sys-shape-corner-small);
   padding: 1rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: var(--md-sys-theme-transition);
 }
 
 .email-section {
@@ -260,10 +268,10 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
   align-items: center;
   gap: 0.5rem;
   margin: 0 0 1rem 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #2c3e50;
-  border-bottom: 1px solid #e0e0e0;
+  font-size: var(--md-sys-typescale-title-small-size);
+  font-weight: var(--md-sys-typescale-title-small-weight);
+  color: var(--md-sys-color-on-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
   padding-bottom: 0.5rem;
 }
 
@@ -272,44 +280,44 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
 }
 
 .email-meta {
-  font-size: 0.875rem;
-  color: #495057;
+  font-size: var(--md-sys-typescale-body-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
   margin-bottom: 0.5rem;
 }
 
 .email-meta strong {
-  color: #2c3e50;
+  color: var(--md-sys-color-on-surface);
 }
 
 .email-body {
   margin-top: 1rem;
   padding: 0.75rem;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  border: 1px solid #e9ecef;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--md-sys-shape-corner-extra-small);
+  border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .body-text {
   margin: 0;
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
   line-height: 1.5;
   white-space: pre-wrap;
   word-wrap: break-word;
-  color: #495057;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .more-indicator {
   margin: 0.5rem 0 0 0;
-  font-size: 0.75rem;
-  color: #6c757d;
+  font-size: var(--md-sys-typescale-label-small-size);
+  color: var(--md-sys-color-on-surface-variant);
   font-style: italic;
 }
 
 .no-content {
-  color: #6c757d;
+  color: var(--md-sys-color-on-surface-variant);
   font-style: italic;
-  font-size: 0.875rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
 }
 
 /* Timeline styles (T039) */
@@ -325,7 +333,7 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
   top: 0;
   bottom: 0;
   width: 2px;
-  background-color: #dee2e6;
+  background-color: var(--md-sys-color-outline-variant);
 }
 
 .timeline-entry {
@@ -343,17 +351,17 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
   top: 0.25rem;
   width: 10px;
   height: 10px;
-  border-radius: 50%;
-  background-color: #3498db;
-  border: 2px solid white;
-  box-shadow: 0 0 0 2px #3498db;
+  border-radius: var(--md-sys-shape-corner-full);
+  background-color: var(--md-sys-color-primary);
+  border: 2px solid var(--md-sys-color-surface);
+  box-shadow: 0 0 0 2px var(--md-sys-color-primary);
 }
 
 .timeline-content {
-  background-color: #f8f9fa;
-  border-radius: 4px;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--md-sys-shape-corner-extra-small);
   padding: 0.75rem;
-  font-size: 0.875rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
 }
 
 .entry-header {
@@ -364,26 +372,26 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
 }
 
 .entry-date {
-  font-size: 0.75rem;
-  color: #6c757d;
+  font-size: var(--md-sys-typescale-label-small-size);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .entry-source {
-  font-size: 0.7rem;
+  font-size: var(--md-sys-typescale-label-small-size);
   padding: 0.15rem 0.4rem;
-  border-radius: 10px;
-  font-weight: 500;
+  border-radius: var(--md-sys-shape-corner-full);
+  font-weight: var(--md-sys-typescale-label-small-weight);
   text-transform: uppercase;
 }
 
 .entry-source.user {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: var(--md-ext-color-success-container);
+  color: var(--md-ext-color-on-success-container);
 }
 
 .entry-source.system {
-  background-color: #cce5ff;
-  color: #004085;
+  background-color: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
 }
 
 .entry-changes {
@@ -393,15 +401,15 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
 }
 
 .change-item {
-  font-size: 0.8rem;
-  color: #495057;
+  font-size: var(--md-sys-typescale-body-small-size);
+  color: var(--md-sys-color-on-surface-variant);
   padding: 0.15rem 0;
 }
 
 .change-item::before {
   content: '→';
   margin-right: 0.5rem;
-  color: #6c757d;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 /* Info grid */
@@ -414,16 +422,16 @@ function formatCorrectionEntry(entry: CorrectionHistoryEntry): { changes: string
 .info-item {
   display: flex;
   gap: 0.5rem;
-  font-size: 0.875rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
 }
 
 .info-label {
-  color: #6c757d;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .info-value {
-  color: #2c3e50;
-  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  font-weight: var(--md-sys-typescale-label-large-weight);
 }
 
 /* Responsive */

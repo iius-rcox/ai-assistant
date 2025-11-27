@@ -12,7 +12,11 @@
 import { ref, computed, watch } from 'vue'
 import { useClassificationStore } from '@/stores/classificationStore'
 import { logAction, logError } from '@/utils/logger'
-import type { BulkActionPayload, BulkActionResult, BulkActionType } from '@/types/table-enhancements'
+import type {
+  BulkActionPayload,
+  BulkActionResult,
+  BulkActionType,
+} from '@/types/table-enhancements'
 import type { ClassificationWithEmail } from '@/types/models'
 import { BULK_ACTION_CONFIG } from '@/constants/table'
 
@@ -27,7 +31,11 @@ export interface UseBulkActionsOptions {
 
 export function useBulkActions(options: UseBulkActionsOptions = {}) {
   const store = useClassificationStore()
-  const { maxSelection = BULK_ACTION_CONFIG.MAX_SELECTION, onSelectionChange, onActionComplete } = options
+  const {
+    maxSelection = BULK_ACTION_CONFIG.MAX_SELECTION,
+    onSelectionChange,
+    onActionComplete,
+  } = options
 
   // State
   const selectedIds = ref<Set<number>>(new Set())
@@ -43,15 +51,11 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
     return classifications.every(c => selectedIds.value.has(c.id))
   })
 
-  const isIndeterminate = computed(() =>
-    selectedIds.value.size > 0 && !isAllSelected.value
-  )
+  const isIndeterminate = computed(() => selectedIds.value.size > 0 && !isAllSelected.value)
 
   const hasSelection = computed(() => selectedIds.value.size > 0)
 
-  const canSelectMore = computed(() =>
-    selectedIds.value.size < maxSelection
-  )
+  const canSelectMore = computed(() => selectedIds.value.size < maxSelection)
 
   const selectedClassifications = computed(() =>
     store.classifications.filter(c => selectedIds.value.has(c.id))
@@ -172,9 +176,7 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
 
     if (startIndex === -1 || endIndex === -1) return
 
-    const [from, to] = startIndex < endIndex
-      ? [startIndex, endIndex]
-      : [endIndex, startIndex]
+    const [from, to] = startIndex < endIndex ? [startIndex, endIndex] : [endIndex, startIndex]
 
     const newSelection = new Set(selectedIds.value)
     let added = 0
@@ -216,7 +218,7 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
 
     const result: BulkActionResult = {
       success: [],
-      failed: []
+      failed: [],
     }
 
     try {
@@ -228,7 +230,7 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
         } catch (error) {
           result.failed.push({
             id,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Unknown error',
           })
         }
       }
@@ -236,7 +238,7 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
       logAction('Bulk action completed', {
         actionType,
         success: result.success.length,
-        failed: result.failed.length
+        failed: result.failed.length,
       })
 
       // Clear selection on success
@@ -354,7 +356,7 @@ export function useBulkActions(options: UseBulkActionsOptions = {}) {
     selectRange,
 
     // Action methods
-    executeBulkAction
+    executeBulkAction,
   }
 }
 

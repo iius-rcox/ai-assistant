@@ -1,10 +1,11 @@
 <!--
-  ConfidenceBar Component
+  ConfidenceBar Component (Simplified)
   Feature: 005-table-enhancements
   Tasks: T048, T049, T050, T051
   Requirements: FR-024, FR-025, FR-026, FR-027
 
-  Visual progress bar showing classification confidence with color thresholds
+  Simple percentage tag with subtle color-coded background
+  Green: 80%+, Yellow/Amber: 50-79%, Red: <50%
 -->
 
 <script setup lang="ts">
@@ -13,15 +14,12 @@ import { computed } from 'vue'
 interface Props {
   /** Confidence score from 0 to 1 */
   score: number | null
-  /** Show percentage text label */
-  showLabel?: boolean
   /** Compact mode for table cells */
   compact?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  showLabel: true,
-  compact: true
+  compact: true,
 })
 
 // Convert 0-1 score to percentage
@@ -38,161 +36,78 @@ const colorClass = computed(() => {
   return 'confidence-low'
 })
 
-// Accessibility pattern class (FR-026)
-// Different patterns for color-blind users
-const patternClass = computed(() => {
-  if (percentage.value >= 80) return 'pattern-solid'
-  if (percentage.value >= 50) return 'pattern-stripes'
-  return 'pattern-dots'
-})
-
 // Human-readable confidence level for screen readers
 const ariaLabel = computed(() => {
   const level = percentage.value >= 80 ? 'High' : percentage.value >= 50 ? 'Medium' : 'Low'
   return `Confidence: ${percentage.value}% (${level})`
 })
 
-// Tooltip text (FR-027)
+// Tooltip text
 const tooltipText = computed(() => {
   if (props.score === null) return 'No confidence score'
-  return `${percentage.value}% confidence`
+  const level = percentage.value >= 80 ? 'High' : percentage.value >= 50 ? 'Medium' : 'Low'
+  return `${percentage.value}% confidence (${level})`
 })
 </script>
 
 <template>
-  <div
-    class="confidence-bar-container"
-    :class="{ compact }"
+  <span
+    class="confidence-tag"
+    :class="[colorClass, { compact }]"
     :title="tooltipText"
-    role="progressbar"
-    :aria-valuenow="percentage"
-    aria-valuemin="0"
-    aria-valuemax="100"
     :aria-label="ariaLabel"
+    role="status"
   >
-    <div class="confidence-track">
-      <div
-        class="confidence-fill"
-        :class="[colorClass, patternClass]"
-        :style="{ width: `${percentage}%` }"
-      ></div>
-    </div>
-    <span v-if="showLabel" class="confidence-label" :class="colorClass">
-      {{ percentage }}%
-    </span>
-  </div>
+    {{ percentage }}%
+  </span>
 </template>
 
 <style scoped>
-.confidence-bar-container {
-  display: flex;
+.confidence-tag {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 80px;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: var(--md-sys-typescale-label-medium-size);
+  font-weight: var(--md-sys-typescale-label-medium-weight);
+  font-variant-numeric: tabular-nums;
+  min-width: 42px;
+  transition: var(--md-sys-theme-transition);
 }
 
-.confidence-bar-container.compact {
-  min-width: 60px;
-  gap: 0.35rem;
+.confidence-tag.compact {
+  padding: 0.2rem 0.4rem;
+  font-size: var(--md-sys-typescale-label-small-size);
+  min-width: 38px;
 }
 
-.confidence-track {
-  flex: 1;
-  height: 8px;
-  background-color: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-  position: relative;
-}
-
-.compact .confidence-track {
-  height: 6px;
-}
-
-.confidence-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.3s ease, background-color 0.2s ease;
-  position: relative;
-}
-
-/* Color thresholds (FR-025) */
+/* High confidence: subtle green */
 .confidence-high {
-  background-color: #27ae60;
+  background-color: color-mix(in srgb, var(--md-ext-color-success) 15%, transparent);
+  color: var(--md-ext-color-success);
 }
 
+/* Medium confidence: subtle amber/yellow */
 .confidence-medium {
-  background-color: #f39c12;
+  background-color: color-mix(in srgb, var(--md-ext-color-warning) 15%, transparent);
+  color: var(--md-ext-color-warning);
 }
 
+/* Low confidence: subtle red */
 .confidence-low {
-  background-color: #e74c3c;
+  background-color: color-mix(in srgb, var(--md-sys-color-error) 15%, transparent);
+  color: var(--md-sys-color-error);
 }
 
-/* Accessibility patterns for color-blind users (FR-026) */
-.pattern-solid {
-  /* Solid fill for high confidence */
-}
-
-.pattern-stripes {
-  /* Diagonal stripes for medium confidence */
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 2px,
-    rgba(255, 255, 255, 0.3) 2px,
-    rgba(255, 255, 255, 0.3) 4px
-  );
-}
-
-.pattern-dots {
-  /* Dotted pattern for low confidence */
-  background-image: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.4) 1px,
-    transparent 1px
-  );
-  background-size: 4px 4px;
-}
-
-/* Label styling */
-.confidence-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  min-width: 32px;
-  text-align: right;
-}
-
-.compact .confidence-label {
-  font-size: 0.7rem;
-  min-width: 28px;
-}
-
-.confidence-label.confidence-high {
-  color: #27ae60;
-}
-
-.confidence-label.confidence-medium {
-  color: #d68910;
-}
-
-.confidence-label.confidence-low {
-  color: #e74c3c;
-}
-
-/* Hover effect to show exact percentage (FR-027) */
-.confidence-bar-container:hover .confidence-track {
-  transform: scaleY(1.2);
-}
-
-.confidence-bar-container:hover .confidence-fill {
-  filter: brightness(1.1);
+/* Hover effect */
+.confidence-tag:hover {
+  transform: scale(1.05);
 }
 
 /* Focus styling for accessibility */
-.confidence-bar-container:focus-visible {
-  outline: 2px solid #3498db;
+.confidence-tag:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 </style>

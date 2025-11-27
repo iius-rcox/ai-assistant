@@ -26,7 +26,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   height: '600px',
   showBackToTop: true,
-  threshold: 200
+  threshold: 200,
 })
 
 const emit = defineEmits<{
@@ -60,7 +60,7 @@ function scrollToTop() {
   if (containerRef.value) {
     containerRef.value.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'smooth',
     })
   }
 }
@@ -80,17 +80,13 @@ onUnmounted(() => {
 // Expose for parent component
 defineExpose({
   scrollToTop,
-  container: containerRef
+  container: containerRef,
 })
 </script>
 
 <template>
   <div class="infinite-scroller-wrapper">
-    <div
-      ref="containerRef"
-      class="infinite-scroller"
-      :style="{ maxHeight: height }"
-    >
+    <div ref="containerRef" class="infinite-scroller" :style="{ maxHeight: height }">
       <slot></slot>
 
       <!-- Loading indicator at bottom -->
@@ -114,7 +110,17 @@ defineExpose({
         aria-label="Back to top"
         type="button"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <polyline points="18 15 12 9 6 15"></polyline>
         </svg>
       </button>

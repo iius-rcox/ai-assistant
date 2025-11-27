@@ -7,6 +7,14 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
+# Build arguments for Vite environment variables
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_SERVICE_KEY
+
+# Set environment variables for the build
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_SERVICE_KEY=$VITE_SUPABASE_SERVICE_KEY
+
 # Copy package files
 COPY package*.json ./
 

@@ -1,15 +1,16 @@
 <!--
   Category Pie Chart Component
-  Feature: 005-table-enhancements
-  Task: T084
+  Feature: 005-table-enhancements / 006-material-design-themes
+  Task: T084, T055
   Requirements: FR-040, FR-042
 
-  ApexCharts pie/donut chart showing category distribution
+  ApexCharts pie/donut chart showing category distribution with M3 theming
 -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
+import { useChartTheme } from '@/composables/useChartTheme'
 
 interface Props {
   categories: string[]
@@ -19,69 +20,50 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  chartType: 'donut'
+  chartType: 'donut',
 })
 
 const emit = defineEmits<{
   'slice-click': [category: string, count: number]
 }>()
 
-// Category colors matching theme
-const categoryColors: Record<string, string> = {
-  KIDS: 'var(--badge-kids, #9b59b6)',
-  ROBYN: 'var(--badge-robyn, #e91e63)',
-  WORK: 'var(--badge-work, #3498db)',
-  FINANCIAL: 'var(--badge-financial, #27ae60)',
-  SHOPPING: 'var(--badge-shopping, #f39c12)',
-  OTHER: 'var(--badge-other, #95a5a6)'
-}
+const { pieChartOptions, getCategoryColors, chartColors, isDark } = useChartTheme()
 
-const colors = computed(() =>
-  props.categories.map(cat => categoryColors[cat] || 'var(--badge-other, #95a5a6)')
-)
+const colors = computed(() => getCategoryColors(props.categories))
 
-// Chart options
+// Chart options with M3 theming
 const chartOptions = computed(() => ({
+  ...pieChartOptions.value,
   chart: {
+    ...pieChartOptions.value.chart,
     id: 'category-distribution',
     type: props.chartType,
     toolbar: {
-      show: true
-    },
-    animations: {
-      enabled: true,
-      easing: 'easeinout',
-      speed: 400
+      show: true,
     },
     events: {
       dataPointSelection: (_event: any, _chartContext: any, config: any) => {
         const category = props.categories[config.dataPointIndex] ?? ''
         const count = props.counts[config.dataPointIndex] ?? 0
         emit('slice-click', category, count)
-      }
-    }
+      },
+    },
   },
   labels: props.categories,
   colors: colors.value,
   title: {
     text: 'Category Distribution',
     align: 'left' as const,
-    style: {
-      fontSize: '16px',
-      fontWeight: 600,
-      color: 'var(--text-primary, #2c3e50)'
-    }
+    style: pieChartOptions.value.title?.style,
   },
   legend: {
     position: 'bottom' as const,
     horizontalAlign: 'center' as const,
-    labels: {
-      colors: 'var(--text-primary, #2c3e50)'
-    },
+    labels: pieChartOptions.value.legend?.labels,
     markers: {
       size: 12,
-      strokeWidth: 0
-    }
+      strokeWidth: 0,
+    },
   },
   plotOptions: {
     pie: {
@@ -89,68 +71,53 @@ const chartOptions = computed(() => ({
         size: props.chartType === 'donut' ? '55%' : '0%',
         labels: {
           show: props.chartType === 'donut',
-          name: {
-            show: true,
-            fontSize: '14px',
-            color: 'var(--text-primary, #2c3e50)'
-          },
+          name: pieChartOptions.value.plotOptions?.pie?.donut?.labels?.name,
           value: {
-            show: true,
-            fontSize: '22px',
-            fontWeight: 600,
-            color: 'var(--text-primary, #2c3e50)',
-            formatter: (val: string) => val
+            ...pieChartOptions.value.plotOptions?.pie?.donut?.labels?.value,
+            formatter: (val: string) => val,
           },
           total: {
-            show: true,
+            ...pieChartOptions.value.plotOptions?.pie?.donut?.labels?.total,
             label: 'Total',
-            fontSize: '12px',
-            color: 'var(--text-muted, #6c757d)',
-            formatter: () => props.counts.reduce((a, b) => a + b, 0).toString()
-          }
-        }
+            formatter: () => props.counts.reduce((a, b) => a + b, 0).toString(),
+          },
+        },
       },
-      expandOnClick: true
-    }
+      expandOnClick: true,
+    },
   },
   dataLabels: {
     enabled: true,
     formatter: (val: number) => `${val.toFixed(1)}%`,
-    style: {
-      fontSize: '12px',
-      fontWeight: 500
-    },
+    style: pieChartOptions.value.dataLabels?.style,
     dropShadow: {
-      enabled: false
-    }
+      enabled: false,
+    },
   },
   tooltip: {
     enabled: true,
-    theme: document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light',
+    theme: isDark.value ? 'dark' : 'light',
     y: {
       formatter: (val: number, opts: any) => {
         const idx = opts.seriesIndex
         return `${val} emails (${props.percentages[idx]?.toFixed(1) || 0}%)`
-      }
-    }
+      },
+    },
   },
-  stroke: {
-    width: 2,
-    colors: ['var(--bg-primary, #fff)']
-  },
+  stroke: pieChartOptions.value.stroke,
   responsive: [
     {
       breakpoint: 480,
       options: {
         chart: {
-          height: 300
+          height: 300,
         },
         legend: {
-          position: 'bottom'
-        }
-      }
-    }
-  ]
+          position: 'bottom',
+        },
+      },
+    },
+  ],
 }))
 
 const hasData = computed(() => props.categories.length > 0 && props.counts.some(c => c > 0))
@@ -162,13 +129,7 @@ const hasData = computed(() => props.categories.length > 0 && props.counts.some(
       <p>No category data available yet. Classifications will appear here.</p>
     </div>
 
-    <VueApexCharts
-      v-else
-      :type="chartType"
-      :options="chartOptions"
-      :series="counts"
-      height="350"
-    />
+    <VueApexCharts v-else :type="chartType" :options="chartOptions" :series="counts" height="350" />
 
     <!-- Category legend with counts -->
     <div v-if="hasData" class="category-legend">
@@ -178,10 +139,7 @@ const hasData = computed(() => props.categories.length > 0 && props.counts.some(
         class="legend-item"
         @click="emit('slice-click', category, counts[idx] ?? 0)"
       >
-        <span
-          class="legend-color"
-          :style="{ backgroundColor: colors[idx] }"
-        ></span>
+        <span class="legend-color" :style="{ backgroundColor: colors[idx] }"></span>
         <span class="legend-label">{{ category }}</span>
         <span class="legend-count">{{ counts[idx] }}</span>
         <span class="legend-percent">({{ percentages[idx]?.toFixed(1) || 0 }}%)</span>
@@ -192,23 +150,24 @@ const hasData = computed(() => props.categories.length > 0 && props.counts.some(
 
 <style scoped>
 .category-chart {
-  background-color: var(--bg-primary, white);
+  background-color: var(--md-sys-color-surface);
   padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.05));
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-1);
   margin-bottom: 1.5rem;
-  border: 1px solid var(--border-primary, #e0e0e0);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: var(--md-sys-theme-transition);
 }
 
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: var(--text-muted, #95a5a6);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .empty-state p {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--md-sys-typescale-body-medium-size);
 }
 
 .category-legend {
@@ -217,7 +176,7 @@ const hasData = computed(() => props.categories.length > 0 && props.counts.some(
   gap: 0.75rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-primary, #e0e0e0);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .legend-item {
@@ -225,36 +184,36 @@ const hasData = computed(() => props.categories.length > 0 && props.counts.some(
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--md-sys-shape-corner-small);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: var(--md-sys-theme-transition);
 }
 
 .legend-item:hover {
-  background-color: var(--bg-hover, #f8f9fa);
+  background-color: var(--md-sys-color-surface-container-high);
 }
 
 .legend-color {
   width: 12px;
   height: 12px;
-  border-radius: 2px;
+  border-radius: var(--md-sys-shape-corner-extra-small);
   flex-shrink: 0;
 }
 
 .legend-label {
-  font-weight: 500;
-  color: var(--text-primary, #2c3e50);
-  font-size: 0.85rem;
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-label-medium-size);
 }
 
 .legend-count {
   font-weight: 600;
-  color: var(--text-primary, #2c3e50);
+  color: var(--md-sys-color-on-surface);
   margin-left: auto;
 }
 
 .legend-percent {
-  font-size: 0.8rem;
-  color: var(--text-muted, #6c757d);
+  font-size: var(--md-sys-typescale-label-small-size);
+  color: var(--md-sys-color-on-surface-variant);
 }
 </style>

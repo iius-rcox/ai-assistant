@@ -39,12 +39,16 @@ function getCachedResults(query: string): number[] | null {
 /**
  * Cache search results
  */
-function cacheResults(query: string, results: number[], ttl: number = SEARCH_CONFIG.CACHE_TTL_MS): void {
+function cacheResults(
+  query: string,
+  results: number[],
+  ttl: number = SEARCH_CONFIG.CACHE_TTL_MS
+): void {
   searchCache.set(query.toLowerCase(), {
     query: query.toLowerCase(),
     results,
     timestamp: Date.now(),
-    ttl
+    ttl,
   })
 }
 
@@ -117,8 +121,10 @@ export function searchClientSide(
       email?.sender || '',
       classification.category || '',
       classification.urgency || '',
-      classification.action || ''
-    ].join(' ').toLowerCase()
+      classification.action || '',
+    ]
+      .join(' ')
+      .toLowerCase()
 
     // Match if ALL query terms are found (AND search)
     return queryTerms.every(term => searchableText.includes(term))
@@ -129,7 +135,7 @@ export function searchClientSide(
   perfEnd('searchClientSide', {
     query,
     totalRecords: classifications.length,
-    matchCount: resultIds.length
+    matchCount: resultIds.length,
   })
 
   return resultIds
@@ -190,7 +196,7 @@ export function searchClientSideWithScore(
   perfEnd('searchClientSideWithScore', {
     query,
     totalRecords: classifications.length,
-    matchCount: scoredResults.length
+    matchCount: scoredResults.length,
   })
 
   return scoredResults
@@ -228,7 +234,7 @@ export async function searchServerSide(query: string): Promise<number[]> {
   try {
     // Call the search_emails RPC function
     const { data, error } = await (supabase.rpc as any)('search_emails', {
-      search_query: query
+      search_query: query,
     })
 
     if (error) {
@@ -258,7 +264,7 @@ export async function searchServerSide(query: string): Promise<number[]> {
     perfEnd('searchServerSide', {
       query,
       emailMatches: emailIds.length,
-      classificationMatches: classificationIds.length
+      classificationMatches: classificationIds.length,
     })
 
     return classificationIds
@@ -283,12 +289,7 @@ export async function searchClassificationsWithEmails(
 ): Promise<ClassificationWithEmail[]> {
   perfStart('searchClassificationsWithEmails')
 
-  const {
-    sortColumn = 'created_at',
-    sortAsc = false,
-    offset = 0,
-    limit = 100
-  } = options
+  const { sortColumn = 'created_at', sortAsc = false, offset = 0, limit = 100 } = options
 
   if (!query || query.length < SEARCH_CONFIG.MIN_QUERY_LENGTH) {
     perfEnd('searchClassificationsWithEmails', { skipped: true })
@@ -301,7 +302,8 @@ export async function searchClassificationsWithEmails(
 
     const { data, error } = await supabase
       .from('classifications')
-      .select(`
+      .select(
+        `
         id,
         category,
         urgency,
@@ -320,7 +322,8 @@ export async function searchClassificationsWithEmails(
           body,
           received_timestamp
         )
-      `)
+      `
+      )
       .or(`email.subject.ilike.${searchPattern},email.sender.ilike.${searchPattern}`)
       .order(sortColumn, { ascending: sortAsc })
       .range(offset, offset + limit - 1)
@@ -332,7 +335,7 @@ export async function searchClassificationsWithEmails(
 
     perfEnd('searchClassificationsWithEmails', {
       query,
-      resultCount: data?.length || 0
+      resultCount: data?.length || 0,
     })
 
     return (data || []) as ClassificationWithEmail[]
@@ -401,13 +404,13 @@ export async function hybridSearch(
       searchType,
       threshold,
       totalCount,
-      resultCount: results.length
+      resultCount: results.length,
     })
 
     logInfo('Hybrid search completed', {
       searchType,
       query: query.substring(0, 50),
-      resultCount: results.length
+      resultCount: results.length,
     })
 
     return results
@@ -431,7 +434,10 @@ export function highlightSearchTerms(text: string, query: string): string {
     return text
   }
 
-  const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0)
+  const terms = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(t => t.length > 0)
   let result = text
 
   terms.forEach(term => {
